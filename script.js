@@ -1,20 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- NEU: Cooldown-Zoom-Schutz ---
+    function isZoomed() {
+        return window.visualViewport && window.visualViewport.scale > 1.01;
+    }
+
+    let activePointers = new Set();
     let zoomCooldown = false;
     let zoomTimeout;
 
     function protectZoom(e) {
         const isMultiTouch = e.touches && e.touches.length > 1;
-        const isZoomed = window.visualViewport && window.visualViewport.scale > 1.01;
+        const isCurrentlyZoomed = isZoomed();
 
-        if (isMultiTouch || isZoomed) {
-            // Blockiert die Blätter-Bibliothek, wenn gezoomt wird
+        if (isMultiTouch || isCurrentlyZoomed) {
             zoomCooldown = true;
             clearTimeout(zoomTimeout);
             e.stopPropagation(); 
         } else if (zoomCooldown) {
-            // Blockiert noch kurz weiter, wenn die Finger gerade erst losgelassen wurden
             e.stopPropagation();
             if (!e.touches || e.touches.length === 0) {
                 clearTimeout(zoomTimeout);
@@ -23,13 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Fängt die Gesten vor der Buch-Bibliothek ab
     window.addEventListener('touchstart', protectZoom, { capture: true, passive: true });
     window.addEventListener('touchmove', protectZoom, { capture: true, passive: true });
     window.addEventListener('touchend', protectZoom, { capture: true, passive: true });
     window.addEventListener('pointerdown', protectZoom, { capture: true, passive: true });
     window.addEventListener('pointerup', protectZoom, { capture: true, passive: true });
-    // ----------------------------------------------
 
     const bookWrapper = document.getElementById('flip-book-container');
     const loadingScreen = document.getElementById('loading');
@@ -328,7 +328,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const startWrapper = startMenu.querySelector('.menu-wrapper');
             const endWrapper = endOfBookMenu.querySelector('.menu-wrapper');
             
-            // FIX: Versteckt das Menü WÄHREND des Blätterns hinter dem Buch (Verhindert Text-Durchscheinen)
             menuPositioner.style.zIndex = '1';
             
             if (targetPage === 0) {
@@ -443,9 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', (e) => {
         if (e.target.id === 'back-to-start-btn') {
             e.preventDefault();
-            if (pageFlip && !(window.visualViewport && window.visualViewport.scale > 1.01)) { 
-                pageFlip.flip(0); 
-            }
+            if (pageFlip && !isZoomed()) { pageFlip.flip(0); }
         }
         if (e.target.classList.contains('all-books-trigger')) {
             e.preventDefault();
@@ -468,12 +465,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('keydown', (e) => {
         if (bookView.style.display !== 'none' && pageFlip) {
-            const isZoomed = window.visualViewport && window.visualViewport.scale > 1.01;
             if (e.key === 'ArrowRight' || e.key === ' ') {
                 if (e.key === ' ') e.preventDefault(); 
-                if (!isZoomed) pageFlip.flipNext();
+                if (!isZoomed()) pageFlip.flipNext();
             } else if (e.key === 'ArrowLeft') {
-                if (!isZoomed) pageFlip.flipPrev();
+                if (!isZoomed()) pageFlip.flipPrev();
             }
         }
     });
