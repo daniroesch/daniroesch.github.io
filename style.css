@@ -62,10 +62,11 @@ body {
     width: var(--real-book-width, 100vw);
     height: var(--real-book-height, 100vh);
     pointer-events: none; 
-    z-index: 3;
+    /* WICHTIG: Das Menü liegt jetzt immer SICHER über dem Buch! */
+    z-index: 10; 
 }
 
-/* NEU: Styling für den freistehenden Vollbild-Button oben rechts am Buchrand */
+/* Die Klammer oben rechts */
 #fullscreen-btn {
     position: absolute;
     top: clamp(10px, calc(var(--real-book-height) * 0.04), 25px);
@@ -73,10 +74,9 @@ body {
     color: #888;
     text-decoration: none;
     font-weight: 400;
-    /* Nutzt exakt dieselbe Größenberechnung wie die Menü-Zeilen */
     font-size: clamp(10px, calc(var(--real-book-height) * 0.045), 22px);
-    z-index: 10;
-    pointer-events: auto;
+    z-index: 20;
+    pointer-events: auto; /* Die Klammer fängt Klicks auf */
     transition: color 0.2s, font-weight 0.2s;
 }
 #fullscreen-btn:hover {
@@ -93,6 +93,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    /* Gesteuert via JavaScript, damit man durch das unsichtbare Menü klicken kann */
     pointer-events: auto; 
     opacity: 1;
 }
@@ -118,7 +119,6 @@ body {
     padding: 0 10px;
 }
 
-/* NEU: Schriften skalieren jetzt strikt proportional zur Buch-HÖHE */
 h1 {
     font-size: clamp(12px, calc(var(--real-book-height) * 0.06), 28px); 
     font-weight: 800;
@@ -163,14 +163,19 @@ h1:hover { color: #000; }
 .legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; }
 .legal-links a:hover { color: #000; }
 
-/* NEU: touch-action erlaubt dem Browser explizit das native Zoomen auf der Fläche */
+/* FIX: Zwingt den Browser !important das Zoomen überall zu erlauben */
+.flip-book-container, 
+.flip-book-container *, 
+.st-page-flip {
+    touch-action: pan-x pan-y pinch-zoom !important;
+}
+
 .flip-book-container {
     position: absolute;
     top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
     display: flex; justify-content: center; align-items: center;
     z-index: 2;
     opacity: 0; transition: opacity 0.5s ease;
-    touch-action: pan-x pan-y pinch-zoom;
 }
 
 #loading {
