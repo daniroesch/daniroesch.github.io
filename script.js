@@ -1,4 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // NEU: Globaler, unblockbarer Pinch-To-Zoom-Handler auf Window-Ebene (Capture-Phase)
+    // Wenn 2 Finger auf dem Bildschirm liegen, wird das Event vor der Buch-Bibliothek versteckt
+    window.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) {
+            e.stopPropagation();
+        }
+    }, { capture: true, passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 1) {
+            e.stopPropagation();
+        }
+    }, { capture: true, passive: true });
+
     const bookWrapper = document.getElementById('flip-book-container');
     const loadingScreen = document.getElementById('loading');
     const mainHeading = document.getElementById('main-heading');
@@ -23,10 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentImgH = 794;
     
     const translations = {
-        'de': { titles: ["es ist ein buch", "blätter herum", "architekturdesign", "daniroesch.de"], allBooks: "- alle bücher -", backToStart: "- zurück zum anfang -", close: "x schließen", fullscreen: "[ vollbild ]" },
-        'en': { titles: ["it´s a book", "flip around", "architectural design", "daniroesch.de"], allBooks: "- all books -", backToStart: "- back to start -", close: "x close", fullscreen: "[ fullscreen ]" },
-        'es': { titles: ["es un libro", "hojea las páginas", "diseño arquitectónico", "daniroesch.de"], allBooks: "- todos los livros -", backToStart: "- volver al inicio -", close: "x cerrar", fullscreen: "[ pantalla completa ]" },
-        'pt': { titles: ["é um libro", "folheie as páginas", "desenho arquitectónico", "daniroesch.de"], allBooks: "- todos os livros -", backToStart: "- voltar ao início -", close: "x fechar", fullscreen: "[ tela cheia ]" }
+        'de': { titles: ["es ist ein buch", "blätter herum", "architekturdesign", "daniroesch.de"], allBooks: "- alle bücher -", backToStart: "- zurück zum anfang -", close: "x schließen" },
+        'en': { titles: ["it´s a book", "flip around", "architectural design", "daniroesch.de"], allBooks: "- all books -", backToStart: "- back to start -", close: "x close" },
+        'es': { titles: ["es un libro", "hojea las páginas", "diseño arquitectónico", "daniroesch.de"], allBooks: "- todos los livros -", backToStart: "- volver al inicio -", close: "x cerrar" },
+        'pt': { titles: ["é um libro", "folheie as páginas", "desenho arquitectónico", "daniroesch.de"], allBooks: "- todos os livros -", backToStart: "- voltar ao início -", close: "x fechar" }
     };
 
     function getHashParams() {
@@ -113,6 +127,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Automatische CSS-Aktualisierung bei Orientierungswechsel, um Textgrößen neu anzupassen
+    window.addEventListener('orientationchange', () => {
+        setTimeout(updateBookSize, 200);
+    });
+
     function updateHeading() {
         if (translations[currentLang]) {
             mainHeading.innerText = translations[currentLang].titles[currentTitleIndex];
@@ -182,10 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('back-to-book-btn').innerText = translations[lang].close;
         document.getElementById('close-legal').innerText = translations[lang].close;
         document.getElementById('back-to-start-btn').innerText = translations[lang].backToStart;
-        
-        // Sprache für den Vollbild-Button
-        const fullscreenBtn = document.getElementById('fullscreen-btn');
-        if (fullscreenBtn) fullscreenBtn.innerText = translations[lang].fullscreen;
 
         langLinks.forEach(link => link.classList.remove('active'));
         const activeLink = document.querySelector(`[data-lang="${lang}"]`);
@@ -257,21 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
         pageFlip.loadFromHTML(document.querySelectorAll('.page'));
         loadingScreen.style.display = 'none';
         bookWrapper.style.opacity = '1';
-
-        // --- NEU: Pinch-to-Zoom Hack für Handys ---
-        // Fängt 2-Finger-Gesten ab, BEVOR PageFlip sie blockieren kann
-        bookContainer.addEventListener('touchstart', (e) => {
-            if (e.touches.length > 1) {
-                e.stopPropagation();
-            }
-        }, { capture: true, passive: false });
-        
-        bookContainer.addEventListener('touchmove', (e) => {
-            if (e.touches.length > 1) {
-                e.stopPropagation();
-            }
-        }, { capture: true, passive: false });
-        // ------------------------------------------
         
         if (initialPage > 0 && initialPage < pageFlip.getPageCount()) {
             pageFlip.flip(initialPage);
@@ -401,7 +401,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // NEU: Robuste Vollbild-Logik, die alle Browser abdeckt
     function toggleFullscreen() {
         const elem = document.documentElement;
         if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
@@ -441,7 +440,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        // Aufruf der neuen Vollbild-Funktion
         if (e.target.id === 'fullscreen-btn') {
             e.preventDefault();
             toggleFullscreen();
