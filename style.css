@@ -65,6 +65,25 @@ body {
     z-index: 3;
 }
 
+/* NEU: Styling für den freistehenden Vollbild-Button oben rechts am Buchrand */
+#fullscreen-btn {
+    position: absolute;
+    top: clamp(10px, calc(var(--real-book-height) * 0.04), 25px);
+    right: clamp(10px, calc(var(--real-book-height) * 0.04), 25px);
+    color: #888;
+    text-decoration: none;
+    font-weight: 400;
+    /* Nutzt exakt dieselbe Größenberechnung wie die Menü-Zeilen */
+    font-size: clamp(10px, calc(var(--real-book-height) * 0.045), 22px);
+    z-index: 10;
+    pointer-events: auto;
+    transition: color 0.2s, font-weight 0.2s;
+}
+#fullscreen-btn:hover {
+    color: #000;
+    font-weight: 800;
+}
+
 .static-menu {
     position: absolute;
     top: 0;
@@ -96,17 +115,17 @@ body {
     flex-direction: column;
     align-items: stretch; 
     will-change: transform; 
-    padding: 0 10px; /* Ein kleiner Puffer am Rand */
+    padding: 0 10px;
 }
 
-/* FIX: Stabilere Typografie, die nicht mehr quetscht */
+/* NEU: Schriften skalieren jetzt strikt proportional zur Buch-HÖHE */
 h1 {
-    font-size: clamp(18px, 4vmin, 30px); 
+    font-size: clamp(12px, calc(var(--real-book-height) * 0.06), 28px); 
     font-weight: 800;
     text-align: center;
-    white-space: normal; /* Erlaubt Umbrüche auf winzigen Screens */
-    line-height: 1.2;
-    margin-bottom: 0.8rem;
+    white-space: nowrap; 
+    margin-bottom: 0.6rem;
+    letter-spacing: -1px;
     text-transform: lowercase;
     color: #a0a0a0; 
     cursor: pointer;
@@ -115,14 +134,13 @@ h1 {
 
 h1:hover { color: #000; }
 
-/* FIX: Auch die Links reagieren nun besser auf kleine Screens */
 .menu-row {
     display: flex;
     justify-content: space-between; 
     align-items: center;
-    font-size: clamp(12px, 3vmin, 28px); 
+    font-size: clamp(10px, calc(var(--real-book-height) * 0.045), 22px); 
     color: #888;
-    margin-bottom: 0.6rem; 
+    margin-bottom: 0.4rem; 
 }
 
 .bracket { font-weight: 400; }
@@ -135,9 +153,9 @@ h1:hover { color: #000; }
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px; 
-    margin-top: clamp(20px, 4vmin, 40px); 
-    font-size: clamp(10px, 2vmin, 20px); 
+    gap: 6px; 
+    margin-top: clamp(10px, calc(var(--real-book-height) * 0.05), 30px); 
+    font-size: clamp(8px, calc(var(--real-book-height) * 0.035), 15px); 
     letter-spacing: 1px;
     text-transform: lowercase;
 }
@@ -145,7 +163,7 @@ h1:hover { color: #000; }
 .legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; }
 .legal-links a:hover { color: #000; }
 
-/* FIX: Damit der Browser das Zoomen erlaubt, darf das Container-Touch-Action nicht blockiert sein */
+/* NEU: touch-action erlaubt dem Browser explizit das native Zoomen auf der Fläche */
 .flip-book-container {
     position: absolute;
     top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
