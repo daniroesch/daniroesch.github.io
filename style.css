@@ -1,0 +1,199 @@
+/* Lokale Einbindung der Montserrat Schriftarten */
+@font-face {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('fonts/montserrat-400.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('fonts/montserrat-500.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('fonts/montserrat-700.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+    src: url('fonts/montserrat-800.woff2') format('woff2');
+}
+
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif; 
+}
+
+body {
+    background-color: #ffffff;
+    overflow: hidden; 
+    color: #000;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh; 
+}
+
+#book-view {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+}
+
+#menu-positioner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: var(--real-book-width, 100vw);
+    height: var(--real-book-height, 100vh);
+    pointer-events: none; 
+    z-index: 3;
+}
+
+.static-menu {
+    position: absolute;
+    top: 0;
+    left: 0; 
+    width: 50%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: auto; 
+    opacity: 1;
+}
+
+#end-of-book-menu {
+    position: absolute;
+    top: 0;
+    right: 0; 
+    width: 50%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: auto;
+    opacity: 0; 
+}
+
+.menu-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch; 
+    will-change: transform; 
+}
+
+h1 {
+    font-size: clamp(10px, calc(var(--real-book-width) * 0.0225), 30px); 
+    font-weight: 800;
+    text-align: center;
+    white-space: nowrap; 
+    margin-bottom: 0.8rem;
+    letter-spacing: -1px;
+    text-transform: lowercase;
+    color: #a0a0a0; 
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+h1:hover { color: #000; }
+
+.menu-row {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    font-size: clamp(8px, calc(var(--real-book-width) * 0.015), 28px); 
+    color: #888;
+    margin-bottom: 0.6rem; 
+}
+
+.bracket { font-weight: 400; }
+
+.menu-links { flex-grow: 1; text-align: center; text-transform: lowercase; }
+.menu-links a { color: #888; text-decoration: none; transition: color 0.2s; font-weight: 400; }
+.menu-links a:hover, .menu-links a.active { color: #000; font-weight: 800; }
+
+.legal-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px; 
+    margin-top: clamp(10px, calc(var(--real-book-width) * 0.04), 40px); 
+    font-size: clamp(6px, calc(var(--real-book-width) * 0.01), 20px); 
+    letter-spacing: 1px;
+    text-transform: lowercase;
+}
+
+.legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; }
+.legal-links a:hover { color: #000; }
+
+.flip-book-container {
+    position: absolute;
+    top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
+    display: flex; justify-content: center; align-items: center;
+    z-index: 2;
+    opacity: 0; transition: opacity 0.5s ease;
+}
+
+#loading {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 1.2rem; color: #888; z-index: 10; text-transform: lowercase;
+}
+
+.page { background-color: #ffffff; position: relative; }
+.page img { width: 100%; height: 100%; object-fit: cover; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
+
+#grid-view, #legal-view {
+    position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
+    padding: 5vw; background: #fff; overflow-y: auto; z-index: 20;
+}
+
+.grid-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+.grid-header h2 { font-weight: 800; font-size: 1.5rem; text-transform: lowercase; }
+.grid-header a { color: #000; text-decoration: none; font-weight: 800; text-transform: lowercase; }
+
+.grid-container { 
+    display: flex; 
+    flex-wrap: wrap; 
+    justify-content: center; 
+    gap: 30px; 
+}
+.book-tile { 
+    cursor: pointer; 
+    transition: transform 0.2s; 
+}
+.book-tile:hover { 
+    transform: scale(1.02); 
+}
+.book-tile img { 
+    height: 300px; 
+    width: auto; 
+    object-fit: cover; 
+    background: #f0f0f0; 
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
+    display: block;
+}
+
+.legal-content { max-width: 800px; margin: 0 auto; }
+.legal-image { display: block; margin: 0 auto; max-width: 100%; height: auto; box-shadow: 0 5px 25px rgba(0,0,0,0.05); }
+
+@media (max-width: 600px) {
+    .book-tile img {
+        height: 200px;
+    }
+}
