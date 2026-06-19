@@ -294,6 +294,8 @@ document.addEventListener('DOMContentLoaded', () => {
             pageFlip.flip(initialPage);
         }
         
+        // --- FIX: Stellt sicher, dass das Menü zu Beginn ganz vorne ist ---
+        menuPositioner.style.zIndex = '3';
         startMenu.style.pointerEvents = 'auto';
         startMenu.style.opacity = '1';
         startMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
@@ -308,12 +310,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (startPage > 0) {
             if (startPage >= totalPages - 2) {
+                menuPositioner.style.zIndex = '3';
                 endOfBookMenu.style.pointerEvents = 'auto';
                 endOfBookMenu.style.opacity = '1';
                 endOfBookMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
                 startMenu.style.opacity = '0';
                 startMenu.style.pointerEvents = 'none';
             } else {
+                menuPositioner.style.zIndex = '1';
                 startMenu.style.opacity = '0';
                 startMenu.style.pointerEvents = 'none';
                 endOfBookMenu.style.opacity = '0';
@@ -327,6 +331,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const startWrapper = startMenu.querySelector('.menu-wrapper');
             const endWrapper = endOfBookMenu.querySelector('.menu-wrapper');
+            
+            // --- FIX: Schiebt das Menü WÄHREND des Blätterns nach hinten ---
+            menuPositioner.style.zIndex = '1';
             
             if (targetPage === 0) {
                 startMenu.style.opacity = '1'; 
@@ -365,21 +372,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalPages = pageFlip.getPageCount();
 
             if (state !== 'read') {
+                // --- FIX: Schiebt das Menü nach hinten, wenn das Buch berührt wird ---
+                menuPositioner.style.zIndex = '1';
                 startMenu.style.pointerEvents = 'none';
                 endOfBookMenu.style.pointerEvents = 'none';
             } else {
                 if (currentPage === 0) {
+                    // --- FIX: Holt das Startmenü wieder ganz nach vorne ---
+                    menuPositioner.style.zIndex = '3'; 
                     startMenu.style.pointerEvents = 'auto';
                     startMenu.style.opacity = '1'; 
                     endOfBookMenu.style.pointerEvents = 'none';
                     endOfBookMenu.style.opacity = '0'; 
                     cycleTitle(); 
                 } else if (currentPage >= totalPages - 2) {
+                    // --- FIX: Holt das Endmenü wieder ganz nach vorne ---
+                    menuPositioner.style.zIndex = '3';
                     endOfBookMenu.style.pointerEvents = 'auto';
                     endOfBookMenu.style.opacity = '1'; 
                     startMenu.style.pointerEvents = 'none';
                     startMenu.style.opacity = '0'; 
                 } else {
+                    menuPositioner.style.zIndex = '1'; 
                     startMenu.style.opacity = '0'; 
                     endOfBookMenu.style.opacity = '0'; 
                 }
@@ -393,6 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             setTimeout(() => {
                 if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
+                    menuPositioner.style.zIndex = '3';
                     startMenu.style.pointerEvents = 'auto';
                 }
             }, 100);
