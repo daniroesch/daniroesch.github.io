@@ -328,8 +328,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const startWrapper = startMenu.querySelector('.menu-wrapper');
             const endWrapper = endOfBookMenu.querySelector('.menu-wrapper');
             
-            menuPositioner.style.zIndex = '1';
-            
             if (targetPage === 0) {
                 startMenu.style.opacity = '1'; 
                 startWrapper.style.transition = 'none';
@@ -367,25 +365,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalPages = pageFlip.getPageCount();
 
             if (state !== 'read') {
-                menuPositioner.style.zIndex = '1';
                 startMenu.style.pointerEvents = 'none';
                 endOfBookMenu.style.pointerEvents = 'none';
             } else {
                 if (currentPage === 0) {
-                    menuPositioner.style.zIndex = '3'; 
                     startMenu.style.pointerEvents = 'auto';
                     startMenu.style.opacity = '1'; 
                     endOfBookMenu.style.pointerEvents = 'none';
                     endOfBookMenu.style.opacity = '0'; 
                     cycleTitle(); 
                 } else if (currentPage >= totalPages - 2) {
-                    menuPositioner.style.zIndex = '3';
                     endOfBookMenu.style.pointerEvents = 'auto';
                     endOfBookMenu.style.opacity = '1'; 
                     startMenu.style.pointerEvents = 'none';
                     startMenu.style.opacity = '0'; 
                 } else {
-                    menuPositioner.style.zIndex = '1'; 
                     startMenu.style.opacity = '0'; 
                     endOfBookMenu.style.opacity = '0'; 
                 }
@@ -399,7 +393,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             setTimeout(() => {
                 if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
-                    menuPositioner.style.zIndex = '3';
                     startMenu.style.pointerEvents = 'auto';
                 }
             }, 100);
