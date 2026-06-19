@@ -1,42 +1,35 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- NEU: Prüft ob der Nutzer reingezoomt hat (> 101%) ---
-    function isZoomed() {
-        return window.visualViewport && window.visualViewport.scale > 1.01;
+    // --- NEU: Cooldown-Zoom-Schutz ---
+    let zoomCooldown = false;
+    let zoomTimeout;
+
+    function protectZoom(e) {
+        const isMultiTouch = e.touches && e.touches.length > 1;
+        const isZoomed = window.visualViewport && window.visualViewport.scale > 1.01;
+
+        if (isMultiTouch || isZoomed) {
+            // Blockiert die Blätter-Bibliothek, wenn gezoomt wird
+            zoomCooldown = true;
+            clearTimeout(zoomTimeout);
+            e.stopPropagation(); 
+        } else if (zoomCooldown) {
+            // Blockiert noch kurz weiter, wenn die Finger gerade erst losgelassen wurden
+            e.stopPropagation();
+            if (!e.touches || e.touches.length === 0) {
+                clearTimeout(zoomTimeout);
+                zoomTimeout = setTimeout(() => { zoomCooldown = false; }, 300);
+            }
+        }
     }
 
-    // --- NEU: Erweiterter Pinch-to-Zoom & Pan Handler ---
-    // Schützt Gesten davor, von der Buch-Bibliothek blockiert zu werden.
-    // Sobald man gezoomt ist, werden ALLE Wischgesten vor dem Buch versteckt,
-    // damit man entspannt über das Bild "pannen" kann, ohne zu blättern!
-    let activePointers = new Set();
-
-    window.addEventListener('pointerdown', (e) => {
-        activePointers.add(e.pointerId);
-        if (activePointers.size > 1 || isZoomed()) e.stopPropagation();
-    }, { capture: true, passive: true });
-
-    window.addEventListener('pointermove', (e) => {
-        if (activePointers.size > 1 || isZoomed()) e.stopPropagation();
-    }, { capture: true, passive: true });
-
-    window.addEventListener('pointerup', (e) => {
-        activePointers.delete(e.pointerId);
-    }, { capture: true, passive: true });
-
-    window.addEventListener('pointercancel', (e) => {
-        activePointers.delete(e.pointerId);
-    }, { capture: true, passive: true });
-
-    window.addEventListener('touchstart', (e) => {
-        if (e.touches.length > 1 || isZoomed()) e.stopPropagation();
-    }, { capture: true, passive: true });
-
-    window.addEventListener('touchmove', (e) => {
-        if (e.touches.length > 1 || isZoomed()) e.stopPropagation();
-    }, { capture: true, passive: true });
+    // Fängt die Gesten vor der Buch-Bibliothek ab
+    window.addEventListener('touchstart', protectZoom, { capture: true, passive: true });
+    window.addEventListener('touchmove', protectZoom, { capture: true, passive: true });
+    window.addEventListener('touchend', protectZoom, { capture: true, passive: true });
+    window.addEventListener('pointerdown', protectZoom, { capture: true, passive: true });
+    window.addEventListener('pointerup', protectZoom, { capture: true, passive: true });
     // ----------------------------------------------
-
 
     const bookWrapper = document.getElementById('flip-book-container');
     const loadingScreen = document.getElementById('loading');
@@ -335,6 +328,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const startWrapper = startMenu.querySelector('.menu-wrapper');
             const endWrapper = endOfBookMenu.querySelector('.menu-wrapper');
             
+            // FIX: Versteckt das Menü WÄHREND des Blätterns hinter dem Buch (Verhindert Text-Durchscheinen)
+            menuPositioner.style.zIndex = '1';
+            
             if (targetPage === 0) {
                 startMenu.style.opacity = '1'; 
                 startWrapper.style.transition = 'none';
@@ -372,21 +368,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalPages = pageFlip.getPageCount();
 
             if (state !== 'read') {
+                menuPositioner.style.zIndex = '1';
                 startMenu.style.pointerEvents = 'none';
                 endOfBookMenu.style.pointerEvents = 'none';
             } else {
                 if (currentPage === 0) {
+                    menuPositioner.style.zIndex = '3'; 
                     startMenu.style.pointerEvents = 'auto';
                     startMenu.style.opacity = '1'; 
                     endOfBookMenu.style.pointerEvents = 'none';
                     endOfBookMenu.style.opacity = '0'; 
                     cycleTitle(); 
                 } else if (currentPage >= totalPages - 2) {
+                    menuPositioner.style.zIndex = '3';
                     endOfBookMenu.style.pointerEvents = 'auto';
                     endOfBookMenu.style.opacity = '1'; 
                     startMenu.style.pointerEvents = 'none';
                     startMenu.style.opacity = '0'; 
                 } else {
+                    menuPositioner.style.zIndex = '1'; 
                     startMenu.style.opacity = '0'; 
                     endOfBookMenu.style.opacity = '0'; 
                 }
@@ -400,6 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             setTimeout(() => {
                 if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
+                    menuPositioner.style.zIndex = '3';
                     startMenu.style.pointerEvents = 'auto';
                 }
             }, 100);
@@ -442,8 +443,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', (e) => {
         if (e.target.id === 'back-to-start-btn') {
             e.preventDefault();
-            // Blättern nur erlauben, wenn nicht herangezoomt
-            if (pageFlip && !isZoomed()) { pageFlip.flip(0); }
+            if (pageFlip && !(window.visualViewport && window.visualViewport.scale > 1.01)) { 
+                pageFlip.flip(0); 
+            }
         }
         if (e.target.classList.contains('all-books-trigger')) {
             e.preventDefault();
@@ -466,12 +468,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('keydown', (e) => {
         if (bookView.style.display !== 'none' && pageFlip) {
+            const isZoomed = window.visualViewport && window.visualViewport.scale > 1.01;
             if (e.key === 'ArrowRight' || e.key === ' ') {
                 if (e.key === ' ') e.preventDefault(); 
-                // NEU: Keyboard-Blättern blockieren, wenn man gezoomt ist
-                if (!isZoomed()) pageFlip.flipNext();
+                if (!isZoomed) pageFlip.flipNext();
             } else if (e.key === 'ArrowLeft') {
-                if (!isZoomed()) pageFlip.flipPrev();
+                if (!isZoomed) pageFlip.flipPrev();
             }
         }
     });
@@ -490,7 +492,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('hashchange', handleRouting);
     window.addEventListener('resize', updateBookSize);
-    window.addEventListener('orientationchange', updateBookSize);
 
     handleRouting();
 });
