@@ -1,17 +1,35 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // NEU: Globaler, unblockbarer Pinch-To-Zoom-Handler auf Window-Ebene (Capture-Phase)
-    // Wenn 2 Finger auf dem Bildschirm liegen, wird das Event vor der Buch-Bibliothek versteckt
+
+    // --- NEU: Bulletproof Pinch-to-Zoom Handler ---
+    // Schützt deine 2-Finger-Geste davor, von der Buch-Bibliothek blockiert zu werden.
+    let activePointers = new Set();
+
+    window.addEventListener('pointerdown', (e) => {
+        activePointers.add(e.pointerId);
+        if (activePointers.size > 1) e.stopPropagation();
+    }, { capture: true, passive: true });
+
+    window.addEventListener('pointermove', (e) => {
+        if (activePointers.size > 1) e.stopPropagation();
+    }, { capture: true, passive: true });
+
+    window.addEventListener('pointerup', (e) => {
+        activePointers.delete(e.pointerId);
+    }, { capture: true, passive: true });
+
+    window.addEventListener('pointercancel', (e) => {
+        activePointers.delete(e.pointerId);
+    }, { capture: true, passive: true });
+
     window.addEventListener('touchstart', (e) => {
-        if (e.touches.length > 1) {
-            e.stopPropagation();
-        }
+        if (e.touches.length > 1) e.stopPropagation();
     }, { capture: true, passive: true });
 
     window.addEventListener('touchmove', (e) => {
-        if (e.touches.length > 1) {
-            e.stopPropagation();
-        }
+        if (e.touches.length > 1) e.stopPropagation();
     }, { capture: true, passive: true });
+    // ----------------------------------------------
+
 
     const bookWrapper = document.getElementById('flip-book-container');
     const loadingScreen = document.getElementById('loading');
@@ -127,7 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Automatische CSS-Aktualisierung bei Orientierungswechsel, um Textgrößen neu anzupassen
     window.addEventListener('orientationchange', () => {
         setTimeout(updateBookSize, 200);
     });
@@ -277,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
             pageFlip.flip(initialPage);
         }
         
-        menuPositioner.style.zIndex = '3';
+        // Z-Index-Verschiebungen entfernt: Menü ist jetzt dauerhaft drüber
         startMenu.style.pointerEvents = 'auto';
         startMenu.style.opacity = '1';
         startMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
@@ -289,6 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const startPage = pageFlip.getCurrentPageIndex();
         const totalPages = pageFlip.getPageCount();
+        
         if (startPage > 0) {
             if (startPage >= totalPages - 2) {
                 endOfBookMenu.style.pointerEvents = 'auto';
@@ -297,8 +315,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 startMenu.style.opacity = '0';
                 startMenu.style.pointerEvents = 'none';
             } else {
-                menuPositioner.style.zIndex = '1';
                 startMenu.style.opacity = '0';
+                startMenu.style.pointerEvents = 'none';
                 endOfBookMenu.style.opacity = '0';
             }
         }
@@ -310,8 +328,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const startWrapper = startMenu.querySelector('.menu-wrapper');
             const endWrapper = endOfBookMenu.querySelector('.menu-wrapper');
-
-            menuPositioner.style.zIndex = '1';
             
             if (targetPage === 0) {
                 startMenu.style.opacity = '1'; 
@@ -350,25 +366,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalPages = pageFlip.getPageCount();
 
             if (state !== 'read') {
-                menuPositioner.style.zIndex = '1';
                 startMenu.style.pointerEvents = 'none';
                 endOfBookMenu.style.pointerEvents = 'none';
             } else {
                 if (currentPage === 0) {
-                    menuPositioner.style.zIndex = '3'; 
                     startMenu.style.pointerEvents = 'auto';
                     startMenu.style.opacity = '1'; 
                     endOfBookMenu.style.pointerEvents = 'none';
                     endOfBookMenu.style.opacity = '0'; 
                     cycleTitle(); 
                 } else if (currentPage >= totalPages - 2) {
-                    menuPositioner.style.zIndex = '3';
                     endOfBookMenu.style.pointerEvents = 'auto';
                     endOfBookMenu.style.opacity = '1'; 
                     startMenu.style.pointerEvents = 'none';
                     startMenu.style.opacity = '0'; 
                 } else {
-                    menuPositioner.style.zIndex = '1'; 
                     startMenu.style.opacity = '0'; 
                     endOfBookMenu.style.opacity = '0'; 
                 }
@@ -382,7 +394,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             setTimeout(() => {
                 if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
-                    menuPositioner.style.zIndex = '3';
                     startMenu.style.pointerEvents = 'auto';
                 }
             }, 100);
