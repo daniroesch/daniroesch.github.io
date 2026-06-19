@@ -57,7 +57,8 @@ body {
     height: 100dvh;
 }
 
-#menu-positioner {
+/* Beide Positioner verhalten sich exakt gleich, was die Größe anbelangt */
+#menu-positioner, #fullscreen-positioner {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -65,10 +66,11 @@ body {
     width: var(--real-book-width, 100vw);
     height: var(--real-book-height, 100vh);
     pointer-events: none; 
-    z-index: 10; 
 }
 
-/* FIX: z-index: 100 sorgt dafür, dass die Klammer immer ganz oben ist */
+#menu-positioner { z-index: 3; } /* Wird vom JS gesteuert (geht auf 1 beim Blättern) */
+#fullscreen-positioner { z-index: 100; } /* Bleibt IMMER oben drüber */
+
 #fullscreen-btn {
     position: absolute;
     top: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
@@ -77,7 +79,6 @@ body {
     text-decoration: none;
     font-weight: 400;
     font-size: clamp(10px, calc(var(--real-book-height) * 0.045), 20px);
-    z-index: 100;
     pointer-events: auto; 
     transition: color 0.2s, font-weight 0.2s;
 }
