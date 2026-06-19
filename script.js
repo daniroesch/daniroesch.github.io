@@ -1,16 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- NEU: Bulletproof Pinch-to-Zoom Handler ---
-    // Schützt deine 2-Finger-Geste davor, von der Buch-Bibliothek blockiert zu werden.
+    // --- NEU: Prüft ob der Nutzer reingezoomt hat (> 101%) ---
+    function isZoomed() {
+        return window.visualViewport && window.visualViewport.scale > 1.01;
+    }
+
+    // --- NEU: Erweiterter Pinch-to-Zoom & Pan Handler ---
+    // Schützt Gesten davor, von der Buch-Bibliothek blockiert zu werden.
+    // Sobald man gezoomt ist, werden ALLE Wischgesten vor dem Buch versteckt,
+    // damit man entspannt über das Bild "pannen" kann, ohne zu blättern!
     let activePointers = new Set();
 
     window.addEventListener('pointerdown', (e) => {
         activePointers.add(e.pointerId);
-        if (activePointers.size > 1) e.stopPropagation();
+        if (activePointers.size > 1 || isZoomed()) e.stopPropagation();
     }, { capture: true, passive: true });
 
     window.addEventListener('pointermove', (e) => {
-        if (activePointers.size > 1) e.stopPropagation();
+        if (activePointers.size > 1 || isZoomed()) e.stopPropagation();
     }, { capture: true, passive: true });
 
     window.addEventListener('pointerup', (e) => {
@@ -22,11 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { capture: true, passive: true });
 
     window.addEventListener('touchstart', (e) => {
-        if (e.touches.length > 1) e.stopPropagation();
+        if (e.touches.length > 1 || isZoomed()) e.stopPropagation();
     }, { capture: true, passive: true });
 
     window.addEventListener('touchmove', (e) => {
-        if (e.touches.length > 1) e.stopPropagation();
+        if (e.touches.length > 1 || isZoomed()) e.stopPropagation();
     }, { capture: true, passive: true });
     // ----------------------------------------------
 
@@ -294,7 +301,6 @@ document.addEventListener('DOMContentLoaded', () => {
             pageFlip.flip(initialPage);
         }
         
-        // Z-Index-Verschiebungen entfernt: Menü ist jetzt dauerhaft drüber
         startMenu.style.pointerEvents = 'auto';
         startMenu.style.opacity = '1';
         startMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
@@ -436,7 +442,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', (e) => {
         if (e.target.id === 'back-to-start-btn') {
             e.preventDefault();
-            if (pageFlip) { pageFlip.flip(0); }
+            // Blättern nur erlauben, wenn nicht herangezoomt
+            if (pageFlip && !isZoomed()) { pageFlip.flip(0); }
         }
         if (e.target.classList.contains('all-books-trigger')) {
             e.preventDefault();
@@ -461,9 +468,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (bookView.style.display !== 'none' && pageFlip) {
             if (e.key === 'ArrowRight' || e.key === ' ') {
                 if (e.key === ' ') e.preventDefault(); 
-                pageFlip.flipNext();
+                // NEU: Keyboard-Blättern blockieren, wenn man gezoomt ist
+                if (!isZoomed()) pageFlip.flipNext();
             } else if (e.key === 'ArrowLeft') {
-                pageFlip.flipPrev();
+                if (!isZoomed()) pageFlip.flipPrev();
             }
         }
     });
