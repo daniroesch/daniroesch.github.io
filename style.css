@@ -38,6 +38,11 @@
     font-family: 'Montserrat', sans-serif; 
 }
 
+/* NEU: Auch html und body erzwingen jetzt die Zoom-Erlaubnis */
+html, body {
+    touch-action: pan-x pan-y pinch-zoom !important;
+}
+
 body {
     background-color: #ffffff;
     overflow: hidden; 
@@ -62,11 +67,9 @@ body {
     width: var(--real-book-width, 100vw);
     height: var(--real-book-height, 100vh);
     pointer-events: none; 
-    /* WICHTIG: Das Menü liegt jetzt immer SICHER über dem Buch! */
     z-index: 10; 
 }
 
-/* Die Klammer oben rechts */
 #fullscreen-btn {
     position: absolute;
     top: clamp(10px, calc(var(--real-book-height) * 0.04), 25px);
@@ -76,7 +79,7 @@ body {
     font-weight: 400;
     font-size: clamp(10px, calc(var(--real-book-height) * 0.045), 22px);
     z-index: 20;
-    pointer-events: auto; /* Die Klammer fängt Klicks auf */
+    pointer-events: auto; 
     transition: color 0.2s, font-weight 0.2s;
 }
 #fullscreen-btn:hover {
@@ -93,7 +96,6 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    /* Gesteuert via JavaScript, damit man durch das unsichtbare Menü klicken kann */
     pointer-events: auto; 
     opacity: 1;
 }
@@ -163,7 +165,6 @@ h1:hover { color: #000; }
 .legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; }
 .legal-links a:hover { color: #000; }
 
-/* FIX: Zwingt den Browser !important das Zoomen überall zu erlauben */
 .flip-book-container, 
 .flip-book-container *, 
 .st-page-flip {
