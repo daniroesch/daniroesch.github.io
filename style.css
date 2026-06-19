@@ -96,15 +96,17 @@ body {
     flex-direction: column;
     align-items: stretch; 
     will-change: transform; 
+    padding: 0 10px; /* Ein kleiner Puffer am Rand */
 }
 
+/* FIX: Stabilere Typografie, die nicht mehr quetscht */
 h1 {
-    font-size: clamp(10px, calc(var(--real-book-width) * 0.0225), 30px); 
+    font-size: clamp(18px, 4vmin, 30px); 
     font-weight: 800;
     text-align: center;
-    white-space: nowrap; 
+    white-space: normal; /* Erlaubt Umbrüche auf winzigen Screens */
+    line-height: 1.2;
     margin-bottom: 0.8rem;
-    letter-spacing: -1px;
     text-transform: lowercase;
     color: #a0a0a0; 
     cursor: pointer;
@@ -113,11 +115,12 @@ h1 {
 
 h1:hover { color: #000; }
 
+/* FIX: Auch die Links reagieren nun besser auf kleine Screens */
 .menu-row {
     display: flex;
     justify-content: space-between; 
     align-items: center;
-    font-size: clamp(8px, calc(var(--real-book-width) * 0.015), 28px); 
+    font-size: clamp(12px, 3vmin, 28px); 
     color: #888;
     margin-bottom: 0.6rem; 
 }
@@ -133,8 +136,8 @@ h1:hover { color: #000; }
     flex-direction: column;
     align-items: center;
     gap: 8px; 
-    margin-top: clamp(10px, calc(var(--real-book-width) * 0.04), 40px); 
-    font-size: clamp(6px, calc(var(--real-book-width) * 0.01), 20px); 
+    margin-top: clamp(20px, 4vmin, 40px); 
+    font-size: clamp(10px, 2vmin, 20px); 
     letter-spacing: 1px;
     text-transform: lowercase;
 }
@@ -142,12 +145,14 @@ h1:hover { color: #000; }
 .legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; }
 .legal-links a:hover { color: #000; }
 
+/* FIX: Damit der Browser das Zoomen erlaubt, darf das Container-Touch-Action nicht blockiert sein */
 .flip-book-container {
     position: absolute;
     top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
     display: flex; justify-content: center; align-items: center;
     z-index: 2;
     opacity: 0; transition: opacity 0.5s ease;
+    touch-action: pan-x pan-y pinch-zoom;
 }
 
 #loading {
