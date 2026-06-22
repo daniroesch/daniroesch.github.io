@@ -70,12 +70,11 @@ body {
 #menu-positioner { z-index: 3; }
 #ui-layer { z-index: 100; } 
 
-/* Symmetrisches Styling & Zentrierung für beide Eck-Buttons */
 .ui-btn {
     position: absolute;
     right: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
-    width: 4.5em; /* FIX: Gleiche Breite für beide Buttons zwingt sie in eine Linie */
-    text-align: center; /* FIX: Zentriert das X und die Klammer exakt übereinander */
+    width: 4.5em; 
+    text-align: center; 
     white-space: nowrap;
     color: #888;
     text-decoration: none;
@@ -90,7 +89,6 @@ body {
     font-weight: 800;
 }
 
-/* Positionierungen Oben & Unten */
 #home-btn {
     top: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
 }
@@ -108,7 +106,10 @@ body {
     justify-content: center;
     align-items: center;
     pointer-events: auto; 
-    opacity: 1;
+    
+    /* FIX: Startet unsichtbar, um das Springen der Schriften (FOUT) zu verbergen! */
+    opacity: 0; 
+    transition: opacity 0.5s ease;
 }
 
 #end-of-book-menu {
