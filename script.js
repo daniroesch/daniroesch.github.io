@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- PULL-TO-REFRESH ---
     let pullStartY = 0;
     let pullStartX = 0;
 
@@ -91,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentImgH = 794;
     
     let activeLoadId = 0;
-    let activeGridId = 0; // FIX: Verhindert zuverlässig doppelte Bücher in der Bibliothek
+    let activeGridId = 0; 
     
     const translations = {
         'de': { titles: ["es ist ein buch", "blätter herum", "architektur portfolio", "daniroesch.de"], allBooks: "alle bücher", backToStart: "zurück zum anfang", close: "x schließen", home: "X", loading: "[ buch wird geladen... ]" },
@@ -112,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function handleRouting() {
+        // FIX: Solange eine interne Animation läuft, blockieren wir jegliches automatisches Nach-Flippen!
         if (isInternalHashUpdate) return;
 
         let params = getHashParams();
@@ -122,7 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (params.view === 'book' || !params.view) {
                 isInternalHashUpdate = true;
                 window.location.hash = `view=book&book=${params.book}&lang=${params.lang}&page=0`;
-                setTimeout(() => { isInternalHashUpdate = false; }, 50);
             }
         }
 
@@ -233,7 +234,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function initGrid() {
         const myGridId = ++activeGridId; 
-
         const gridContainer = document.querySelector('.grid-container');
         
         const gridPromises = [];
@@ -251,11 +251,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const gridResults = await Promise.all(gridPromises);
-        
-        // FIX: Bricht ab, falls der Nutzer während des Ladens die Sprache gewechselt hat!
         if (myGridId !== activeGridId) return;
 
-        // FIX: Leert den Container exakt in der Millisekunde VOR dem Einfügen (Keine Doppelten Bücher!)
         gridContainer.innerHTML = ''; 
 
         for (const book of gridResults) {
@@ -306,7 +303,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const imageUrls = [];
         
         const cover = await checkImage(`${folder}0${extension}`);
-        
         if (myLoadId !== activeLoadId) return;
 
         if (cover.exists) { 
@@ -369,11 +365,12 @@ document.addEventListener('DOMContentLoaded', () => {
         pageFlip = new St.PageFlip(bookContainer, {
             width: width, height: height, size: "stretch", 
             showCover: true, 
-            mobileScrollSupport: false, // FIX: Verhindert störendes Native-Scroll Verhalten auf Handys!
+            mobileScrollSupport: false, 
             usePortrait: false
         });
         
-        pageFlip.loadFromHTML(document.querySelectorAll('.page'));
+        // FIX: Wir lesen nur noch Elemente innerhalb des eigenen Containers aus!
+        pageFlip.loadFromHTML(bookContainer.querySelectorAll('.page'));
         loadingScreen.style.display = 'none';
         bookWrapper.style.opacity = '1';
         
@@ -419,17 +416,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         pageFlip.on('flip', (e) => {
             const targetPage = e.data; 
-            const currentPage = pageFlip.getCurrentPageIndex();
             const totalPages = pageFlip.getPageCount();
             
-            // FIX: Radikales Löschen aller fehlerhaften Slide-Animationen. 
-            // Das Menü verblasst jetzt sofort und stumm!
-            startMenu.style.opacity = '0';
-            startMenu.style.pointerEvents = 'none';
-            endOfBookMenu.style.opacity = '0';
-            endOfBookMenu.style.pointerEvents = 'none';
-            menuPositioner.style.zIndex = '1';
+            // FIX: Riegel vorschieben! Jede URL-Änderung ab hier gilt als interne Aktion.
+            isInternalHashUpdate = true;
+            window.location.hash = `view=book&book=${currentBook}&lang=${currentLang}&page=${targetPage}`;
 
+            // Synchronisierte Ausblendung der Steuerelemente während der Bewegung
             if (targetPage === 0 || targetPage >= totalPages - 2) {
                 if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
                 if(fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
@@ -437,19 +430,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(homeBtn) { homeBtn.style.opacity = '1'; homeBtn.style.pointerEvents = 'auto'; }
                 if(fsBtn) { fsBtn.style.opacity = '1'; fsBtn.style.pointerEvents = 'auto'; }
             }
-            
-            if (targetPage === 0) {
-                startMenu.style.opacity = '1'; 
-                startMenu.style.pointerEvents = 'auto';
-            } 
-            if (targetPage >= totalPages - 2) {
-                endOfBookMenu.style.opacity = '1'; 
-                endOfBookMenu.style.pointerEvents = 'auto';
-            } 
-
-            isInternalHashUpdate = true;
-            window.location.hash = `view=book&book=${currentBook}&lang=${currentLang}&page=${targetPage}`;
-            setTimeout(() => { isInternalHashUpdate = false; }, 50);
         });
 
         pageFlip.on('changeState', (e) => {
@@ -458,12 +438,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalPages = pageFlip.getPageCount();
 
             if (state !== 'read') {
+                // Während der Bewegung werden alle Textmenüs stumm geschaltet
                 startMenu.style.opacity = '0';
                 startMenu.style.pointerEvents = 'none';
                 endOfBookMenu.style.opacity = '0';
                 endOfBookMenu.style.pointerEvents = 'none';
                 menuPositioner.style.zIndex = '1';
             } else {
+                // FIX: Erst wenn die Animation zu 100% stillsteht, lösen wir den Adressriegel wieder!
+                isInternalHashUpdate = false;
+
                 if (currentPage === 0) {
                     menuPositioner.style.zIndex = '3'; 
                     startMenu.style.pointerEvents = 'auto';
@@ -497,6 +481,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     startMenu.style.pointerEvents = 'auto';
                     menuPositioner.style.visibility = 'visible';
                 }
+                // Initialisierungsriegel lösen
+                isInternalHashUpdate = false;
             }, 100);
         }, 150);
     }
