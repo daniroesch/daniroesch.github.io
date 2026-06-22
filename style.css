@@ -30,14 +30,20 @@
     src: url('fonts/montserrat-800.woff2') format('woff2');
 }
 
+/* FIX: Garantiert, dass nirgendwo Abstände verzerrt werden */
 *, *::before, *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: 'Montserrat', sans-serif; 
+    letter-spacing: normal !important; 
+    font-stretch: normal !important;
 }
 
 html, body {
+    /* FIX: Verhindert aggressives Font-Boosting von mobilen Browsern! */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
     touch-action: pan-x pan-y pinch-zoom !important;
 }
 
@@ -91,23 +97,44 @@ body {
     font-weight: 800;
 }
 
+/* --- FIX: NEUE ASYMMETRISCHE ICON PLATZIERUNG --- */
+
+/* STANDARD (Im Buch) */
+#home-btn {
+    top: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
+    right: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
+    left: auto;
+}
+#fullscreen-btn {
+    bottom: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
+    left: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
+    right: auto;
+}
+
+/* BUCH IST BREIT (Leerraum oben & unten) */
 body.fit-width #home-btn {
     top: -2.5em; 
     right: 0;
+    left: auto;
 }
 body.fit-width #fullscreen-btn {
     bottom: -2.5em; 
-    right: 0;
+    left: 0;
+    right: auto;
 }
 
+/* BUCH IST HOCH (Leerraum links & rechts) */
 body.fit-height #home-btn {
     top: 10px;
     right: -5.5em; 
+    left: auto;
 }
 body.fit-height #fullscreen-btn {
     bottom: 10px;
-    right: -5.5em; 
+    left: -5.5em; 
+    right: auto;
 }
+/* ------------------------------------------------ */
 
 .static-menu {
     position: absolute;
@@ -154,7 +181,6 @@ h1 {
     color: #a0a0a0; 
     cursor: pointer;
     transition: color 0.3s ease;
-    letter-spacing: normal; 
 }
 
 h1:hover { color: #000; }
@@ -166,7 +192,6 @@ h1:hover { color: #000; }
     font-size: clamp(11px, calc(var(--real-book-height) * 0.04), 20px); 
     color: #888;
     margin-bottom: 0.3rem; 
-    letter-spacing: normal;
 }
 
 .bracket { font-weight: 400; }
@@ -183,7 +208,6 @@ h1:hover { color: #000; }
     margin-top: clamp(8px, calc(var(--real-book-height) * 0.04), 20px); 
     font-size: clamp(9px, calc(var(--real-book-height) * 0.03), 14px); 
     text-transform: lowercase;
-    letter-spacing: normal;
 }
 
 .legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; }
@@ -207,7 +231,6 @@ h1:hover { color: #000; }
     opacity: 0; transition: opacity 0.5s ease;
 }
 
-/* FIX: Nutzt jetzt eine saubere Flex-Container Struktur, damit die internen .menu-rows greifen! */
 #loading {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: 100%;
