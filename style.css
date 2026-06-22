@@ -84,14 +84,14 @@ body {
     font-size: clamp(10px, calc(var(--real-book-height) * 0.045), 20px);
     opacity: 0;
     pointer-events: none; 
-    transition: all 0.3s ease; 
+    transition: color 0.2s, font-weight 0.2s, opacity 0.3s ease, top 0.3s ease, bottom 0.3s ease, right 0.3s ease; 
 }
 .ui-btn:hover {
     color: #000;
     font-weight: 800;
 }
 
-/* Dynamische Platzierung: Buch ist breiter als hoch (Leerraum oben & unten) */
+/* Dynamische Platzierung der UI-Buttons */
 body.fit-width #home-btn {
     top: -2.5em; 
     right: 0;
@@ -101,16 +101,14 @@ body.fit-width #fullscreen-btn {
     right: 0;
 }
 
-/* Dynamische Platzierung: Buch ist höher als breit (Leerraum rechts & links) */
 body.fit-height #home-btn {
     top: 10px;
-    right: -5.5em; /* FIX: Deutlich mehr Abstand zum Buchrand */
+    right: -5.5em; 
 }
 body.fit-height #fullscreen-btn {
     bottom: 10px;
-    right: -5.5em; /* FIX: Deutlich mehr Abstand zum Buchrand */
+    right: -5.5em; 
 }
-
 
 .static-menu {
     position: absolute;
