@@ -1,3 +1,4 @@
+/* Lokale Einbindung der Montserrat Schriftarten */
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
@@ -57,7 +58,6 @@ body {
     height: 100dvh;
 }
 
-/* Beide Positioner verhalten sich exakt gleich, was die Größe anbelangt */
 #menu-positioner, #fullscreen-positioner {
     position: absolute;
     top: 50%;
@@ -68,8 +68,8 @@ body {
     pointer-events: none; 
 }
 
-#menu-positioner { z-index: 3; } /* Wird vom JS gesteuert (geht auf 1 beim Blättern) */
-#fullscreen-positioner { z-index: 100; } /* Bleibt IMMER oben drüber */
+#menu-positioner { z-index: 3; }
+#fullscreen-positioner { z-index: 100; }
 
 #fullscreen-btn {
     position: absolute;
@@ -170,6 +170,11 @@ h1:hover { color: #000; }
 .flip-book-container *, 
 .st-page-flip {
     touch-action: pan-x pan-y pinch-zoom !important;
+}
+
+/* SMART FIX: Schaltet die Event-Verarbeitung des Buchs stumm, wenn herangezoomt ist */
+.flip-book-container.zoomed-state {
+    pointer-events: none !important;
 }
 
 .flip-book-container {
