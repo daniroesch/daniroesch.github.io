@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- PULL-TO-REFRESH ---
     let pullStartY = 0;
     let pullStartX = 0;
 
@@ -113,7 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function handleRouting() {
-        // FIX: Solange eine interne Animation läuft, blockieren wir jegliches automatisches Nach-Flippen!
         if (isInternalHashUpdate) return;
 
         let params = getHashParams();
@@ -223,7 +221,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateHeading();
     }
 
-    async function checkImage(url) {
+    // Läd nur das Cover einmal "echt" herunter, um die Breite/Höhe des Papiers zu erfassen
+    async function getCoverAspectRatio(url) {
         return new Promise((resolve) => {
             const img = new Image();
             img.onload = () => resolve({ exists: true, width: img.naturalWidth, height: img.naturalHeight });
@@ -232,40 +231,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // FIX: Die absolut schnellste Methode. Prüft nur die Existenz der Datei ohne Bilder herunterzuladen!
+    // Enthält einen 4-Sekunden-Notaus, falls das Netz hängt.
+    async function checkPageExists(url) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
+            const res = await fetch(url, { method: 'HEAD', signal: controller.signal, cache: 'no-store' });
+            clearTimeout(timeoutId);
+            return res.ok;
+        } catch (e) {
+            return false;
+        }
+    }
+
     async function initGrid() {
         const myGridId = ++activeGridId; 
         const gridContainer = document.querySelector('.grid-container');
+        gridContainer.innerHTML = ''; 
         
-        const gridPromises = [];
         for (let b = 1; b <= 20; b++) {
+            if (myGridId !== activeGridId) return;
             const bookName = `book_${b}`;
             const folder = `${bookName}/pages_${currentLang}/`;
-            gridPromises.push(
-                checkImage(`${folder}0${extension}`).then(res => ({
-                    index: b,
-                    name: bookName,
-                    folder: folder,
-                    exists: res.exists
-                }))
-            );
-        }
-
-        const gridResults = await Promise.all(gridPromises);
-        if (myGridId !== activeGridId) return;
-
-        gridContainer.innerHTML = ''; 
-
-        for (const book of gridResults) {
-            if (book.exists) {
+            
+            const exists = await checkPageExists(`${folder}0${extension}`);
+            
+            if (exists) {
                 const tile = document.createElement('div');
                 tile.className = 'book-tile';
-                tile.innerHTML = `<img src="${book.folder}0${extension}" alt="${book.name}">`;
+                tile.innerHTML = `<img src="${folder}0${extension}" alt="${bookName}">`;
                 tile.onclick = () => {
-                    window.location.hash = `view=book&book=${book.name}&lang=${currentLang}&page=0`;
+                    window.location.hash = `view=book&book=${bookName}&lang=${currentLang}&page=0`;
                 };
                 gridContainer.appendChild(tile);
             } else {
-                break; 
+                break; // Bricht ab, sobald ein Buch nicht mehr existiert
             }
         }
     }
@@ -302,7 +303,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const folder = `${bookName}/pages_${lang}/`;
         const imageUrls = [];
         
-        const cover = await checkImage(`${folder}0${extension}`);
+        // Holt das Seitenverhältnis aus dem Cover
+        const cover = await getCoverAspectRatio(`${folder}0${extension}`);
         if (myLoadId !== activeLoadId) return;
 
         if (cover.exists) { 
@@ -314,25 +316,24 @@ document.addEventListener('DOMContentLoaded', () => {
             currentImgH = 794;
         }
 
-        const batchSize = 4;
+        // Schnelles, stetiges Suchen nach Folgeseiten in 3er Gruppen
+        const batchSize = 3;
         let pageCounter = 1;
         let checking = true;
 
         while (checking) {
+            if (myLoadId !== activeLoadId) return;
             const promises = [];
             for (let i = 0; i < batchSize; i++) {
-                const pageId = pageCounter + i;
-                promises.push(checkImage(`${folder}${pageId}${extension}`).then(res => ({ id: pageId, exists: res.exists })));
+                promises.push(checkPageExists(`${folder}${pageCounter + i}${extension}`));
             }
             
             const results = await Promise.all(promises);
             if (myLoadId !== activeLoadId) return;
 
-            results.sort((a, b) => a.id - b.id);
-            
-            for (const res of results) {
-                if (res.exists) {
-                    imageUrls.push(`${res.id}${extension}`);
+            for (let i = 0; i < batchSize; i++) {
+                if (results[i]) {
+                    imageUrls.push(`${pageCounter + i}${extension}`);
                 } else {
                     checking = false;
                     break;
@@ -341,10 +342,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (checking) pageCounter += batchSize;
         }
 
-        const back = await checkImage(`${folder}-1${extension}`);
+        const back = await checkPageExists(`${folder}-1${extension}`);
         if (myLoadId !== activeLoadId) return;
 
-        if (back.exists) { imageUrls.push(`-1${extension}`); }
+        if (back) { imageUrls.push(`-1${extension}`); }
 
         buildBook(imageUrls, folder, currentImgW, currentImgH, initialPage);
     }
@@ -369,7 +370,6 @@ document.addEventListener('DOMContentLoaded', () => {
             usePortrait: false
         });
         
-        // FIX: Wir lesen nur noch Elemente innerhalb des eigenen Containers aus!
         pageFlip.loadFromHTML(bookContainer.querySelectorAll('.page'));
         loadingScreen.style.display = 'none';
         bookWrapper.style.opacity = '1';
@@ -418,11 +418,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetPage = e.data; 
             const totalPages = pageFlip.getPageCount();
             
-            // FIX: Riegel vorschieben! Jede URL-Änderung ab hier gilt als interne Aktion.
             isInternalHashUpdate = true;
             window.location.hash = `view=book&book=${currentBook}&lang=${currentLang}&page=${targetPage}`;
 
-            // Synchronisierte Ausblendung der Steuerelemente während der Bewegung
             if (targetPage === 0 || targetPage >= totalPages - 2) {
                 if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
                 if(fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
@@ -438,14 +436,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalPages = pageFlip.getPageCount();
 
             if (state !== 'read') {
-                // Während der Bewegung werden alle Textmenüs stumm geschaltet
                 startMenu.style.opacity = '0';
                 startMenu.style.pointerEvents = 'none';
                 endOfBookMenu.style.opacity = '0';
                 endOfBookMenu.style.pointerEvents = 'none';
                 menuPositioner.style.zIndex = '1';
             } else {
-                // FIX: Erst wenn die Animation zu 100% stillsteht, lösen wir den Adressriegel wieder!
                 isInternalHashUpdate = false;
 
                 if (currentPage === 0) {
@@ -481,7 +477,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     startMenu.style.pointerEvents = 'auto';
                     menuPositioner.style.visibility = 'visible';
                 }
-                // Initialisierungsriegel lösen
                 isInternalHashUpdate = false;
             }, 100);
         }, 150);
