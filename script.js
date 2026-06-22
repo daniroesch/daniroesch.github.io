@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- PULL-TO-REFRESH Wisch-Geste (Sicherer Reload auf Seite 0) ---
+    // --- PULL-TO-REFRESH Wisch-Geste (Erzwingt Reload auf Seite 0) ---
     let pullStartY = 0;
     let pullStartX = 0;
 
@@ -35,9 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const yDiff = pullEndY - pullStartY;
             const xDiff = Math.abs(pullEndX - pullStartX);
             
+            // Wenn nach unten gezogen wird und NICHT gezoomt ist
             if (yDiff > 130 && xDiff < 40 && !isZoomed()) {
-                // Erzwingt das Zurücksetzen der URL-Hashes auf das Startcover vor dem Reload
+                // Setzt die Hash-URL auf die Startseite
                 window.location.hash = `view=book&book=${currentBook}&lang=${currentLang}&page=0`;
+                // Lädt die Seite sofort hart neu
                 setTimeout(() => { window.location.reload(); }, 30);
             }
         }
@@ -94,11 +96,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentImgW = 1123; 
     let currentImgH = 794;
     
+    // FIX: Übersetzungen korrigiert (LibrO für Spanisch, LivrO für Portugiesisch)
     const translations = {
         'de': { titles: ["es ist ein buch", "blätter herum", "architekturdesign", "daniroesch.de"], allBooks: "- alle bücher -", backToStart: "- zurück zum anfang -", close: "x schließen", home: "X" },
         'en': { titles: ["it´s a book", "flip around", "architectural design", "daniroesch.de"], allBooks: "- all books -", backToStart: "- back to start -", close: "x close", home: "X" },
-        'es': { titles: ["es un libro", "hojea las páginas", "diseño arquitectónico", "daniroesch.de"], allBooks: "- todos los livros -", backToStart: "- volver al inicio -", close: "x cerrar", home: "X" },
-        'pt': { titles: ["é um libro", "folheie as páginas", "desenho arquitectónico", "daniroesch.de"], allBooks: "- todos os livros -", backToStart: "- voltar ao início -", close: "x fechar", home: "X" }
+        'es': { titles: ["es un libro", "hojea las páginas", "diseño arquitectónico", "daniroesch.de"], allBooks: "- todos los libros -", backToStart: "- volver al inicio -", close: "x cerrar", home: "X" },
+        'pt': { titles: ["é um livro", "folheie as páginas", "desenho arquitectónico", "daniroesch.de"], allBooks: "- todos os livros -", backToStart: "- voltar ao início -", close: "x fechar", home: "X" }
     };
 
     function getHashParams() {
@@ -187,7 +190,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // FIX: Absolut stabiler, un-nerviger Resize-Wächter!
     // Reagiert NUR, wenn sich die BILDCHIRMBREITE ändert (Drehung oder Fenster verziehen).
-    // Ignoriert das nervige Auf- und Abspringen der mobilen Adressleisten komplett!
     let lastWinW = window.innerWidth;
 
     window.addEventListener('resize', () => {
@@ -319,7 +321,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let pageCounter = 1;
         let checking = true;
 
-        while (checking && pageCounter < 120) {
+        // FIX: Hartes Seitenlimit von 120 entfernt. 
+        // Das Skript sucht jetzt so lange in 4er Batches, wie es Seiten findet.
+        while (checking) {
             const promises = [];
             for (let i = 0; i < batchSize; i++) {
                 const pageId = pageCounter + i;
