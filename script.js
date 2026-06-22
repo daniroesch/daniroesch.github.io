@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- NEU: PULL-TO-REFRESH Wisch-Geste ---
+    // --- PULL-TO-REFRESH Wisch-Geste (Sicherer Reload auf Seite 0) ---
     let pullStartY = 0;
     let pullStartX = 0;
 
@@ -35,16 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const yDiff = pullEndY - pullStartY;
             const xDiff = Math.abs(pullEndX - pullStartX);
             
-            // Wenn massiv nach unten gezogen wird (vertikaler Swipe) und NICHT gezoomt ist
-            if (yDiff > 120 && xDiff < 50 && !isZoomed()) {
-                // Zwingt die Hash-URL auf die Startseite (page=0)
+            if (yDiff > 130 && xDiff < 40 && !isZoomed()) {
+                // Erzwingt das Zurücksetzen der URL-Hashes auf das Startcover vor dem Reload
                 window.location.hash = `view=book&book=${currentBook}&lang=${currentLang}&page=0`;
-                // Lädt die Seite sofort hart neu
-                window.location.reload();
+                setTimeout(() => { window.location.reload(); }, 30);
             }
         }
     }, { passive: true });
-    // ----------------------------------------
 
 
     let activePointers = new Set();
@@ -122,7 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isInitialLoad) {
             isInitialLoad = false;
-            // FIX: Zwingt die Seite bei jedem frischen Neuladen strikt auf das Startcover!
             params.page = 0;
             if (params.view === 'book' || !params.view) {
                 isInternalHashUpdate = true;
@@ -189,29 +185,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // FIX: Absolut stabiler, un-nerviger Resize-Wächter!
+    // Reagiert NUR, wenn sich die BILDCHIRMBREITE ändert (Drehung oder Fenster verziehen).
+    // Ignoriert das nervige Auf- und Abspringen der mobilen Adressleisten komplett!
     let lastWinW = window.innerWidth;
-    let lastWinH = window.innerHeight;
 
-    function handleResize() {
+    window.addEventListener('resize', () => {
         const currentW = window.innerWidth;
-        const currentH = window.innerHeight;
-        
-        const diffW = Math.abs(currentW - lastWinW);
-        const diffH = Math.abs(currentH - lastWinH);
-
-        if (diffW > 10 || diffH > 120) {
+        if (currentW !== lastWinW) {
             lastWinW = currentW;
-            lastWinH = currentH;
             updateBookSize();
             if (pageFlip) pageFlip.update();
         }
-    }
+    });
 
-    window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', () => {
         setTimeout(() => {
             lastWinW = window.innerWidth;
-            lastWinH = window.innerHeight;
             updateBookSize();
             if (pageFlip) pageFlip.update();
         }, 200);
@@ -228,13 +218,24 @@ document.addEventListener('DOMContentLoaded', () => {
         updateHeading();
     }
 
-    async function checkImage(url) {
+    // Lädt das Cover voll zur Erkennung des Seitenverhältnisses
+    async function loadCoverImage(url) {
         return new Promise((resolve) => {
             const img = new Image();
             img.onload = () => resolve({ exists: true, width: img.naturalWidth, height: img.naturalHeight });
             img.onerror = () => resolve({ exists: false });
             img.src = url;
         });
+    }
+
+    // HIGH-SPEED PROBING FIX: Nutzt ultraschnelle HEAD-Requests ohne Bilddaten-Download
+    async function checkPageExists(url) {
+        try {
+            const res = await fetch(url, { method: 'HEAD' });
+            return res.ok;
+        } catch (e) {
+            return false;
+        }
     }
 
     async function initGrid() {
@@ -249,11 +250,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const bookName = `book_${b}`;
             const folder = `${bookName}/pages_${currentLang}/`;
             gridPromises.push(
-                checkImage(`${folder}0${extension}`).then(res => ({
+                checkPageExists(`${folder}0${extension}`).then(exists => ({
                     index: b,
                     name: bookName,
                     folder: folder,
-                    exists: res.exists
+                    exists: exists
                 }))
             );
         }
@@ -280,6 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentBook = bookName;
         currentLang = lang;
         
+        if (menuPositioner) menuPositioner.style.visibility = 'hidden'; // Versteckt Schriften vor Berechnung
         updateHeading();
         document.querySelectorAll('.all-books-trigger').forEach(el => el.innerText = translations[lang].allBooks);
         document.getElementById('grid-heading').innerText = translations[lang].allBooks;
@@ -302,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const folder = `${bookName}/pages_${lang}/`;
         const imageUrls = [];
         
-        const cover = await checkImage(`${folder}0${extension}`);
+        const cover = await loadCoverImage(`${folder}0${extension}`);
         if (cover.exists) { 
             imageUrls.push(`0${extension}`); 
             currentImgW = cover.width; 
@@ -312,17 +314,16 @@ document.addEventListener('DOMContentLoaded', () => {
             currentImgH = 794;
         }
 
-        // FIX: Extrem stabiler "Safe Batch" Lader. 
-        // Prüft nur noch 4 Bilder zeitgleich, verhindert den "Freeze" komplett.
+        // Sicherer, pfeilschneller Batch-Prober (4 parallele HEAD-Abfragen zeitgleich)
         const batchSize = 4;
         let pageCounter = 1;
         let checking = true;
 
-        while (checking && pageCounter < 150) {
+        while (checking && pageCounter < 120) {
             const promises = [];
             for (let i = 0; i < batchSize; i++) {
                 const pageId = pageCounter + i;
-                promises.push(checkImage(`${folder}${pageId}${extension}`).then(res => ({ id: pageId, exists: res.exists })));
+                promises.push(checkPageExists(`${folder}${pageId}${extension}`).then(exists => ({ id: pageId, exists: exists })));
             }
             
             const results = await Promise.all(promises);
@@ -338,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (checking) pageCounter += batchSize;
         }
 
-        const back = await checkImage(`${folder}-1${extension}`);
+        const back = await checkPageExists(`${folder}-1${extension}`);
         if (back.exists) { imageUrls.push(`-1${extension}`); }
 
         buildBook(imageUrls, folder, currentImgW, currentImgH, initialPage);
@@ -384,6 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const startPage = pageFlip.getCurrentPageIndex();
         const totalPages = pageFlip.getPageCount();
         
+        // Synchronisiertes Ausblenden auf der Start- und Endseite
         if (startPage > 0 && startPage < totalPages - 2) {
             if(homeBtn) { homeBtn.style.opacity = '1'; homeBtn.style.pointerEvents = 'auto'; }
             if(fsBtn) { fsBtn.style.opacity = '1'; fsBtn.style.pointerEvents = 'auto'; }
@@ -416,6 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const startWrapper = startMenu.querySelector('.menu-wrapper');
             const endWrapper = endOfBookMenu.querySelector('.menu-wrapper');
             
+            // Text rigoros unsichtbar schalten während der Blätterbewegung
             startMenu.style.opacity = '0';
             startMenu.style.pointerEvents = 'none';
             endOfBookMenu.style.opacity = '0';
@@ -505,8 +508,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     menuPositioner.style.zIndex = '3';
                     startMenu.style.pointerEvents = 'auto';
                     
-                    // FIX: Blendet das Menü erst nach dem Rechnen des Buches sanft ein (Kein Springen mehr!)
-                    startMenu.style.opacity = '1';
+                    // Schaltet die Menüebene erst nach vollendeter Größenrechnung sichtbar
+                    menuPositioner.style.visibility = 'visible';
                 }
             }, 100);
         }, 150);
@@ -562,12 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.addEventListener('click', (e) => {
-        if (e.target.id === 'back-to-start-btn') {
-            e.preventDefault();
-            if (pageFlip && !isZoomed()) { pageFlip.flip(0); }
-        }
-        
-        if (e.target.id === 'home-btn') {
+        if (e.target.id === 'back-to-start-btn' || e.target.id === 'home-btn') {
             e.preventDefault();
             if (pageFlip && !isZoomed()) { pageFlip.flip(0); }
         }
