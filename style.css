@@ -67,7 +67,11 @@ body {
     pointer-events: none; 
 }
 
-#menu-positioner { z-index: 3; }
+/* FIX: Startet unsichtbar, um das Flackern/Springen unskalierter Schriften beim Laden zu verhindern */
+#menu-positioner { 
+    z-index: 3; 
+    visibility: hidden; 
+}
 #ui-layer { z-index: 100; } 
 
 .ui-btn {
@@ -106,10 +110,7 @@ body {
     justify-content: center;
     align-items: center;
     pointer-events: auto; 
-    
-    /* FIX: Startet unsichtbar, um das Springen der Schriften (FOUT) zu verbergen! */
-    opacity: 0; 
-    transition: opacity 0.5s ease;
+    opacity: 1;
 }
 
 #end-of-book-menu {
