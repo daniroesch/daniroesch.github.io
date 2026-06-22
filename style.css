@@ -75,7 +75,6 @@ body {
 
 .ui-btn {
     position: absolute;
-    right: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
     width: 4.5em; 
     text-align: center; 
     white-space: nowrap;
@@ -85,19 +84,38 @@ body {
     font-size: clamp(10px, calc(var(--real-book-height) * 0.045), 20px);
     opacity: 0;
     pointer-events: none; 
-    transition: color 0.2s, font-weight 0.2s, opacity 0.3s ease;
+    transition: all 0.3s ease; /* Ermöglicht flüssiges Verschieben der Icons */
 }
 .ui-btn:hover {
     color: #000;
     font-weight: 800;
 }
 
-#home-btn {
-    top: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
+/* * DYNAMISCHE ICON-PLATZIERUNG:
+ * Das JavaScript gibt dem <body> je nach Platz die Klasse .fit-width oder .fit-height
+ */
+
+/* Wenn das Buch die volle BREITE nutzt (Leerraum ist OBEN und UNTEN) */
+body.fit-width #home-btn {
+    top: -2.5em; /* Schiebt das X über das Buch */
+    right: 0;
 }
-#fullscreen-btn {
-    bottom: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
+body.fit-width #fullscreen-btn {
+    bottom: -2.5em; /* Schiebt die Klammer unter das Buch */
+    right: 0;
 }
+
+/* Wenn das Buch die volle HÖHE nutzt (Leerraum ist RECHTS und LINKS) */
+body.fit-height #home-btn {
+    top: 10px;
+    right: -3.5em; /* Schiebt das X rechts neben das Buch */
+}
+body.fit-height #fullscreen-btn {
+    bottom: 10px;
+    right: -3.5em; /* Schiebt die Klammer rechts neben das Buch */
+}
+
+/* ------------------------------------- */
 
 .static-menu {
     position: absolute;
