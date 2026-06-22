@@ -67,12 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentImgW = 1123; 
     let currentImgH = 794;
     
-    // Übersetzungen (inkl. Home-Button)
     const translations = {
-        'de': { titles: ["es ist ein buch", "blätter herum", "architekturdesign", "daniroesch.de"], allBooks: "- alle bücher -", backToStart: "- zurück zum anfang -", close: "x schließen", home: "[ anfang ]" },
-        'en': { titles: ["it´s a book", "flip around", "architectural design", "daniroesch.de"], allBooks: "- all books -", backToStart: "- back to start -", close: "x close", home: "[ home ]" },
-        'es': { titles: ["es un libro", "hojea las páginas", "diseño arquitectónico", "daniroesch.de"], allBooks: "- todos los livros -", backToStart: "- volver al inicio -", close: "x cerrar", home: "[ inicio ]" },
-        'pt': { titles: ["é um libro", "folheie as páginas", "desenho arquitectónico", "daniroesch.de"], allBooks: "- todos os livros -", backToStart: "- voltar ao início -", close: "x fechar", home: "[ início ]" }
+        'de': { titles: ["es ist ein buch", "blätter herum", "architekturdesign", "daniroesch.de"], allBooks: "- alle bücher -", backToStart: "- zurück zum anfang -", close: "x schließen", home: "x" },
+        'en': { titles: ["it´s a book", "flip around", "architectural design", "daniroesch.de"], allBooks: "- all books -", backToStart: "- back to start -", close: "x close", home: "x" },
+        'es': { titles: ["es un libro", "hojea las páginas", "diseño arquitectónico", "daniroesch.de"], allBooks: "- todos los livros -", backToStart: "- volver al inicio -", close: "x cerrar", home: "x" },
+        'pt': { titles: ["é um libro", "folheie as páginas", "desenho arquitectónico", "daniroesch.de"], allBooks: "- todos os livros -", backToStart: "- voltar ao início -", close: "x fechar", home: "x" }
     };
 
     function getHashParams() {
@@ -159,7 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // FIX: Stoßdämpfer gegen das Adressleisten-Springen auf dem Tablet!
     let lastWinW = window.innerWidth;
     let lastWinH = window.innerHeight;
 
@@ -170,8 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const diffW = Math.abs(currentW - lastWinW);
         const diffH = Math.abs(currentH - lastWinH);
 
-        // Ignoriert kleine vertikale Adressleisten-Sprünge (< 120px) 
-        // Reagiert aber immer auf Quer/Hochformat-Wechsel oder Desktop-Resize
         if (diffW > 10 || diffH > 120) {
             lastWinW = currentW;
             lastWinH = currentH;
@@ -342,7 +338,9 @@ document.addEventListener('DOMContentLoaded', () => {
             pageFlip.flip(initialPage);
         }
 
+        // Steuerung der beiden UI-Buttons
         const homeBtn = document.getElementById('home-btn');
+        const fsBtn = document.getElementById('fullscreen-btn');
         
         menuPositioner.style.zIndex = '3';
         startMenu.style.pointerEvents = 'auto';
@@ -357,9 +355,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const startPage = pageFlip.getCurrentPageIndex();
         const totalPages = pageFlip.getPageCount();
         
+        // Beide Buttons synchron anzeigen oder verstecken (Startansicht)
         if (startPage > 0) {
-            homeBtn.style.opacity = '1';
-            homeBtn.style.pointerEvents = 'auto';
+            if(homeBtn) { homeBtn.style.opacity = '1'; homeBtn.style.pointerEvents = 'auto'; }
+            if(fsBtn) { fsBtn.style.opacity = '1'; fsBtn.style.pointerEvents = 'auto'; }
 
             if (startPage >= totalPages - 2) {
                 menuPositioner.style.zIndex = '3';
@@ -375,8 +374,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 endOfBookMenu.style.opacity = '0';
             }
         } else {
-            homeBtn.style.opacity = '0';
-            homeBtn.style.pointerEvents = 'none';
+            if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
+            if(fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
         }
 
         pageFlip.on('flip', (e) => {
@@ -393,13 +392,13 @@ document.addEventListener('DOMContentLoaded', () => {
             endOfBookMenu.style.pointerEvents = 'none';
             menuPositioner.style.zIndex = '1';
 
-            // Ein- und Ausblenden des Home-Buttons
+            // Beide Buttons synchron beim Blättern steuern
             if (targetPage === 0) {
-                homeBtn.style.opacity = '0';
-                homeBtn.style.pointerEvents = 'none';
+                if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
+                if(fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
             } else {
-                homeBtn.style.opacity = '1';
-                homeBtn.style.pointerEvents = 'auto';
+                if(homeBtn) { homeBtn.style.opacity = '1'; homeBtn.style.pointerEvents = 'auto'; }
+                if(fsBtn) { fsBtn.style.opacity = '1'; fsBtn.style.pointerEvents = 'auto'; }
             }
             
             if (targetPage === 0) {
@@ -536,7 +535,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pageFlip && !isZoomed()) { pageFlip.flip(0); }
         }
         
-        // Klick auf neuen Home-Button
+        // Neues Home Icon Event
         if (e.target.id === 'home-btn') {
             e.preventDefault();
             if (pageFlip && !isZoomed()) { pageFlip.flip(0); }
@@ -585,8 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.addEventListener('hashchange', handleRouting);
-    // Den resize-Befehl hier unten habe ich entfernt, 
-    // da er jetzt oben sicher über `handleResize` gesteuert wird!
+    // Orientierungs- und Resize Events werden sicher von handleResize überwacht
 
     handleRouting();
 });
