@@ -67,10 +67,9 @@ body {
     pointer-events: none; 
 }
 
-/* FIX: Startet unsichtbar, um das Flackern/Springen unskalierter Schriften beim Laden zu verhindern */
 #menu-positioner { 
     z-index: 3; 
-    visibility: hidden; 
+    visibility: hidden; /* FIX: Verhindert das Flackern unskalierter Schriften beim Laden */
 }
 #ui-layer { z-index: 100; } 
 
