@@ -84,14 +84,13 @@ body {
     font-size: clamp(10px, calc(var(--real-book-height) * 0.045), 20px);
     opacity: 0;
     pointer-events: none; 
-    transition: color 0.2s, font-weight 0.2s, opacity 0.3s ease, top 0.3s ease, bottom 0.3s ease, right 0.3s ease; 
+    transition: all 0.3s ease; 
 }
 .ui-btn:hover {
     color: #000;
     font-weight: 800;
 }
 
-/* Dynamische Platzierung der UI-Buttons */
 body.fit-width #home-btn {
     top: -2.5em; 
     right: 0;
@@ -121,6 +120,8 @@ body.fit-height #fullscreen-btn {
     align-items: center;
     pointer-events: auto; 
     opacity: 1;
+    /* FIX: Ein einfacher Opacity-Fade (kein störendes Wischen/Sliden) */
+    transition: opacity 0.3s ease;
 }
 
 #end-of-book-menu {
@@ -134,13 +135,13 @@ body.fit-height #fullscreen-btn {
     align-items: center;
     pointer-events: auto;
     opacity: 0; 
+    transition: opacity 0.3s ease;
 }
 
 .menu-wrapper {
     display: flex;
     flex-direction: column;
     align-items: stretch; 
-    will-change: transform; 
     padding: 0 10px;
 }
 
