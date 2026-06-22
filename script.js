@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return window.visualViewport && window.visualViewport.scale > 1.01;
     }
 
-    // SMART FIX: Erkennt Zoom automatisch und setzt CSS-Klasse zur Deaktivierung des Blätterns
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
             const bookWrapper = document.getElementById('flip-book-container');
@@ -17,6 +16,33 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    let activePointers = new Set();
+    let zoomCooldown = false;
+    let zoomTimeout;
+
+    function protectZoom(e) {
+        const isMultiTouch = e.touches && e.touches.length > 1;
+        const isCurrentlyZoomed = isZoomed();
+
+        if (isMultiTouch || isCurrentlyZoomed) {
+            zoomCooldown = true;
+            clearTimeout(zoomTimeout);
+            e.stopPropagation(); 
+        } else if (zoomCooldown) {
+            e.stopPropagation();
+            if (!e.touches || e.touches.length === 0) {
+                clearTimeout(zoomTimeout);
+                zoomTimeout = setTimeout(() => { zoomCooldown = false; }, 300);
+            }
+        }
+    }
+
+    window.addEventListener('touchstart', protectZoom, { capture: true, passive: true });
+    window.addEventListener('touchmove', protectZoom, { capture: true, passive: true });
+    window.addEventListener('touchend', protectZoom, { capture: true, passive: true });
+    window.addEventListener('pointerdown', protectZoom, { capture: true, passive: true });
+    window.addEventListener('pointerup', protectZoom, { capture: true, passive: true });
 
     const bookWrapper = document.getElementById('flip-book-container');
     const loadingScreen = document.getElementById('loading');
@@ -41,11 +67,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentImgW = 1123; 
     let currentImgH = 794;
     
+    // Übersetzungen (inkl. Home-Button)
     const translations = {
-        'de': { titles: ["es ist ein buch", "blätter herum", "architekturdesign", "daniroesch.de"], allBooks: "- alle bücher -", backToStart: "- zurück zum anfang -", close: "x schließen" },
-        'en': { titles: ["it´s a book", "flip around", "architectural design", "daniroesch.de"], allBooks: "- all books -", backToStart: "- back to start -", close: "x close" },
-        'es': { titles: ["es un libro", "hojea las páginas", "diseño arquitectónico", "daniroesch.de"], allBooks: "- todos los livros -", backToStart: "- volver al inicio -", close: "x cerrar" },
-        'pt': { titles: ["é um libro", "folheie as páginas", "desenho arquitectónico", "daniroesch.de"], allBooks: "- todos os livros -", backToStart: "- voltar ao início -", close: "x fechar" }
+        'de': { titles: ["es ist ein buch", "blätter herum", "architekturdesign", "daniroesch.de"], allBooks: "- alle bücher -", backToStart: "- zurück zum anfang -", close: "x schließen", home: "[ anfang ]" },
+        'en': { titles: ["it´s a book", "flip around", "architectural design", "daniroesch.de"], allBooks: "- all books -", backToStart: "- back to start -", close: "x close", home: "[ home ]" },
+        'es': { titles: ["es un libro", "hojea las páginas", "diseño arquitectónico", "daniroesch.de"], allBooks: "- todos los livros -", backToStart: "- volver al inicio -", close: "x cerrar", home: "[ inicio ]" },
+        'pt': { titles: ["é um libro", "folheie as páginas", "desenho arquitectónico", "daniroesch.de"], allBooks: "- todos os livros -", backToStart: "- voltar ao início -", close: "x fechar", home: "[ início ]" }
     };
 
     function getHashParams() {
@@ -132,8 +159,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // FIX: Stoßdämpfer gegen das Adressleisten-Springen auf dem Tablet!
+    let lastWinW = window.innerWidth;
+    let lastWinH = window.innerHeight;
+
+    function handleResize() {
+        const currentW = window.innerWidth;
+        const currentH = window.innerHeight;
+        
+        const diffW = Math.abs(currentW - lastWinW);
+        const diffH = Math.abs(currentH - lastWinH);
+
+        // Ignoriert kleine vertikale Adressleisten-Sprünge (< 120px) 
+        // Reagiert aber immer auf Quer/Hochformat-Wechsel oder Desktop-Resize
+        if (diffW > 10 || diffH > 120) {
+            lastWinW = currentW;
+            lastWinH = currentH;
+            updateBookSize();
+            if (pageFlip) pageFlip.update();
+        }
+    }
+
+    window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', () => {
-        setTimeout(updateBookSize, 200);
+        setTimeout(() => {
+            lastWinW = window.innerWidth;
+            lastWinH = window.innerHeight;
+            updateBookSize();
+            if (pageFlip) pageFlip.update();
+        }, 200);
     });
 
     function updateHeading() {
@@ -206,6 +260,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('close-legal').innerText = translations[lang].close;
         document.getElementById('back-to-start-btn').innerText = translations[lang].backToStart;
 
+        const homeBtn = document.getElementById('home-btn');
+        if (homeBtn) homeBtn.innerText = translations[lang].home;
+
         langLinks.forEach(link => link.classList.remove('active'));
         const activeLink = document.querySelector(`[data-lang="${lang}"]`);
         if (activeLink) activeLink.classList.add('active');
@@ -228,7 +285,6 @@ document.addEventListener('DOMContentLoaded', () => {
             currentImgH = 794;
         }
 
-        // SMART BATCH LOADING FIX: Prüft performant in 10er-Schritten statt 300 gleichzeitig
         const batchSize = 10;
         let pageCounter = 1;
         let checking = true;
@@ -285,6 +341,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (initialPage > 0 && initialPage < pageFlip.getPageCount()) {
             pageFlip.flip(initialPage);
         }
+
+        const homeBtn = document.getElementById('home-btn');
         
         menuPositioner.style.zIndex = '3';
         startMenu.style.pointerEvents = 'auto';
@@ -300,6 +358,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalPages = pageFlip.getPageCount();
         
         if (startPage > 0) {
+            homeBtn.style.opacity = '1';
+            homeBtn.style.pointerEvents = 'auto';
+
             if (startPage >= totalPages - 2) {
                 menuPositioner.style.zIndex = '3';
                 endOfBookMenu.style.pointerEvents = 'auto';
@@ -313,6 +374,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 startMenu.style.pointerEvents = 'none';
                 endOfBookMenu.style.opacity = '0';
             }
+        } else {
+            homeBtn.style.opacity = '0';
+            homeBtn.style.pointerEvents = 'none';
         }
 
         pageFlip.on('flip', (e) => {
@@ -323,12 +387,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const startWrapper = startMenu.querySelector('.menu-wrapper');
             const endWrapper = endOfBookMenu.querySelector('.menu-wrapper');
             
-            // SMART FIX: Menü sofort unsichtbar machen beim Blättern gegen Text-Durchscheinen
             startMenu.style.opacity = '0';
             startMenu.style.pointerEvents = 'none';
             endOfBookMenu.style.opacity = '0';
             endOfBookMenu.style.pointerEvents = 'none';
             menuPositioner.style.zIndex = '1';
+
+            // Ein- und Ausblenden des Home-Buttons
+            if (targetPage === 0) {
+                homeBtn.style.opacity = '0';
+                homeBtn.style.pointerEvents = 'none';
+            } else {
+                homeBtn.style.opacity = '1';
+                homeBtn.style.pointerEvents = 'auto';
+            }
             
             if (targetPage === 0) {
                 startMenu.style.opacity = '1'; 
@@ -367,7 +439,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalPages = pageFlip.getPageCount();
 
             if (state !== 'read') {
-                // Bei jeder Bewegung Text rigoros unsichtbar schalten
                 startMenu.style.opacity = '0';
                 startMenu.style.pointerEvents = 'none';
                 endOfBookMenu.style.opacity = '0';
@@ -400,7 +471,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             updateBookSize();
             if (pageFlip) pageFlip.update();
-            window.dispatchEvent(new Event('resize'));
             
             setTimeout(() => {
                 if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
@@ -465,6 +535,13 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             if (pageFlip && !isZoomed()) { pageFlip.flip(0); }
         }
+        
+        // Klick auf neuen Home-Button
+        if (e.target.id === 'home-btn') {
+            e.preventDefault();
+            if (pageFlip && !isZoomed()) { pageFlip.flip(0); }
+        }
+
         if (e.target.classList.contains('all-books-trigger')) {
             e.preventDefault();
             window.location.hash = `view=grid`;
@@ -508,7 +585,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.addEventListener('hashchange', handleRouting);
-    window.addEventListener('resize', updateBookSize);
+    // Den resize-Befehl hier unten habe ich entfernt, 
+    // da er jetzt oben sicher über `handleResize` gesteuert wird!
 
     handleRouting();
 });
