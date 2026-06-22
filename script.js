@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- PULL-TO-REFRESH ---
     let pullStartY = 0;
     let pullStartX = 0;
 
@@ -84,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentLang = 'de'; 
     let currentBook = 'book_1'; 
     let currentTitleIndex = 0; 
-    let isGridLoading = false; 
     let isInternalHashUpdate = false; 
     let isInitialLoad = true; 
     const extension = '.webp'; 
@@ -92,8 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentImgW = 1123; 
     let currentImgH = 794;
     
-    // NEU: Globaler Abbruch-Schalter, um Race-Conditions beim schnellen Sprachenwechsel zu verhindern!
     let activeLoadId = 0;
+    let activeGridId = 0; // FIX: Verhindert zuverlässig doppelte Bücher in der Bibliothek
     
     const translations = {
         'de': { titles: ["es ist ein buch", "blätter herum", "architektur portfolio", "daniroesch.de"], allBooks: "alle bücher", backToStart: "zurück zum anfang", close: "x schließen", home: "X", loading: "[ buch wird geladen... ]" },
@@ -196,7 +194,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentW = window.innerWidth;
         if (currentW !== lastWinW) {
             lastWinW = currentW;
-            // FIX: Blendet das Buch bei starkem Resize kurz aus, um fehlerfreie Zentrierungs-Neuberechnungen zu garantieren!
             if(bookWrapper) bookWrapper.style.opacity = '0';
             updateBookSize();
             if (pageFlip) pageFlip.update();
@@ -235,11 +232,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function initGrid() {
-        if (isGridLoading) return; 
-        isGridLoading = true;
+        const myGridId = ++activeGridId; 
 
         const gridContainer = document.querySelector('.grid-container');
-        gridContainer.innerHTML = ''; 
         
         const gridPromises = [];
         for (let b = 1; b <= 20; b++) {
@@ -257,6 +252,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const gridResults = await Promise.all(gridPromises);
         
+        // FIX: Bricht ab, falls der Nutzer während des Ladens die Sprache gewechselt hat!
+        if (myGridId !== activeGridId) return;
+
+        // FIX: Leert den Container exakt in der Millisekunde VOR dem Einfügen (Keine Doppelten Bücher!)
+        gridContainer.innerHTML = ''; 
+
         for (const book of gridResults) {
             if (book.exists) {
                 const tile = document.createElement('div');
@@ -270,11 +271,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 break; 
             }
         }
-        isGridLoading = false;
     }
 
     async function loadBook(bookName, lang, initialPage = 0) {
-        // Erhöhe die ID: Jedes Mal, wenn neu geklickt wird, kriegt dieser Task eine einmalige Nummer
         const myLoadId = ++activeLoadId;
 
         currentBook = bookName;
@@ -308,7 +307,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const cover = await checkImage(`${folder}0${extension}`);
         
-        // FIX: Sofortiger Abbruch, falls der Nutzer währenddessen schon wieder geklickt hat!
         if (myLoadId !== activeLoadId) return;
 
         if (cover.exists) { 
@@ -324,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let pageCounter = 1;
         let checking = true;
 
-        while (checking && pageCounter <= 200) { 
+        while (checking) {
             const promises = [];
             for (let i = 0; i < batchSize; i++) {
                 const pageId = pageCounter + i;
@@ -332,8 +330,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             const results = await Promise.all(promises);
-            
-            // FIX: Abbruchprüfung mitten in der Ladeschleife
             if (myLoadId !== activeLoadId) return;
 
             results.sort((a, b) => a.id - b.id);
@@ -350,8 +346,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const back = await checkImage(`${folder}-1${extension}`);
-        
-        // FIX: Letzter Abbruch-Check direkt vor dem Buchaufbau
         if (myLoadId !== activeLoadId) return;
 
         if (back.exists) { imageUrls.push(`-1${extension}`); }
@@ -374,7 +368,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         pageFlip = new St.PageFlip(bookContainer, {
             width: width, height: height, size: "stretch", 
-            showCover: true, mobileScrollSupport: true, usePortrait: false
+            showCover: true, 
+            mobileScrollSupport: false, // FIX: Verhindert störendes Native-Scroll Verhalten auf Handys!
+            usePortrait: false
         });
         
         pageFlip.loadFromHTML(document.querySelectorAll('.page'));
@@ -394,7 +390,6 @@ document.addEventListener('DOMContentLoaded', () => {
         endOfBookMenu.style.display = 'flex'; 
         endOfBookMenu.style.pointerEvents = 'none';
         endOfBookMenu.style.opacity = '0'; 
-        endOfBookMenu.querySelector('.menu-wrapper').style.transform = 'translateX(-40px)';
 
         const startPage = pageFlip.getCurrentPageIndex();
         const totalPages = pageFlip.getPageCount();
@@ -412,7 +407,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 menuPositioner.style.zIndex = '3';
                 endOfBookMenu.style.pointerEvents = 'auto';
                 endOfBookMenu.style.opacity = '1';
-                endOfBookMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
                 startMenu.style.opacity = '0';
                 startMenu.style.pointerEvents = 'none';
             } else {
@@ -428,9 +422,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentPage = pageFlip.getCurrentPageIndex();
             const totalPages = pageFlip.getPageCount();
             
-            const startWrapper = startMenu.querySelector('.menu-wrapper');
-            const endWrapper = endOfBookMenu.querySelector('.menu-wrapper');
-            
+            // FIX: Radikales Löschen aller fehlerhaften Slide-Animationen. 
+            // Das Menü verblasst jetzt sofort und stumm!
             startMenu.style.opacity = '0';
             startMenu.style.pointerEvents = 'none';
             endOfBookMenu.style.opacity = '0';
@@ -448,28 +441,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (targetPage === 0) {
                 startMenu.style.opacity = '1'; 
                 startMenu.style.pointerEvents = 'auto';
-                startWrapper.style.transition = 'none';
-                startWrapper.style.transform = 'translateX(40px)'; 
-                startWrapper.offsetHeight; 
-                startWrapper.style.transition = 'transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)';
-                startWrapper.style.transform = 'translateX(0)';
-            } else if (currentPage === 0) {
-                startWrapper.style.transition = 'transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)';
-                startWrapper.style.transform = 'translateX(40px)'; 
-            }
-
+            } 
             if (targetPage >= totalPages - 2) {
                 endOfBookMenu.style.opacity = '1'; 
                 endOfBookMenu.style.pointerEvents = 'auto';
-                endWrapper.style.transition = 'none';
-                endWrapper.style.transform = 'translateX(-40px)';
-                endWrapper.offsetHeight; 
-                endWrapper.style.transition = 'transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)';
-                endWrapper.style.transform = 'translateX(0)';
-            } else if (currentPage >= totalPages - 2) {
-                endWrapper.style.transition = 'transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)';
-                endWrapper.style.transform = 'translateX(-40px)';
-            }
+            } 
 
             isInternalHashUpdate = true;
             window.location.hash = `view=book&book=${currentBook}&lang=${currentLang}&page=${targetPage}`;
