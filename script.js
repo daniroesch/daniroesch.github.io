@@ -17,6 +17,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- NEU: PULL-TO-REFRESH Wisch-Geste ---
+    let pullStartY = 0;
+    let pullStartX = 0;
+
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+            pullStartY = e.touches[0].clientY;
+            pullStartX = e.touches[0].clientX;
+        }
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+        if (e.changedTouches.length === 1) {
+            const pullEndY = e.changedTouches[0].clientY;
+            const pullEndX = e.changedTouches[0].clientX;
+            const yDiff = pullEndY - pullStartY;
+            const xDiff = Math.abs(pullEndX - pullStartX);
+            
+            // Wenn massiv nach unten gezogen wird (vertikaler Swipe) und NICHT gezoomt ist
+            if (yDiff > 120 && xDiff < 50 && !isZoomed()) {
+                // Zwingt die Hash-URL auf die Startseite (page=0)
+                window.location.hash = `view=book&book=${currentBook}&lang=${currentLang}&page=0`;
+                // Lädt die Seite sofort hart neu
+                window.location.reload();
+            }
+        }
+    }, { passive: true });
+    // ----------------------------------------
+
+
     let activePointers = new Set();
     let zoomCooldown = false;
     let zoomTimeout;
@@ -67,7 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentImgW = 1123; 
     let currentImgH = 794;
     
-    // Großes X in den Übersetzungen für den Home-Button
     const translations = {
         'de': { titles: ["es ist ein buch", "blätter herum", "architekturdesign", "daniroesch.de"], allBooks: "- alle bücher -", backToStart: "- zurück zum anfang -", close: "x schließen", home: "X" },
         'en': { titles: ["it´s a book", "flip around", "architectural design", "daniroesch.de"], allBooks: "- all books -", backToStart: "- back to start -", close: "x close", home: "X" },
@@ -93,8 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isInitialLoad) {
             isInitialLoad = false;
+            // FIX: Zwingt die Seite bei jedem frischen Neuladen strikt auf das Startcover!
+            params.page = 0;
             if (params.view === 'book' || !params.view) {
-                params.page = 0;
                 isInternalHashUpdate = true;
                 window.location.hash = `view=book&book=${params.book}&lang=${params.lang}&page=0`;
                 setTimeout(() => { isInternalHashUpdate = false; }, 50);
@@ -282,7 +312,9 @@ document.addEventListener('DOMContentLoaded', () => {
             currentImgH = 794;
         }
 
-        const batchSize = 10;
+        // FIX: Extrem stabiler "Safe Batch" Lader. 
+        // Prüft nur noch 4 Bilder zeitgleich, verhindert den "Freeze" komplett.
+        const batchSize = 4;
         let pageCounter = 1;
         let checking = true;
 
@@ -294,17 +326,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             const results = await Promise.all(promises);
-            results.sort((a, b) => a.id - b.id);
             
             for (const res of results) {
                 if (res.exists) {
                     imageUrls.push(`${res.id}${extension}`);
-                    pageCounter++;
                 } else {
                     checking = false;
                     break;
                 }
             }
+            if (checking) pageCounter += batchSize;
         }
 
         const back = await checkImage(`${folder}-1${extension}`);
@@ -344,9 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         menuPositioner.style.zIndex = '3';
         startMenu.style.pointerEvents = 'auto';
-        startMenu.style.opacity = '1';
-        startMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
-
+        
         endOfBookMenu.style.display = 'flex'; 
         endOfBookMenu.style.pointerEvents = 'none';
         endOfBookMenu.style.opacity = '0'; 
@@ -355,7 +384,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const startPage = pageFlip.getCurrentPageIndex();
         const totalPages = pageFlip.getPageCount();
         
-        // Beide UI-Buttons auf der ersten und letzten Seite unsichtbar machen
         if (startPage > 0 && startPage < totalPages - 2) {
             if(homeBtn) { homeBtn.style.opacity = '1'; homeBtn.style.pointerEvents = 'auto'; }
             if(fsBtn) { fsBtn.style.opacity = '1'; fsBtn.style.pointerEvents = 'auto'; }
@@ -394,7 +422,6 @@ document.addEventListener('DOMContentLoaded', () => {
             endOfBookMenu.style.pointerEvents = 'none';
             menuPositioner.style.zIndex = '1';
 
-            // FIX: Beide Buttons synchron steuern (Ausblenden auf Start- UND Endseite)
             if (targetPage === 0 || targetPage >= totalPages - 2) {
                 if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
                 if(fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
@@ -477,6 +504,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
                     menuPositioner.style.zIndex = '3';
                     startMenu.style.pointerEvents = 'auto';
+                    
+                    // FIX: Blendet das Menü erst nach dem Rechnen des Buches sanft ein (Kein Springen mehr!)
+                    startMenu.style.opacity = '1';
                 }
             }, 100);
         }, 150);
@@ -587,227 +617,4 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('hashchange', handleRouting);
 
     handleRouting();
-});@font-face {
-    font-family: 'Montserrat';
-    font-style: normal;
-    font-weight: 400;
-    font-display: swap;
-    src: url('fonts/montserrat-400.woff2') format('woff2');
-}
-
-@font-face {
-    font-family: 'Montserrat';
-    font-style: normal;
-    font-weight: 500;
-    font-display: swap;
-    src: url('fonts/montserrat-500.woff2') format('woff2');
-}
-
-@font-face {
-    font-family: 'Montserrat';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url('fonts/montserrat-700.woff2') format('woff2');
-}
-
-@font-face {
-    font-family: 'Montserrat';
-    font-style: normal;
-    font-weight: 800;
-    font-display: swap;
-    src: url('fonts/montserrat-800.woff2') format('woff2');
-}
-
-*, *::before, *::after {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Montserrat', sans-serif; 
-}
-
-html, body {
-    touch-action: pan-x pan-y pinch-zoom !important;
-}
-
-body {
-    background-color: #ffffff;
-    overflow: hidden; 
-    color: #000;
-    width: 100vw;
-    height: 100vh;
-    height: 100dvh; 
-}
-
-#book-view {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    height: 100dvh;
-}
-
-#menu-positioner, #ui-layer {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: var(--real-book-width, 100vw);
-    height: var(--real-book-height, 100vh);
-    pointer-events: none; 
-}
-
-#menu-positioner { z-index: 3; }
-#ui-layer { z-index: 100; } 
-
-/* Symmetrisches Styling & Zentrierung für beide Eck-Buttons */
-.ui-btn {
-    position: absolute;
-    right: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
-    width: 4.5em; /* FIX: Gleiche Breite für beide Buttons zwingt sie in eine Linie */
-    text-align: center; /* FIX: Zentriert das X und die Klammer exakt übereinander */
-    white-space: nowrap;
-    color: #888;
-    text-decoration: none;
-    font-weight: 400;
-    font-size: clamp(10px, calc(var(--real-book-height) * 0.045), 20px);
-    opacity: 0;
-    pointer-events: none; 
-    transition: color 0.2s, font-weight 0.2s, opacity 0.3s ease;
-}
-.ui-btn:hover {
-    color: #000;
-    font-weight: 800;
-}
-
-/* Positionierungen Oben & Unten */
-#home-btn {
-    top: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
-}
-#fullscreen-btn {
-    bottom: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
-}
-
-.static-menu {
-    position: absolute;
-    top: 0;
-    left: 0; 
-    width: 50%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    pointer-events: auto; 
-    opacity: 1;
-}
-
-#end-of-book-menu {
-    position: absolute;
-    top: 0;
-    right: 0; 
-    width: 50%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    pointer-events: auto;
-    opacity: 0; 
-}
-
-.menu-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch; 
-    will-change: transform; 
-    padding: 0 10px;
-}
-
-h1 {
-    font-size: clamp(14px, calc(var(--real-book-height) * 0.055), 26px); 
-    font-weight: 800;
-    text-align: center;
-    white-space: nowrap; 
-    margin-bottom: 0.5rem;
-    text-transform: lowercase;
-    color: #a0a0a0; 
-    cursor: pointer;
-    transition: color 0.3s ease;
-    letter-spacing: normal; 
-}
-
-h1:hover { color: #000; }
-
-.menu-row {
-    display: flex;
-    justify-content: space-between; 
-    align-items: center;
-    font-size: clamp(11px, calc(var(--real-book-height) * 0.04), 20px); 
-    color: #888;
-    margin-bottom: 0.3rem; 
-    letter-spacing: normal;
-}
-
-.bracket { font-weight: 400; }
-
-.menu-links { flex-grow: 1; text-align: center; text-transform: lowercase; }
-.menu-links a { color: #888; text-decoration: none; transition: color 0.2s; font-weight: 400; }
-.menu-links a:hover, .menu-links a.active { color: #000; font-weight: 800; }
-
-.legal-links {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px; 
-    margin-top: clamp(8px, calc(var(--real-book-height) * 0.04), 20px); 
-    font-size: clamp(9px, calc(var(--real-book-height) * 0.03), 14px); 
-    text-transform: lowercase;
-    letter-spacing: normal;
-}
-
-.legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; }
-.legal-links a:hover { color: #000; }
-
-.flip-book-container, 
-.flip-book-container *, 
-.st-page-flip {
-    touch-action: pan-x pan-y pinch-zoom !important;
-}
-
-.flip-book-container.zoomed-state {
-    pointer-events: none !important;
-}
-
-.flip-book-container {
-    position: absolute;
-    top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
-    display: flex; justify-content: center; align-items: center;
-    z-index: 2;
-    opacity: 0; transition: opacity 0.5s ease;
-}
-
-#loading {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    font-size: 1.2rem; color: #888; z-index: 10; text-transform: lowercase;
-}
-
-.page { background-color: #ffffff; position: relative; }
-.page img { width: 100%; height: 100%; object-fit: cover; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
-
-#grid-view, #legal-view {
-    position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
-    padding: 5vw; background: #fff; overflow-y: auto; z-index: 20;
-}
-
-.grid-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-.grid-header h2 { font-weight: 800; font-size: 1.5rem; text-transform: lowercase; }
-.grid-header a { color: #000; text-decoration: none; font-weight: 800; text-transform: lowercase; }
-
-.grid-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; }
-.book-tile { cursor: pointer; transition: transform 0.2s; }
-.book-tile:hover { transform: scale(1.02); }
-.book-tile img { height: 300px; width: auto; object-fit: cover; background: #f0f0f0; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: block; }
-.legal-content { max-width: 800px; margin: 0 auto; }
-.legal-image { display: block; margin: 0 auto; max-width: 100%; height: auto; box-shadow: 0 5px 25px rgba(0,0,0,0.05); }
-
-@media (max-width: 600px) {
-    .book-tile img { height: 200px; }
-}
+});
