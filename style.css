@@ -84,14 +84,13 @@ body {
     font-size: clamp(10px, calc(var(--real-book-height) * 0.045), 20px);
     opacity: 0;
     pointer-events: none; 
-    transition: color 0.2s, font-weight 0.2s, opacity 0.3s ease, top 0.3s ease, bottom 0.3s ease, right 0.3s ease; 
+    transition: all 0.3s ease; 
 }
 .ui-btn:hover {
     color: #000;
     font-weight: 800;
 }
 
-/* Dynamische Platzierung der UI-Buttons */
 body.fit-width #home-btn {
     top: -2.5em; 
     right: 0;
@@ -172,7 +171,13 @@ h1:hover { color: #000; }
 
 .bracket { font-weight: 400; }
 
-.menu-links { flex-grow: 1; text-align: center; text-transform: lowercase; }
+/* FIX: Perfekter und einheitlicher Abstand der Text-Links zu ihren Klammern */
+.menu-links { 
+    flex-grow: 1; 
+    text-align: center; 
+    text-transform: lowercase; 
+    padding: 0 0.6em; 
+}
 .menu-links a { color: #888; text-decoration: none; transition: color 0.2s; font-weight: 400; }
 .menu-links a:hover, .menu-links a.active { color: #000; font-weight: 800; }
 
