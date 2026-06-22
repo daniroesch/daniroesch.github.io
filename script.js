@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- PULL-TO-REFRESH Wisch-Geste ---
     let pullStartY = 0;
     let pullStartX = 0;
 
@@ -93,12 +92,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentImgW = 1123; 
     let currentImgH = 794;
     
-    // NEU: Lade-Texte in eckigen Klammern und perfekt übersetzt
+    // FIX: Alle störenden Bindestriche wurden entfernt
     const translations = {
-        'de': { titles: ["es ist ein buch", "blätter herum", "architekturdesign", "daniroesch.de"], allBooks: "- alle bücher -", backToStart: "- zurück zum anfang -", close: "x schließen", home: "X", loading: "[ buch wird geladen... ]" },
-        'en': { titles: ["it´s a book", "flip around", "architectural design", "daniroesch.de"], allBooks: "- all books -", backToStart: "- back to start -", close: "x close", home: "X", loading: "[ loading book... ]" },
-        'es': { titles: ["es un libro", "hojea las páginas", "diseño arquitectónico", "daniroesch.de"], allBooks: "- todos los libros -", backToStart: "- volver al inicio -", close: "x cerrar", home: "X", loading: "[ cargando libro... ]" },
-        'pt': { titles: ["é um livro", "folheie as páginas", "desenho arquitectónico", "daniroesch.de"], allBooks: "- todos os livros -", backToStart: "- voltar ao início -", close: "x fechar", home: "X", loading: "[ carregando livro... ]" }
+        'de': { titles: ["es ist ein buch", "blätter herum", "architekturdesign", "daniroesch.de"], allBooks: "alle bücher", backToStart: "zurück zum anfang", close: "x schließen", home: "X", loading: "[ buch wird geladen... ]" },
+        'en': { titles: ["it´s a book", "flip around", "architectural design", "daniroesch.de"], allBooks: "all books", backToStart: "back to start", close: "x close", home: "X", loading: "[ loading book... ]" },
+        'es': { titles: ["es un libro", "hojea las páginas", "diseño arquitectónico", "daniroesch.de"], allBooks: "todos los libros", backToStart: "volver al inicio", close: "x cerrar", home: "X", loading: "[ cargando libro... ]" },
+        'pt': { titles: ["é um livro", "folheie as páginas", "desenho arquitectónico", "daniroesch.de"], allBooks: "todos os livros", backToStart: "voltar ao início", close: "x fechar", home: "X", loading: "[ carregando livro... ]" }
     };
 
     function getHashParams() {
@@ -155,6 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // FIX: Steuert die CSS-Klassen fit-width und fit-height für die intelligenten Icon-Positionen
     function updateBookSize() {
         const w = window.innerWidth;
         const h = window.innerHeight;
@@ -170,9 +170,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (bookAspectRatio > windowRatio) {
             finalWidth = w;
             finalHeight = w / bookAspectRatio;
+            document.body.classList.add('fit-width');
+            document.body.classList.remove('fit-height');
         } else {
             finalHeight = h;
             finalWidth = h * bookAspectRatio;
+            document.body.classList.add('fit-height');
+            document.body.classList.remove('fit-width');
         }
         
         document.body.style.setProperty('--real-book-width', finalWidth + 'px');
@@ -215,14 +219,22 @@ document.addEventListener('DOMContentLoaded', () => {
         updateHeading();
     }
 
-    // FIX: Die absolut schnellste und sicherste Methode, Bilder abzufragen, ohne dass GitHub blockiert.
-    async function checkImage(url) {
+    async function loadCoverImage(url) {
         return new Promise((resolve) => {
             const img = new Image();
             img.onload = () => resolve({ exists: true, width: img.naturalWidth, height: img.naturalHeight });
             img.onerror = () => resolve({ exists: false });
             img.src = url;
         });
+    }
+
+    async function checkPageExists(url) {
+        try {
+            const res = await fetch(url, { method: 'HEAD' });
+            return res.ok;
+        } catch (e) {
+            return false;
+        }
     }
 
     async function initGrid() {
@@ -237,11 +249,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const bookName = `book_${b}`;
             const folder = `${bookName}/pages_${currentLang}/`;
             gridPromises.push(
-                checkImage(`${folder}0${extension}`).then(res => ({
+                checkPageExists(`${folder}0${extension}`).then(exists => ({
                     index: b,
                     name: bookName,
                     folder: folder,
-                    exists: res.exists
+                    exists: exists
                 }))
             );
         }
@@ -271,7 +283,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (menuPositioner) menuPositioner.style.visibility = 'hidden'; 
         updateHeading();
         
-        // Übersetzt die Lade-Schrift sofort nach dem Klick
         loadingScreen.innerText = translations[lang].loading;
         
         document.querySelectorAll('.all-books-trigger').forEach(el => el.innerText = translations[lang].allBooks);
@@ -295,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const folder = `${bookName}/pages_${lang}/`;
         const imageUrls = [];
         
-        const cover = await checkImage(`${folder}0${extension}`);
+        const cover = await loadCoverImage(`${folder}0${extension}`);
         if (cover.exists) { 
             imageUrls.push(`0${extension}`); 
             currentImgW = cover.width; 
@@ -305,7 +316,6 @@ document.addEventListener('DOMContentLoaded', () => {
             currentImgH = 794;
         }
 
-        // NEU: Prüft in kleinen Batches, was rasend schnell ist und Lücken verhindert!
         const batchSize = 6;
         let pageCounter = 1;
         let checking = true;
@@ -314,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const promises = [];
             for (let i = 0; i < batchSize; i++) {
                 const pageId = pageCounter + i;
-                promises.push(checkImage(`${folder}${pageId}${extension}`).then(res => ({ id: pageId, exists: res.exists })));
+                promises.push(checkPageExists(`${folder}${pageId}${extension}`).then(exists => ({ id: pageId, exists: exists })));
             }
             
             const results = await Promise.all(promises);
@@ -331,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (checking) pageCounter += batchSize;
         }
 
-        const back = await checkImage(`${folder}-1${extension}`);
+        const back = await checkPageExists(`${folder}-1${extension}`);
         if (back.exists) { imageUrls.push(`-1${extension}`); }
 
         buildBook(imageUrls, folder, currentImgW, currentImgH, initialPage);
@@ -497,8 +507,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
                     menuPositioner.style.zIndex = '3';
                     startMenu.style.pointerEvents = 'auto';
-                    
-                    // Schaltet die Menüebene erst nach vollendeter Größenrechnung sichtbar
                     menuPositioner.style.visibility = 'visible';
                 }
             }, 100);
