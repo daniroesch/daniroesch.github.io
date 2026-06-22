@@ -70,15 +70,19 @@ body {
 #menu-positioner { z-index: 3; }
 #ui-layer { z-index: 100; } 
 
-/* Allgemeine UI Button Eigenschaften */
+/* Symmetrisches Styling & Zentrierung für beide Eck-Buttons */
 .ui-btn {
     position: absolute;
+    right: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
+    width: 4.5em; /* FIX: Gleiche Breite für beide Buttons zwingt sie in eine Linie */
+    text-align: center; /* FIX: Zentriert das X und die Klammer exakt übereinander */
+    white-space: nowrap;
     color: #888;
     text-decoration: none;
     font-weight: 400;
     font-size: clamp(10px, calc(var(--real-book-height) * 0.045), 20px);
-    opacity: 0;           /* Unsichtbar beim ersten Laden */
-    pointer-events: none; /* Nicht klickbar beim ersten Laden */
+    opacity: 0;
+    pointer-events: none; 
     transition: color 0.2s, font-weight 0.2s, opacity 0.3s ease;
 }
 .ui-btn:hover {
@@ -86,16 +90,12 @@ body {
     font-weight: 800;
 }
 
-/* Home Button (x) -> Oben Rechts */
+/* Positionierungen Oben & Unten */
 #home-btn {
     top: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
-    right: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
 }
-
-/* Vollbild Klammer -> Unten Rechts */
 #fullscreen-btn {
     bottom: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
-    right: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
 }
 
 .static-menu {
