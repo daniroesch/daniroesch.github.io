@@ -21,8 +21,8 @@
     <main id="book-view">
         
         <div id="ui-layer">
-            <a href="#" id="home-btn" class="ui-btn">X</a>
-            <a href="#" id="fullscreen-btn" class="ui-btn">[&nbsp;&nbsp;&nbsp;&nbsp;]</a>
+            <a href="#" id="home-btn" class="ui-btn"><span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span></a>
+            <a href="#" id="fullscreen-btn" class="ui-btn">[&nbsp;&nbsp;&nbsp;]</a>
         </div>
 
         <div id="menu-positioner">
@@ -72,7 +72,13 @@
             </nav>
         </div>
 
-        <div id="loading">[ buch wird geladen... ]</div>
+        <div id="loading">
+            <div class="menu-row" style="justify-content: center;">
+                <span class="bracket">[</span>
+                <span class="menu-links" style="flex-grow: 0; padding: 0 0.6em;">buch wird geladen...</span>
+                <span class="bracket">]</span>
+            </div>
+        </div>
         <div class="flip-book-container" id="flip-book-container"></div>
     </main>
 
