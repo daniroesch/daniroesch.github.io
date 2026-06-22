@@ -69,7 +69,7 @@ body {
 
 #menu-positioner { 
     z-index: 3; 
-    visibility: hidden; /* FIX: Verhindert das Flackern unskalierter Schriften beim Laden */
+    visibility: hidden; 
 }
 #ui-layer { z-index: 100; } 
 
