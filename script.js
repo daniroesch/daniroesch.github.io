@@ -87,17 +87,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let isInitialLoad = true; 
     const extension = '.webp'; 
     
-    let currentImgW = 1123; 
-    let currentImgH = 794;
-    
     let activeLoadId = 0;
     let activeGridId = 0; 
     
+    // FIX: Die neuen Fallback-Übersetzungen (notAvailable) und das minimalistische "x" für close.
     const translations = {
-        'de': { titles: ["es ist ein buch", "blätter herum", "architektur portfolio", "daniroesch.de"], allBooks: "alle bücher", backToStart: "zurück zum anfang", close: "x schließen", home: "X", loading: "[ buch wird geladen... ]" },
-        'en': { titles: ["it´s a book", "flip around", "architecture portfolio", "daniroesch.de"], allBooks: "all books", backToStart: "back to start", close: "x close", home: "X", loading: "[ loading book... ]" },
-        'es': { titles: ["es un libro", "hojea las páginas", "portafolio de arquitectura", "daniroesch.de"], allBooks: "todos los libros", backToStart: "volver al inicio", close: "x cerrar", home: "X", loading: "[ cargando libro... ]" },
-        'pt': { titles: ["é um livro", "folheie as páginas", "portfólio de arquitetura", "daniroesch.de"], allBooks: "todos os livros", backToStart: "voltar ao início", close: "x fechar", home: "X", loading: "[ carregando livro... ]" }
+        'de': { titles: ["es ist ein buch", "blätter herum", "architektur portfolio", "daniroesch.de"], allBooks: "alle bücher", backToStart: "zurück zum anfang", close: "x", home: "X", loading: "[ buch wird geladen... ]", notAvailable: "[ buch noch nicht in dieser sprache verfügbar ]" },
+        'en': { titles: ["it´s a book", "flip around", "architecture portfolio", "daniroesch.de"], allBooks: "all books", backToStart: "back to start", close: "x", home: "X", loading: "[ loading book... ]", notAvailable: "[ book not yet available in this language ]" },
+        'es': { titles: ["es un libro", "hojea las páginas", "portafolio de arquitectura", "daniroesch.de"], allBooks: "todos los libros", backToStart: "volver al inicio", close: "x", home: "X", loading: "[ cargando libro... ]", notAvailable: "[ libro aún no disponible en este idioma ]" },
+        'pt': { titles: ["é um livro", "folheie as páginas", "portfólio de arquitetura", "daniroesch.de"], allBooks: "todos os livros", backToStart: "voltar ao início", close: "x", home: "X", loading: "[ carregando livro... ]", notAvailable: "[ livro ainda não disponível neste idioma ]" }
     };
 
     function getHashParams() {
@@ -221,8 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateHeading();
     }
 
-    // Läd nur das Cover einmal "echt" herunter, um die Breite/Höhe des Papiers zu erfassen
-    async function getCoverAspectRatio(url) {
+    async function loadCoverImage(url) {
         return new Promise((resolve) => {
             const img = new Image();
             img.onload = () => resolve({ exists: true, width: img.naturalWidth, height: img.naturalHeight });
@@ -231,8 +228,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // FIX: Die absolut schnellste Methode. Prüft nur die Existenz der Datei ohne Bilder herunterzuladen!
-    // Enthält einen 4-Sekunden-Notaus, falls das Netz hängt.
     async function checkPageExists(url) {
         try {
             const controller = new AbortController();
@@ -266,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 gridContainer.appendChild(tile);
             } else {
-                break; // Bricht ab, sobald ein Buch nicht mehr existiert
+                break; 
             }
         }
     }
@@ -277,19 +272,23 @@ document.addEventListener('DOMContentLoaded', () => {
         currentBook = bookName;
         currentLang = lang;
         
+        // FIX: Blendet X und Vollbild sofort aus, falls noch alte Bücher sichtbar waren
+        const homeBtn = document.getElementById('home-btn');
+        const fsBtn = document.getElementById('fullscreen-btn');
+        if (homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
+        if (fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
+
         if (menuPositioner) menuPositioner.style.visibility = 'hidden'; 
         updateHeading();
         
-        loadingScreen.innerText = translations[lang].loading;
+        // Setzt den normalen Ladescreen
+        loadingScreen.innerHTML = translations[lang].loading;
         
         document.querySelectorAll('.all-books-trigger').forEach(el => el.innerText = translations[lang].allBooks);
         document.getElementById('grid-heading').innerText = translations[lang].allBooks;
         document.getElementById('back-to-book-btn').innerText = translations[lang].close;
         document.getElementById('close-legal').innerText = translations[lang].close;
         document.getElementById('back-to-start-btn').innerText = translations[lang].backToStart;
-
-        const homeBtn = document.getElementById('home-btn');
-        if (homeBtn) homeBtn.innerText = translations[lang].home;
 
         langLinks.forEach(link => link.classList.remove('active'));
         const activeLink = document.querySelector(`[data-lang="${lang}"]`);
@@ -298,25 +297,28 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pageFlip) { pageFlip.destroy(); pageFlip = null; }
         bookWrapper.innerHTML = '<div id="book"></div>';
         bookWrapper.style.opacity = '0';
-        loadingScreen.style.display = 'block';
+        loadingScreen.style.display = 'flex'; // FLEX ermöglicht das saubere Stacking der Fallback-Nachrichten
         
         const folder = `${bookName}/pages_${lang}/`;
         const imageUrls = [];
         
-        // Holt das Seitenverhältnis aus dem Cover
-        const cover = await getCoverAspectRatio(`${folder}0${extension}`);
+        const cover = await loadCoverImage(`${folder}0${extension}`);
         if (myLoadId !== activeLoadId) return;
 
+        // FIX: Der Dead-End Notbrems-Schalter!
         if (cover.exists) { 
             imageUrls.push(`0${extension}`); 
             currentImgW = cover.width; 
             currentImgH = cover.height; 
         } else {
-            currentImgW = 1123;
-            currentImgH = 794;
+            // Buch existiert in dieser Sprache nicht! Zeigt die Fehlermeldung und einen Rettungslink.
+            loadingScreen.innerHTML = `
+                <div>${translations[lang].notAvailable}</div>
+                <a href="#view=grid" class="all-books-trigger">[ ${translations[lang].allBooks} ]</a>
+            `;
+            return; // Bricht das Laden hier endgültig ab!
         }
 
-        // Schnelles, stetiges Suchen nach Folgeseiten in 3er Gruppen
         const batchSize = 3;
         let pageCounter = 1;
         let checking = true;
@@ -404,6 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 menuPositioner.style.zIndex = '3';
                 endOfBookMenu.style.pointerEvents = 'auto';
                 endOfBookMenu.style.opacity = '1';
+                endOfBookMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
                 startMenu.style.opacity = '0';
                 startMenu.style.pointerEvents = 'none';
             } else {
