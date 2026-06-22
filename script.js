@@ -90,12 +90,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeLoadId = 0;
     let activeGridId = 0; 
     
-    // FIX: Die neuen Fallback-Übersetzungen (notAvailable) und das minimalistische "x" für close.
+    // FIX: Die Lade- und Fallback-Texte wurden ohne Klammern gespeichert, damit sie sauber mit HTML generiert werden können!
     const translations = {
-        'de': { titles: ["es ist ein buch", "blätter herum", "architektur portfolio", "daniroesch.de"], allBooks: "alle bücher", backToStart: "zurück zum anfang", close: "x", home: "X", loading: "[ buch wird geladen... ]", notAvailable: "[ buch noch nicht in dieser sprache verfügbar ]" },
-        'en': { titles: ["it´s a book", "flip around", "architecture portfolio", "daniroesch.de"], allBooks: "all books", backToStart: "back to start", close: "x", home: "X", loading: "[ loading book... ]", notAvailable: "[ book not yet available in this language ]" },
-        'es': { titles: ["es un libro", "hojea las páginas", "portafolio de arquitectura", "daniroesch.de"], allBooks: "todos los libros", backToStart: "volver al inicio", close: "x", home: "X", loading: "[ cargando libro... ]", notAvailable: "[ libro aún no disponible en este idioma ]" },
-        'pt': { titles: ["é um livro", "folheie as páginas", "portfólio de arquitetura", "daniroesch.de"], allBooks: "todos os livros", backToStart: "voltar ao início", close: "x", home: "X", loading: "[ carregando livro... ]", notAvailable: "[ livro ainda não disponível neste idioma ]" }
+        'de': { titles: ["es ist ein buch", "blätter herum", "architektur portfolio", "daniroesch.de"], allBooks: "alle bücher", backToStart: "zurück zum anfang", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "buch wird geladen...", notAvailable: "buch noch nicht in dieser sprache verfügbar" },
+        'en': { titles: ["it´s a book", "flip around", "architecture portfolio", "daniroesch.de"], allBooks: "all books", backToStart: "back to start", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "loading book...", notAvailable: "book not yet available in this language" },
+        'es': { titles: ["es un libro", "hojea las páginas", "portafolio de arquitectura", "daniroesch.de"], allBooks: "todos los libros", backToStart: "volver al inicio", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "cargando libro...", notAvailable: "libro aún no disponible en este idioma" },
+        'pt': { titles: ["é um livro", "folheie as páginas", "portfólio de arquitetura", "daniroesch.de"], allBooks: "todos os livros", backToStart: "voltar ao início", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "carregando livro...", notAvailable: "livro ainda não disponível neste idioma" }
     };
 
     function getHashParams() {
@@ -272,7 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
         currentBook = bookName;
         currentLang = lang;
         
-        // FIX: Blendet X und Vollbild sofort aus, falls noch alte Bücher sichtbar waren
         const homeBtn = document.getElementById('home-btn');
         const fsBtn = document.getElementById('fullscreen-btn');
         if (homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
@@ -281,14 +280,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (menuPositioner) menuPositioner.style.visibility = 'hidden'; 
         updateHeading();
         
-        // Setzt den normalen Ladescreen
-        loadingScreen.innerHTML = translations[lang].loading;
+        // FIX: Der normale Ladescreen wird perfekt mittig wie ein .menu-row Link gerendert
+        loadingScreen.innerHTML = `
+            <div class="menu-row" style="justify-content: center;">
+                <span class="bracket">[</span>
+                <span class="menu-links" style="flex-grow: 0; padding: 0 0.6em;">${translations[lang].loading}</span>
+                <span class="bracket">]</span>
+            </div>
+        `;
         
         document.querySelectorAll('.all-books-trigger').forEach(el => el.innerText = translations[lang].allBooks);
         document.getElementById('grid-heading').innerText = translations[lang].allBooks;
         document.getElementById('back-to-book-btn').innerText = translations[lang].close;
         document.getElementById('close-legal').innerText = translations[lang].close;
         document.getElementById('back-to-start-btn').innerText = translations[lang].backToStart;
+
+        // Weil wir im Home-Button HTML verwenden, muss hier innerHTML stehen!
+        if (homeBtn) homeBtn.innerHTML = translations[lang].home;
 
         langLinks.forEach(link => link.classList.remove('active'));
         const activeLink = document.querySelector(`[data-lang="${lang}"]`);
@@ -297,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pageFlip) { pageFlip.destroy(); pageFlip = null; }
         bookWrapper.innerHTML = '<div id="book"></div>';
         bookWrapper.style.opacity = '0';
-        loadingScreen.style.display = 'flex'; // FLEX ermöglicht das saubere Stacking der Fallback-Nachrichten
+        loadingScreen.style.display = 'flex'; 
         
         const folder = `${bookName}/pages_${lang}/`;
         const imageUrls = [];
@@ -305,18 +313,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const cover = await loadCoverImage(`${folder}0${extension}`);
         if (myLoadId !== activeLoadId) return;
 
-        // FIX: Der Dead-End Notbrems-Schalter!
         if (cover.exists) { 
             imageUrls.push(`0${extension}`); 
             currentImgW = cover.width; 
             currentImgH = cover.height; 
         } else {
-            // Buch existiert in dieser Sprache nicht! Zeigt die Fehlermeldung und einen Rettungslink.
+            // FIX: Der Error-Screen für nicht existierende Bücher! Alles absolut typografisch passend.
             loadingScreen.innerHTML = `
-                <div>${translations[lang].notAvailable}</div>
-                <a href="#view=grid" class="all-books-trigger">[ ${translations[lang].allBooks} ]</a>
+                <div class="menu-row" style="justify-content: center; margin-bottom: 0.8rem;">
+                    <span class="bracket">[</span>
+                    <span class="menu-links" style="flex-grow: 0; padding: 0 0.6em;">${translations[lang].notAvailable}</span>
+                    <span class="bracket">]</span>
+                </div>
+                <div class="menu-row" style="justify-content: center;">
+                    <span class="bracket">[</span>
+                    <span class="menu-links" style="flex-grow: 0; padding: 0 0.6em;">
+                        <a href="#view=grid" class="all-books-trigger">${translations[lang].allBooks}</a>
+                    </span>
+                    <span class="bracket">]</span>
+                </div>
             `;
-            return; // Bricht das Laden hier endgültig ab!
+            return; 
         }
 
         const batchSize = 3;
@@ -535,12 +552,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.addEventListener('click', (e) => {
-        if (e.target.id === 'back-to-start-btn' || e.target.id === 'home-btn') {
+        // Die Abfrage auf id oder Closest wird hier gemacht, falls man auf den Skalierten <span> klickt
+        if (e.target.closest('#back-to-start-btn') || e.target.closest('#home-btn')) {
             e.preventDefault();
             if (pageFlip && !isZoomed()) { pageFlip.flip(0); }
         }
 
-        if (e.target.classList.contains('all-books-trigger')) {
+        if (e.target.closest('.all-books-trigger')) {
             e.preventDefault();
             window.location.hash = `view=grid`;
         }
@@ -553,7 +571,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        if (e.target.id === 'fullscreen-btn') {
+        if (e.target.closest('#fullscreen-btn')) {
             e.preventDefault();
             toggleFullscreen();
         }
