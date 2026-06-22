@@ -90,7 +90,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeLoadId = 0;
     let activeGridId = 0; 
     
-    // FIX: Die Lade- und Fallback-Texte wurden ohne Klammern gespeichert, damit sie sauber mit HTML generiert werden können!
     const translations = {
         'de': { titles: ["es ist ein buch", "blätter herum", "architektur portfolio", "daniroesch.de"], allBooks: "alle bücher", backToStart: "zurück zum anfang", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "buch wird geladen...", notAvailable: "buch noch nicht in dieser sprache verfügbar" },
         'en': { titles: ["it´s a book", "flip around", "architecture portfolio", "daniroesch.de"], allBooks: "all books", backToStart: "back to start", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "loading book...", notAvailable: "book not yet available in this language" },
@@ -280,7 +279,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (menuPositioner) menuPositioner.style.visibility = 'hidden'; 
         updateHeading();
         
-        // FIX: Der normale Ladescreen wird perfekt mittig wie ein .menu-row Link gerendert
         loadingScreen.innerHTML = `
             <div class="menu-row" style="justify-content: center;">
                 <span class="bracket">[</span>
@@ -295,7 +293,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('close-legal').innerText = translations[lang].close;
         document.getElementById('back-to-start-btn').innerText = translations[lang].backToStart;
 
-        // Weil wir im Home-Button HTML verwenden, muss hier innerHTML stehen!
         if (homeBtn) homeBtn.innerHTML = translations[lang].home;
 
         langLinks.forEach(link => link.classList.remove('active'));
@@ -318,7 +315,6 @@ document.addEventListener('DOMContentLoaded', () => {
             currentImgW = cover.width; 
             currentImgH = cover.height; 
         } else {
-            // FIX: Der Error-Screen für nicht existierende Bücher! Alles absolut typografisch passend.
             loadingScreen.innerHTML = `
                 <div class="menu-row" style="justify-content: center; margin-bottom: 0.8rem;">
                     <span class="bracket">[</span>
@@ -552,7 +548,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.addEventListener('click', (e) => {
-        // Die Abfrage auf id oder Closest wird hier gemacht, falls man auf den Skalierten <span> klickt
         if (e.target.closest('#back-to-start-btn') || e.target.closest('#home-btn')) {
             e.preventDefault();
             if (pageFlip && !isZoomed()) { pageFlip.flip(0); }
