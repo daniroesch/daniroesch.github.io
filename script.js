@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- PULL-TO-REFRESH ---
     let pullStartY = 0;
     let pullStartX = 0;
 
@@ -91,7 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentImgW = 1123; 
     let currentImgH = 794;
     
-    // FIX: "architektur portfolio" ist jetzt perfekt in alle Sprachen übersetzt
+    // NEU: Globaler Abbruch-Schalter, um Race-Conditions beim schnellen Sprachenwechsel zu verhindern!
+    let activeLoadId = 0;
+    
     const translations = {
         'de': { titles: ["es ist ein buch", "blätter herum", "architektur portfolio", "daniroesch.de"], allBooks: "alle bücher", backToStart: "zurück zum anfang", close: "x schließen", home: "X", loading: "[ buch wird geladen... ]" },
         'en': { titles: ["it´s a book", "flip around", "architecture portfolio", "daniroesch.de"], allBooks: "all books", backToStart: "back to start", close: "x close", home: "X", loading: "[ loading book... ]" },
@@ -193,16 +196,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentW = window.innerWidth;
         if (currentW !== lastWinW) {
             lastWinW = currentW;
+            // FIX: Blendet das Buch bei starkem Resize kurz aus, um fehlerfreie Zentrierungs-Neuberechnungen zu garantieren!
+            if(bookWrapper) bookWrapper.style.opacity = '0';
             updateBookSize();
             if (pageFlip) pageFlip.update();
+            setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
         }
     });
 
     window.addEventListener('orientationchange', () => {
         setTimeout(() => {
             lastWinW = window.innerWidth;
+            if(bookWrapper) bookWrapper.style.opacity = '0';
             updateBookSize();
             if (pageFlip) pageFlip.update();
+            setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
         }, 200);
     });
 
@@ -217,8 +225,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateHeading();
     }
 
-    // FIX: Die absolut schnellste und sicherste Methode, um fehlende Seiten & das Schluss-Cover auszuschließen.
-    // Löst keine Server-Blockaden wie fetch(HEAD) aus!
     async function checkImage(url) {
         return new Promise((resolve) => {
             const img = new Image();
@@ -268,6 +274,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadBook(bookName, lang, initialPage = 0) {
+        // Erhöhe die ID: Jedes Mal, wenn neu geklickt wird, kriegt dieser Task eine einmalige Nummer
+        const myLoadId = ++activeLoadId;
+
         currentBook = bookName;
         currentLang = lang;
         
@@ -298,6 +307,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const imageUrls = [];
         
         const cover = await checkImage(`${folder}0${extension}`);
+        
+        // FIX: Sofortiger Abbruch, falls der Nutzer währenddessen schon wieder geklickt hat!
+        if (myLoadId !== activeLoadId) return;
+
         if (cover.exists) { 
             imageUrls.push(`0${extension}`); 
             currentImgW = cover.width; 
@@ -307,12 +320,11 @@ document.addEventListener('DOMContentLoaded', () => {
             currentImgH = 794;
         }
 
-        // Sicherer 4er-Batch-Lader mit echten Image-Objekten
         const batchSize = 4;
         let pageCounter = 1;
         let checking = true;
 
-        while (checking) {
+        while (checking && pageCounter <= 200) { 
             const promises = [];
             for (let i = 0; i < batchSize; i++) {
                 const pageId = pageCounter + i;
@@ -320,6 +332,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             const results = await Promise.all(promises);
+            
+            // FIX: Abbruchprüfung mitten in der Ladeschleife
+            if (myLoadId !== activeLoadId) return;
+
             results.sort((a, b) => a.id - b.id);
             
             for (const res of results) {
@@ -333,8 +349,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (checking) pageCounter += batchSize;
         }
 
-        // Schluss-Cover prüfen
         const back = await checkImage(`${folder}-1${extension}`);
+        
+        // FIX: Letzter Abbruch-Check direkt vor dem Buchaufbau
+        if (myLoadId !== activeLoadId) return;
+
         if (back.exists) { imageUrls.push(`-1${extension}`); }
 
         buildBook(imageUrls, folder, currentImgW, currentImgH, initialPage);
