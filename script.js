@@ -99,7 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentLang = 'de'; 
     let currentBook = portfolioBooks[0]; // Das erste Buch der Liste wird beim Start geladen
     let currentTitleIndex = 0; 
-    let isInternalHashUpdate = false; // Blockiert doppelte Blätter-Befehle
+    
+    // FIX: Smarter Wächter statt hartem Blocker für ein flüssiges Menü
+    let targetPageWhileFlipping = -1; 
+    
     let isInitialLoad = true; 
     const extension = '.webp'; 
     
@@ -138,8 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Leitet den Nutzer auf die entsprechende Ansicht um (Buch, Raster oder Impressum)
     async function handleRouting() {
-        if (isInternalHashUpdate) return; // Wenn eine Blätter-Animation läuft: Abbrechen!
-
+        // FIX: Der harte Blocker (isInternalHashUpdate) wurde entfernt, Menüs reagieren sofort!
         let params = getHashParams();
 
         // Beim ersten Laden der Webseite:
@@ -147,7 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
             isInitialLoad = false;
             params.page = 0;
             if (params.view === 'book' || !params.view) {
-                isInternalHashUpdate = true;
                 // Formatiert die URL wunderschön (Path-based Routing)
                 window.location.hash = `/${params.book}/${params.lang}/1`;
             }
@@ -178,7 +179,10 @@ document.addEventListener('DOMContentLoaded', () => {
             await loadBook(params.book, params.lang, params.page);
         } else {
             if (pageFlip && pageFlip.getCurrentPageIndex() !== params.page) {
-                pageFlip.flip(params.page);
+                // FIX: Verhindert Endlosschleifen, ohne Klicks zu blockieren
+                if (params.page !== targetPageWhileFlipping) {
+                    pageFlip.flip(params.page);
+                }
             }
         }
     }
@@ -401,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Such-Schleife: Sucht so lange nach Seiten (1, 2, 3...), bis es keine mehr gibt
-        const batchSize = 3; // Prüft immer 3 Seiten gleichzeitig (Highspeed!)
+        const batchSize = 3; 
         let pageCounter = 1;
         let checking = true;
 
@@ -497,6 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 menuPositioner.style.zIndex = '3';
                 endOfBookMenu.style.pointerEvents = 'auto';
                 endOfBookMenu.style.opacity = '1';
+                endOfBookMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
                 startMenu.style.opacity = '0';
                 startMenu.style.pointerEvents = 'none';
             } else {
@@ -512,8 +517,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetPage = e.data; 
             const totalPages = pageFlip.getPageCount();
             
-            isInternalHashUpdate = true; // Riegel vorschieben (Race-Condition Schutz!)
+            targetPageWhileFlipping = targetPage; // FIX: Präziser Blocker gesetzt
             window.location.hash = `/${currentBook}/${currentLang}/${targetPage + 1}`;
+
+            // FIX: SOFORTIGES Ausblenden verhindert spiegelverkehrte Geistertexte!
+            startMenu.style.opacity = '0';
+            startMenu.style.pointerEvents = 'none';
+            endOfBookMenu.style.opacity = '0';
+            endOfBookMenu.style.pointerEvents = 'none';
+            menuPositioner.style.zIndex = '1';
 
             // Icons dynamisch während dem Flug aus/einblenden
             if (targetPage === 0 || targetPage >= totalPages - 2) {
@@ -539,7 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 endOfBookMenu.style.pointerEvents = 'none';
                 menuPositioner.style.zIndex = '1';
             } else {
-                isInternalHashUpdate = false; // Riegel aufheben!
+                targetPageWhileFlipping = -1; // FIX: Riegel aufheben, Klicks wieder frei!
 
                 // Schriften je nach Position (Start, Mitte, Ende) einblenden
                 if (currentPage === 0) {
@@ -575,7 +587,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     startMenu.style.pointerEvents = 'auto';
                     menuPositioner.style.visibility = 'visible'; // Beendet das anfängliche Versteckspiel
                 }
-                isInternalHashUpdate = false;
             }, 100);
         }, 150);
     }
