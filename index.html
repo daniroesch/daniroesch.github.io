@@ -2,34 +2,46 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <!-- Viewport: Sorgt dafür, dass die Seite auf dem Handy richtig skaliert und Nutzer reinzoomen dürfen -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    
     <title>portfolio daniel rösch</title>
     <meta name="description" content="Portfolio von Daniel Rösch - Architektur Portfolio und Projekte präsentiert als interaktives digitales Buch.">
     
+    <!-- Das kleine Icon im Browser-Tab -->
     <link rel="icon" type="image/png" href="hero/favicon.png">
 
+    <!-- Open Graph: Das sind die Infos, die angezeigt werden, wenn man den Link z.B. auf WhatsApp verschickt -->
     <meta property="og:title" content="Portfolio Daniel Rösch">
     <meta property="og:description" content="Architektur Portfolio und Projekte präsentiert als interaktives digitales Buch.">
     <meta property="og:image" content="https://daniroesch.github.io/hero/social-preview.jpg">
     <meta property="og:url" content="https://daniroesch.github.io">
     <meta property="og:type" content="website">
 
+    <!-- Verknüpfung zur Design-Datei -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+    <!-- HAUPT-ANSICHT: Das Buch -->
     <main id="book-view">
         
+        <!-- UI-Ebene: Hier liegen die beiden feststehenden Icons (Home & Vollbild) -->
         <div id="ui-layer">
             <a href="#" id="home-btn" class="ui-btn"><span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span></a>
             <a href="#" id="fullscreen-btn" class="ui-btn">[&nbsp;&nbsp;&nbsp;]</a>
         </div>
 
+        <!-- Menü-Rahmen: Hält das Textmenü exakt auf der Größe des Buches -->
         <div id="menu-positioner">
+            
+            <!-- VORDERES MENÜ (Auf dem Start-Cover) -->
             <nav class="static-menu" id="start-menu">
                 <div class="menu-wrapper">
+                    <!-- Der klickbare Haupttitel -->
                     <h1 id="main-heading" class="cycle-title">es ist ein buch</h1>
                     
+                    <!-- Sprachauswahl -->
                     <div class="menu-row">
                         <span class="bracket">[</span>
                         <span class="menu-links">
@@ -41,6 +53,7 @@
                         <span class="bracket">]</span>
                     </div>
 
+                    <!-- Link zur Bibliothek -->
                     <div class="menu-row">
                         <span class="bracket">[</span>
                         <span class="menu-links">
@@ -49,6 +62,7 @@
                         <span class="bracket">]</span>
                     </div>
                     
+                    <!-- Kontakt & Impressum -->
                     <div class="legal-links">
                         <a href="mailto:arch.daniroesch@gmail.com" id="link-email">arch.daniroesch@gmail.com</a>
                         <a href="#" id="link-legal">impressum & datenschutz</a>
@@ -56,6 +70,7 @@
                 </div>
             </nav>
 
+            <!-- HINTERES MENÜ (Auf dem End-Cover) -->
             <nav id="end-of-book-menu">
                 <div class="menu-wrapper">
                     <div class="menu-row">
@@ -72,6 +87,7 @@
             </nav>
         </div>
 
+        <!-- Ladescreen: Wird angezeigt, während JavaScript die Seiten sucht -->
         <div id="loading">
             <div class="menu-row" style="justify-content: center;">
                 <span class="bracket">[</span>
@@ -79,9 +95,12 @@
                 <span class="bracket">]</span>
             </div>
         </div>
+        
+        <!-- Hier rendert die PageFlip-Bibliothek das 3D-Buch hinein -->
         <div class="flip-book-container" id="flip-book-container"></div>
     </main>
 
+    <!-- BIBLIOTHEKS-ANSICHT: Das Grid-Layout aller Bücher -->
     <section id="grid-view" style="display: none;">
         <header class="grid-header">
             <h2 id="grid-heading">alle bücher</h2>
@@ -90,6 +109,7 @@
         <div class="grid-container"></div>
     </section>
 
+    <!-- IMPRESSUMS-ANSICHT: Das Bild mit den rechtlichen Infos -->
     <section id="legal-view" style="display: none;">
         <header class="grid-header">
             <h2 id="legal-heading">impressum & datenschutz</h2>
@@ -100,7 +120,9 @@
         </div>
     </section>
 
+    <!-- Das externe Skript für die Blätter-Animation -->
     <script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.min.js"></script>
+    <!-- Dein eigenes Skript -->
     <script src="script.js"></script>
 </body>
 </html>
