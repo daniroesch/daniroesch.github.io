@@ -1,13 +1,11 @@
-/* ==========================================================================
-   1. SCHRIFTARTEN (Montserrat aus deinem lokalen Ordner laden)
-   ========================================================================== */
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
     font-weight: 400;
-    font-display: swap; /* swap: Zeigt sofort Text an, verhindert "unsichtbare" Schriften beim Laden */
+    font-display: swap;
     src: url('fonts/montserrat-400.woff2') format('woff2');
 }
+
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
@@ -15,6 +13,7 @@
     font-display: swap;
     src: url('fonts/montserrat-500.woff2') format('woff2');
 }
+
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
@@ -22,6 +21,7 @@
     font-display: swap;
     src: url('fonts/montserrat-700.woff2') format('woff2');
 }
+
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
@@ -30,39 +30,32 @@
     src: url('fonts/montserrat-800.woff2') format('woff2');
 }
 
-/* ==========================================================================
-   2. ANTI-VERZERRUNGS & GLOBALER RESET (Schützt Schriften auf Handys)
-   ========================================================================== */
+/* FIX: Garantiert, dass nirgendwo Abstände verzerrt werden */
 *, *::before, *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: 'Montserrat', sans-serif; 
-    /* FIX: Zwingt mobile Browser dazu, Schriften und Abstände NIEMALS künstlich zu verzerren */
     letter-spacing: normal !important; 
     font-stretch: normal !important;
 }
 
 html, body {
-    /* Deaktiviert das fehlerhafte automatische "Font Boosting" (Font Autosizing) von iOS Safari */
+    /* FIX: Verhindert aggressives Font-Boosting von mobilen Browsern! */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
-    /* Erlaubt normales Bewegen und das Reinzoomen mit zwei Fingern (Pinch-to-Zoom) */
     touch-action: pan-x pan-y pinch-zoom !important;
 }
 
 body {
     background-color: #ffffff;
-    overflow: hidden; /* Verhindert, dass die Seite am Rand aus Versehen scrollt */
+    overflow: hidden; 
     color: #000;
     width: 100vw;
     height: 100vh;
-    height: 100dvh; /* dvh: Rechnet die mobile Browser-Suchleiste intelligent mit ein */
+    height: 100dvh; 
 }
 
-/* ==========================================================================
-   3. STRUKTUR DER BUCH-ANSICHT
-   ========================================================================== */
 #book-view {
     position: relative;
     width: 100vw;
@@ -70,7 +63,6 @@ body {
     height: 100dvh;
 }
 
-/* UI-Layer & Menü-Rahmen: Werden vom JS exakt auf die Echtzeit-Größe des Buches skaliert */
 #menu-positioner, #ui-layer {
     position: absolute;
     top: 50%;
@@ -78,17 +70,15 @@ body {
     transform: translate(-50%, -50%);
     width: var(--real-book-width, 100vw);
     height: var(--real-book-height, 100vh);
-    pointer-events: none; /* Klicks fallen durch den Rahmen durch direkt auf das Buch */
+    pointer-events: none; 
 }
 
 #menu-positioner { 
-    z-index: 3; /* Liegt über dem Buch, damit Texte lesbar und anklickbar sind */
+    z-index: 3; 
+    visibility: hidden; 
 }
-#ui-layer { z-index: 100; } /* Die Icons schweben ganz oben auf Ebene 100 */
+#ui-layer { z-index: 100; } 
 
-/* ==========================================================================
-   4. ASYMMETRISCHE UI-BUTTONS (Home & Vollbild)
-   ========================================================================== */
 .ui-btn {
     position: absolute;
     width: 4.5em; 
@@ -97,10 +87,9 @@ body {
     color: #888;
     text-decoration: none;
     font-weight: 400;
-    font-size: clamp(10px, var(--real-book-height) * 0.045, 20px);
+    font-size: clamp(10px, calc(var(--real-book-height) * 0.045), 20px);
     opacity: 0;
     pointer-events: none; 
-    /* All-Transition: Ermöglicht das absolut flüssige Wandern der Buttons beim Drehen des Handys */
     transition: all 0.3s ease; 
 }
 .ui-btn:hover {
@@ -108,63 +97,63 @@ body {
     font-weight: 800;
 }
 
-/* STANDARD-POSITIONIERUNG (Innerhalb des Buches, falls kein Platz im toten Raum ist) */
+/* --- FIX: NEUE ASYMMETRISCHE ICON PLATZIERUNG --- */
+
+/* STANDARD (Im Buch) */
 #home-btn {
-    top: clamp(8px, var(--real-book-height) * 0.035, 20px);
-    right: clamp(8px, var(--real-book-height) * 0.035, 20px);
+    top: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
+    right: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
     left: auto;
 }
 #fullscreen-btn {
-    bottom: clamp(8px, var(--real-book-height) * 0.035, 20px);
-    left: clamp(8px, var(--real-book-height) * 0.035, 20px);
+    bottom: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
+    left: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
     right: auto;
 }
 
-/* WENN DAS BUCH DIE VOLLE BREITE NUTZT (Leerraum ist OBEN und UNTEN) */
+/* BUCH IST BREIT (Leerraum oben & unten) */
 body.fit-width #home-btn {
-    top: -2.5em; /* Schiebt das X über die obere Buchkante */
+    top: -2.5em; 
     right: 0;
     left: auto;
 }
 body.fit-width #fullscreen-btn {
-    bottom: -2.5em; /* Schiebt das Vollbild unter die untere Buchkante */
+    bottom: -2.5em; 
     left: 0;
     right: auto;
 }
 
-/* WENN DAS BUCH DIE VOLLE HÖHE NUTZT (Leerraum ist LINKS und RECHTS) */
+/* BUCH IST HOCH (Leerraum links & rechts) */
 body.fit-height #home-btn {
     top: 10px;
-    right: -5.5em; /* Schiebt das X elegant rechts neben das Buch (mit viel Luft) */
+    right: -5.5em; 
     left: auto;
 }
 body.fit-height #fullscreen-btn {
     bottom: 10px;
-    left: -5.5em; /* Schiebt das Vollbild elegant links neben das Buch (mit viel Luft) */
+    left: -5.5em; 
     right: auto;
 }
+/* ------------------------------------------------ */
 
-/* ==========================================================================
-   5. MENÜ DESIGN & KLAMMERN-TYPOGRAFIE
-   ========================================================================== */
 .static-menu {
     position: absolute;
     top: 0;
     left: 0; 
-    width: 50%; /* Startmenü füllt exakt das linke Cover */
+    width: 50%;
     height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    pointer-events: auto; /* Macht die Links im Menü wieder anklickbar */
+    pointer-events: auto; 
     opacity: 1;
-    transition: opacity 0.3s ease; /* Ein sauberer, stummer Fade-Effekt ohne Ruckeln */
+    transition: opacity 0.3s ease;
 }
 
 #end-of-book-menu {
     position: absolute;
     top: 0;
-    right: 0; /* Endmenü füllt exakt das rechte Cover (Impressum) */
+    right: 0; 
     width: 50%;
     height: 100%;
     display: flex;
@@ -183,7 +172,7 @@ body.fit-height #fullscreen-btn {
 }
 
 h1 {
-    font-size: clamp(14px, var(--real-book-height) * 0.055, 26px); 
+    font-size: clamp(14px, calc(var(--real-book-height) * 0.055), 26px); 
     font-weight: 800;
     text-align: center;
     white-space: nowrap; 
@@ -193,25 +182,21 @@ h1 {
     cursor: pointer;
     transition: color 0.3s ease;
 }
+
 h1:hover { color: #000; }
 
 .menu-row {
     display: flex;
     justify-content: space-between; 
     align-items: center;
-    font-size: clamp(11px, var(--real-book-height) * 0.04, 20px); 
+    font-size: clamp(11px, calc(var(--real-book-height) * 0.04), 20px); 
     color: #888;
     margin-bottom: 0.3rem; 
 }
 
 .bracket { font-weight: 400; }
 
-.menu-links { 
-    flex-grow: 1; 
-    text-align: center; 
-    text-transform: lowercase; 
-    padding: 0 0.6em; /* Garantiert den perfekten, edlen Abstand des Textes zu den Klammern */
-}
+.menu-links { flex-grow: 1; text-align: center; text-transform: lowercase; padding: 0 0.6em; }
 .menu-links a { color: #888; text-decoration: none; transition: color 0.2s; font-weight: 400; }
 .menu-links a:hover, .menu-links a.active { color: #000; font-weight: 800; }
 
@@ -220,37 +205,42 @@ h1:hover { color: #000; }
     flex-direction: column;
     align-items: center;
     gap: 4px; 
-    margin-top: clamp(8px, var(--real-book-height) * 0.04), 20px); 
-    font-size: clamp(9px, var(--real-book-height) * 0.03, 14px); 
+    margin-top: clamp(8px, calc(var(--real-book-height) * 0.04), 20px); 
+    font-size: clamp(9px, calc(var(--real-book-height) * 0.03), 14px); 
     text-transform: lowercase;
 }
+
 .legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; }
 .legal-links a:hover { color: #000; }
 
-/* ==========================================================================
-   6. LADESCREEN & CO-FAILBACKS (Der Fehlerbildschirm)
-   ========================================================================== */
+.flip-book-container, 
+.flip-book-container *, 
+.st-page-flip {
+    touch-action: pan-x pan-y pinch-zoom !important;
+}
+
+.flip-book-container.zoomed-state {
+    pointer-events: none !important;
+}
+
+.flip-book-container {
+    position: absolute;
+    top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
+    display: flex; justify-content: center; align-items: center;
+    z-index: 2;
+    opacity: 0; transition: opacity 0.5s ease;
+}
+
 #loading {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: 100%;
     z-index: 10;
-    display: flex; /* Nutzt Flexbox, damit Fehlermeldung und Rettungslink perfekt untereinander liegen */
-    flex-direction: column; 
-    align-items: center;
+    display: flex; flex-direction: column; align-items: center;
 }
-/* Stylt den klickbaren "[ alle bücher ]" Rettungslink im Fehler-Screen */
-#loading a { color: #888; font-weight: 800; text-decoration: none; transition: color 0.2s; }
-#loading a:hover { color: #000; }
 
-/* ==========================================================================
-   7. SEITEN-STYLING (Die Renderings im Buch)
-   ========================================================================== */
 .page { background-color: #ffffff; position: relative; }
 .page img { width: 100%; height: 100%; object-fit: cover; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
 
-/* ==========================================================================
-   8. SUB-ANSICHTEN (Bibliotheks-Raster & Impressums-Overlay)
-   ========================================================================== */
 #grid-view, #legal-view {
     position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
     padding: 5vw; background: #fff; overflow-y: auto; z-index: 20;
@@ -258,18 +248,15 @@ h1:hover { color: #000; }
 
 .grid-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
 .grid-header h2 { font-weight: 800; font-size: 1.5rem; text-transform: lowercase; }
-/* FIX: Das Schließen-x ist nun typografisch exakt identisch groß und stark wie die h2-Überschrift links */
 .grid-header a { color: #000; text-decoration: none; font-weight: 800; text-transform: lowercase; font-size: 1.5rem; }
 
 .grid-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; }
 .book-tile { cursor: pointer; transition: transform 0.2s; }
-.book-tile:hover { transform: scale(1.02); } /* Edler, minimaler Zoom-Effekt beim Drüberfahren */
+.book-tile:hover { transform: scale(1.02); }
 .book-tile img { height: 300px; width: auto; object-fit: cover; background: #f0f0f0; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: block; }
-
 .legal-content { max-width: 800px; margin: 0 auto; }
 .legal-image { display: block; margin: 0 auto; max-width: 100%; height: auto; box-shadow: 0 5px 25px rgba(0,0,0,0.05); }
 
-/* Responsive Media Query für kleinere Smartphone-Displays */
 @media (max-width: 600px) {
     .book-tile img { height: 200px; }
 }
