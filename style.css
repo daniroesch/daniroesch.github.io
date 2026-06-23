@@ -1,11 +1,11 @@
+/* --- SCHRIFTARTEN LADEN --- */
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
     font-weight: 400;
-    font-display: swap;
+    font-display: swap; /* swap: Zeigt Systemschrift an, bis Montserrat geladen ist (schneller) */
     src: url('fonts/montserrat-400.woff2') format('woff2');
 }
-
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
@@ -13,7 +13,6 @@
     font-display: swap;
     src: url('fonts/montserrat-500.woff2') format('woff2');
 }
-
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
@@ -21,7 +20,6 @@
     font-display: swap;
     src: url('fonts/montserrat-700.woff2') format('woff2');
 }
-
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
@@ -30,32 +28,35 @@
     src: url('fonts/montserrat-800.woff2') format('woff2');
 }
 
-/* FIX: Garantiert, dass nirgendwo Abstände verzerrt werden */
+/* --- GRUNDEINSTELLUNGEN --- */
 *, *::before, *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: 'Montserrat', sans-serif; 
+    /* Verhindert, dass Browser den Textabstand beim Laden künstlich verzerren */
     letter-spacing: normal !important; 
     font-stretch: normal !important;
 }
 
 html, body {
-    /* FIX: Verhindert aggressives Font-Boosting von mobilen Browsern! */
+    /* Verhindert "Font-Boosting" (unerwünschtes Vergrößern) auf Smartphones */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    /* Erlaubt dem Nutzer das Pinch-to-Zoom mit zwei Fingern */
     touch-action: pan-x pan-y pinch-zoom !important;
 }
 
 body {
     background-color: #ffffff;
-    overflow: hidden; 
+    overflow: hidden; /* Verhindert hässliche Scrollbalken am Browserrand */
     color: #000;
     width: 100vw;
     height: 100vh;
-    height: 100dvh; 
+    height: 100dvh; /* dvh: Beachtet die Adressleiste auf Handys */
 }
 
+/* --- BUCH ANSICHT --- */
 #book-view {
     position: relative;
     width: 100vw;
@@ -63,6 +64,7 @@ body {
     height: 100dvh;
 }
 
+/* Positioniert das Menü exakt auf den Maßen des Buches */
 #menu-positioner, #ui-layer {
     position: absolute;
     top: 50%;
@@ -70,15 +72,16 @@ body {
     transform: translate(-50%, -50%);
     width: var(--real-book-width, 100vw);
     height: var(--real-book-height, 100vh);
-    pointer-events: none; 
+    pointer-events: none; /* Klicks gehen durch den Rahmen hindurch auf das Buch */
 }
 
 #menu-positioner { 
     z-index: 3; 
-    visibility: hidden; 
+    visibility: hidden; /* Versteckt Menü beim ersten Laden, bis die Größe berechnet ist */
 }
-#ui-layer { z-index: 100; } 
+#ui-layer { z-index: 100; } /* Icons immer ganz oben */
 
+/* --- DIE ICONS (HOME & VOLLBILD) --- */
 .ui-btn {
     position: absolute;
     width: 4.5em; 
@@ -90,6 +93,7 @@ body {
     font-size: clamp(10px, calc(var(--real-book-height) * 0.045), 20px);
     opacity: 0;
     pointer-events: none; 
+    /* Weiche Animation für Hover und für das Verschieben bei Formatänderung */
     transition: all 0.3s ease; 
 }
 .ui-btn:hover {
@@ -97,55 +101,41 @@ body {
     font-weight: 800;
 }
 
-/* --- FIX: NEUE ASYMMETRISCHE ICON PLATZIERUNG --- */
-
-/* STANDARD (Im Buch) */
-#home-btn {
-    top: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
-    right: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
-    left: auto;
-}
-#fullscreen-btn {
-    bottom: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
-    left: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
-    right: auto;
-}
-
-/* BUCH IST BREIT (Leerraum oben & unten) */
+/* DYNAMIK: Buch nutzt volle Bilschirm-Breite (schwarzer Balken oben/unten) */
 body.fit-width #home-btn {
-    top: -2.5em; 
+    top: -2.5em; /* Schiebt das X nach oben aus dem Buch raus */
     right: 0;
     left: auto;
 }
 body.fit-width #fullscreen-btn {
-    bottom: -2.5em; 
+    bottom: -2.5em; /* Schiebt die Klammer nach unten aus dem Buch raus */
     left: 0;
     right: auto;
 }
 
-/* BUCH IST HOCH (Leerraum links & rechts) */
+/* DYNAMIK: Buch nutzt volle Bildschirm-Höhe (schwarzer Balken links/rechts) */
 body.fit-height #home-btn {
     top: 10px;
-    right: -5.5em; 
+    right: -5.5em; /* Schiebt das X nach rechts aus dem Buch raus */
     left: auto;
 }
 body.fit-height #fullscreen-btn {
     bottom: 10px;
-    left: -5.5em; 
+    left: -5.5em; /* Schiebt die Klammer nach links aus dem Buch raus */
     right: auto;
 }
-/* ------------------------------------------------ */
 
+/* --- MENÜ GESTALTUNG --- */
 .static-menu {
     position: absolute;
     top: 0;
     left: 0; 
-    width: 50%;
+    width: 50%; /* Das Menü füllt genau die linke Buchhälfte */
     height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    pointer-events: auto; 
+    pointer-events: auto; /* Klicks auf das Menü aktivieren */
     opacity: 1;
     transition: opacity 0.3s ease;
 }
@@ -153,7 +143,7 @@ body.fit-height #fullscreen-btn {
 #end-of-book-menu {
     position: absolute;
     top: 0;
-    right: 0; 
+    right: 0; /* Das End-Menü füllt genau die rechte Buchhälfte */
     width: 50%;
     height: 100%;
     display: flex;
@@ -196,7 +186,12 @@ h1:hover { color: #000; }
 
 .bracket { font-weight: 400; }
 
-.menu-links { flex-grow: 1; text-align: center; text-transform: lowercase; padding: 0 0.6em; }
+.menu-links { 
+    flex-grow: 1; 
+    text-align: center; 
+    text-transform: lowercase; 
+    padding: 0 0.6em; /* Einheitlicher Abstand zwischen Klammer und Text */
+}
 .menu-links a { color: #888; text-decoration: none; transition: color 0.2s; font-weight: 400; }
 .menu-links a:hover, .menu-links a.active { color: #000; font-weight: 800; }
 
@@ -213,12 +208,14 @@ h1:hover { color: #000; }
 .legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; }
 .legal-links a:hover { color: #000; }
 
+/* --- 3D BUCH & LADESCREEN --- */
 .flip-book-container, 
 .flip-book-container *, 
 .st-page-flip {
     touch-action: pan-x pan-y pinch-zoom !important;
 }
 
+/* Wenn gezoomt wird, schaltet das JS das Blättern ab (pointer-events: none) */
 .flip-book-container.zoomed-state {
     pointer-events: none !important;
 }
@@ -241,6 +238,7 @@ h1:hover { color: #000; }
 .page { background-color: #ffffff; position: relative; }
 .page img { width: 100%; height: 100%; object-fit: cover; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
 
+/* --- BIBLIOTHEK (GRID) & IMPRESSUM --- */
 #grid-view, #legal-view {
     position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
     padding: 5vw; background: #fff; overflow-y: auto; z-index: 20;
@@ -252,11 +250,13 @@ h1:hover { color: #000; }
 
 .grid-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; }
 .book-tile { cursor: pointer; transition: transform 0.2s; }
-.book-tile:hover { transform: scale(1.02); }
+.book-tile:hover { transform: scale(1.02); } /* Leichter Zoom beim Drüberfahren */
 .book-tile img { height: 300px; width: auto; object-fit: cover; background: #f0f0f0; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: block; }
+
 .legal-content { max-width: 800px; margin: 0 auto; }
 .legal-image { display: block; margin: 0 auto; max-width: 100%; height: auto; box-shadow: 0 5px 25px rgba(0,0,0,0.05); }
 
+/* Auf kleinen Handys werden die Vorschaubilder im Grid etwas kleiner gemacht */
 @media (max-width: 600px) {
     .book-tile img { height: 200px; }
 }
