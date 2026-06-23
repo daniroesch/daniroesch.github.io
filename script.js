@@ -35,7 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const xDiff = Math.abs(pullEndX - pullStartX);
             
             if (yDiff > 130 && xDiff < 40 && !isZoomed()) {
-                window.location.hash = `view=book&book=${currentBook}&lang=${currentLang}&page=0`;
+                // NEU: Saubere Path-URL für den Reload
+                window.location.hash = `/${currentBook}/${currentLang}/1`;
                 setTimeout(() => { window.location.reload(); }, 30);
             }
         }
@@ -79,9 +80,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const gridView = document.getElementById('grid-view');
     const legalView = document.getElementById('legal-view');
     
+    // Trag hier zukünftig deine echten Projektnamen ein! 
+    // Sie werden dann genau so in der schönen URL angezeigt.
+    const portfolioBooks = [
+        'book_1', 
+        'book_2',
+        'book_3',
+        'book_4'
+    ]; 
+    
     let pageFlip = null; 
     let currentLang = 'de'; 
-    let currentBook = 'book_1'; 
+    let currentBook = portfolioBooks[0]; 
     let currentTitleIndex = 0; 
     let isInternalHashUpdate = false; 
     let isInitialLoad = true; 
@@ -97,15 +107,24 @@ document.addEventListener('DOMContentLoaded', () => {
         'pt': { titles: ["é um livro", "folheie as páginas", "portfólio de arquitetura", "daniroesch.de"], allBooks: "todos os livros", backToStart: "voltar ao início", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "carregando livro...", notAvailable: "livro ainda não disponível neste idioma" }
     };
 
+    // NEU: Liest die sauberen "Path-Style" URLs aus
     function getHashParams() {
-        const hash = window.location.hash.substring(1);
-        const params = new URLSearchParams(hash);
-        return {
-            view: params.get('view') || 'book',
-            book: params.get('book') || 'book_1',
-            lang: params.get('lang') || 'de',
-            page: parseInt(params.get('page')) || 0
-        };
+        const hash = window.location.hash.replace(/^#\/?/, ''); // Entfernt # und eventuelle /
+        const parts = hash.split('/');
+
+        // Prüft auf statische Seiten
+        if (parts[0] === 'grid') return { view: 'grid' };
+        if (parts[0] === 'legal') return { view: 'legal' };
+
+        // Liest das Buch aus (Bsp: /book_1/de/1)
+        const book = parts[0] || portfolioBooks[0];
+        const lang = parts[1] || 'de';
+        
+        // Nutzer sehen Seite 1, Code rechnet mit Seite 0
+        let pageNum = parts[2] ? parseInt(parts[2]) - 1 : 0;
+        pageNum = Math.max(0, pageNum);
+
+        return { view: 'book', book, lang, page: pageNum };
     }
 
     async function handleRouting() {
@@ -115,10 +134,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isInitialLoad) {
             isInitialLoad = false;
-            params.page = 0;
             if (params.view === 'book' || !params.view) {
+                params.page = 0;
                 isInternalHashUpdate = true;
-                window.location.hash = `view=book&book=${params.book}&lang=${params.lang}&page=0`;
+                // Formatiert die URL beim allerersten Laden direkt extrem sauber
+                window.location.hash = `/${params.book}/${params.lang}/1`;
             }
         }
 
@@ -244,23 +264,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const gridContainer = document.querySelector('.grid-container');
         gridContainer.innerHTML = ''; 
         
-        for (let b = 1; b <= 20; b++) {
-            if (myGridId !== activeGridId) return;
-            const bookName = `book_${b}`;
+        const gridPromises = portfolioBooks.map((bookName, index) => {
             const folder = `${bookName}/pages_${currentLang}/`;
-            
-            const exists = await checkPageExists(`${folder}0${extension}`);
-            
-            if (exists) {
+            return checkPageExists(`${folder}0${extension}`).then(exists => ({
+                index: index,
+                name: bookName,
+                folder: folder,
+                exists: exists
+            }));
+        });
+
+        const gridResults = await Promise.all(gridPromises);
+        if (myGridId !== activeGridId) return;
+
+        gridContainer.innerHTML = ''; 
+
+        for (const book of gridResults) {
+            if (book.exists) {
                 const tile = document.createElement('div');
                 tile.className = 'book-tile';
-                tile.innerHTML = `<img src="${folder}0${extension}" alt="${bookName}">`;
+                const niceName = book.name.replace(/-/g, ' '); 
+                tile.innerHTML = `<img src="${book.folder}0${extension}" alt="${niceName}">`;
                 tile.onclick = () => {
-                    window.location.hash = `view=book&book=${bookName}&lang=${currentLang}&page=0`;
+                    // NEU: Saubere Path-URL
+                    window.location.hash = `/${book.name}/${currentLang}/1`;
                 };
                 gridContainer.appendChild(tile);
-            } else {
-                break; 
             }
         }
     }
@@ -315,6 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentImgW = cover.width; 
             currentImgH = cover.height; 
         } else {
+            // NEU: Der Fallback-Link nutzt ebenfalls die saubere Grid-URL
             loadingScreen.innerHTML = `
                 <div class="menu-row" style="justify-content: center; margin-bottom: 0.8rem;">
                     <span class="bracket">[</span>
@@ -324,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="menu-row" style="justify-content: center;">
                     <span class="bracket">[</span>
                     <span class="menu-links" style="flex-grow: 0; padding: 0 0.6em;">
-                        <a href="#view=grid" class="all-books-trigger">${translations[lang].allBooks}</a>
+                        <a href="#/grid" class="all-books-trigger">${translations[lang].allBooks}</a>
                     </span>
                     <span class="bracket">]</span>
                 </div>
@@ -435,7 +465,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalPages = pageFlip.getPageCount();
             
             isInternalHashUpdate = true;
-            window.location.hash = `view=book&book=${currentBook}&lang=${currentLang}&page=${targetPage}`;
+            // NEU: Saubere Path-URL während des Blätterns
+            window.location.hash = `/${currentBook}/${currentLang}/${targetPage + 1}`;
 
             if (targetPage === 0 || targetPage >= totalPages - 2) {
                 if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
@@ -506,7 +537,8 @@ document.addEventListener('DOMContentLoaded', () => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const lang = e.currentTarget.getAttribute('data-lang'); 
-            window.location.hash = `view=book&book=${currentBook}&lang=${lang}&page=0`;
+            // NEU: Saubere Path-URL beim Sprachenwechsel
+            window.location.hash = `/${currentBook}/${lang}/1`;
         });
     });
 
@@ -555,7 +587,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (e.target.closest('.all-books-trigger')) {
             e.preventDefault();
-            window.location.hash = `view=grid`;
+            // NEU: Saubere Path-URL
+            window.location.hash = `/grid`;
         }
         
         if (e.target.id === 'link-email') {
@@ -583,16 +616,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('link-legal').onclick = (e) => { e.preventDefault(); window.location.hash = `view=legal`; };
+    // NEU: Saubere Path-URLs für das Legal-Menü und den Zurück-Button
+    document.getElementById('link-legal').onclick = (e) => { e.preventDefault(); window.location.hash = `/legal`; };
     document.getElementById('close-legal').onclick = (e) => { 
         e.preventDefault(); 
-        const page = pageFlip ? pageFlip.getCurrentPageIndex() : 0;
-        window.location.hash = `view=book&book=${currentBook}&lang=${currentLang}&page=${page}`; 
+        const page = pageFlip ? pageFlip.getCurrentPageIndex() + 1 : 1;
+        window.location.hash = `/${currentBook}/${currentLang}/${page}`; 
     };
     document.getElementById('back-to-book-btn').onclick = (e) => { 
         e.preventDefault(); 
-        const page = pageFlip ? pageFlip.getCurrentPageIndex() : 0;
-        window.location.hash = `view=book&book=${currentBook}&lang=${currentLang}&page=${page}`; 
+        const page = pageFlip ? pageFlip.getCurrentPageIndex() + 1 : 1;
+        window.location.hash = `/${currentBook}/${currentLang}/${page}`; 
     };
 
     window.addEventListener('hashchange', handleRouting);
