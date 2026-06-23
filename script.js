@@ -1,9 +1,13 @@
+// Wartet, bis die Webseite vollständig geladen ist, bevor das Skript startet
 document.addEventListener('DOMContentLoaded', () => {
 
+    // --- 1. ZOOM WÄCHTER ---
+    // Erkennt, ob der Nutzer mit den Fingern ins Bild gezoomt hat
     function isZoomed() {
         return window.visualViewport && window.visualViewport.scale > 1.01;
     }
 
+    // Wenn gezoomt wurde, bekommt das Buch die Klasse "zoomed-state", wodurch Blättern deaktiviert wird
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
             const bookWrapper = document.getElementById('flip-book-container');
@@ -17,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- 2. PULL-TO-REFRESH WÄCHTER ---
+    // Erkennt, ob jemand auf dem Handy stark nach unten zieht, um die Seite neu zu laden
     let pullStartY = 0;
     let pullStartX = 0;
 
@@ -34,15 +40,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const yDiff = pullEndY - pullStartY;
             const xDiff = Math.abs(pullEndX - pullStartX);
             
+            // Wenn massiv nach unten gezogen wurde (yDiff > 130) und man nicht gezoomt ist
             if (yDiff > 130 && xDiff < 40 && !isZoomed()) {
-                // NEU: Saubere Path-URL für den Reload
+                // Setzt die Adresse sofort auf Seite 1 zurück und lädt neu
                 window.location.hash = `/${currentBook}/${currentLang}/1`;
                 setTimeout(() => { window.location.reload(); }, 30);
             }
         }
     }, { passive: true });
 
-    let activePointers = new Set();
+    // Blockiert Multi-Touch Gesten, damit das Buch nicht durchdreht, wenn man wischt UND zoomt
     let zoomCooldown = false;
     let zoomTimeout;
 
@@ -69,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('pointerdown', protectZoom, { capture: true, passive: true });
     window.addEventListener('pointerup', protectZoom, { capture: true, passive: true });
 
+    // --- 3. BASIS-VARIABLEN ---
     const bookWrapper = document.getElementById('flip-book-container');
     const loadingScreen = document.getElementById('loading');
     const mainHeading = document.getElementById('main-heading');
@@ -80,8 +88,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const gridView = document.getElementById('grid-view');
     const legalView = document.getElementById('legal-view');
     
-    // Trag hier zukünftig deine echten Projektnamen ein! 
-    // Sie werden dann genau so in der schönen URL angezeigt.
+    // WICHTIG: Hier trägst du deine zukünftigen GitHub Ordner-Namen ein!
+    // z.B. 'villa-am-see', 'museum-madrid'
     const portfolioBooks = [
         'book_1', 
         'book_2',
@@ -91,15 +99,19 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let pageFlip = null; 
     let currentLang = 'de'; 
-    let currentBook = portfolioBooks[0]; 
+    let currentBook = portfolioBooks[0]; // Das erste Buch der Liste wird beim Start geladen
     let currentTitleIndex = 0; 
-    let isInternalHashUpdate = false; 
+    let isInternalHashUpdate = false; // Blockiert doppelte Blätter-Befehle
     let isInitialLoad = true; 
     const extension = '.webp'; 
     
-    let activeLoadId = 0;
-    let activeGridId = 0; 
+    let currentImgW = 1123; 
+    let currentImgH = 794;
     
+    let activeLoadId = 0; // Stoppt Ladevorgänge, wenn man zu schnell klickt
+    let activeGridId = 0; // Stoppt Grid-Ladung, wenn man zu schnell klickt
+    
+    // Die Übersetzungs-Datenbank für das Interface
     const translations = {
         'de': { titles: ["es ist ein buch", "blätter herum", "architektur portfolio", "daniroesch.de"], allBooks: "alle bücher", backToStart: "zurück zum anfang", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "buch wird geladen...", notAvailable: "buch noch nicht in dieser sprache verfügbar" },
         'en': { titles: ["it´s a book", "flip around", "architecture portfolio", "daniroesch.de"], allBooks: "all books", backToStart: "back to start", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "loading book...", notAvailable: "book not yet available in this language" },
@@ -107,9 +119,10 @@ document.addEventListener('DOMContentLoaded', () => {
         'pt': { titles: ["é um livro", "folheie as páginas", "portfólio de arquitetura", "daniroesch.de"], allBooks: "todos os livros", backToStart: "voltar ao início", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "carregando livro...", notAvailable: "livro ainda não disponível neste idioma" }
     };
 
-    // NEU: Liest die sauberen "Path-Style" URLs aus
+    // --- 4. URL & ROUTING ---
+    // Liest die obere Internetadresse aus und versteht sie (z.B. daniroesch.de/#/book_1/de/1)
     function getHashParams() {
-        const hash = window.location.hash.replace(/^#\/?/, ''); // Entfernt # und eventuelle /
+        const hash = window.location.hash.replace(/^#\/?/, ''); // Schneidet das # weg
         const parts = hash.split('/');
 
         // Prüft auf statische Seiten
@@ -120,18 +133,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const book = parts[0] || portfolioBooks[0];
         const lang = parts[1] || 'de';
         
-        // Nutzer sehen Seite 1, Code rechnet mit Seite 0
+        // Mathematik-Trick: Mensch sieht Seite 1, Computer rechnet intern mit Seite 0
         let pageNum = parts[2] ? parseInt(parts[2]) - 1 : 0;
         pageNum = Math.max(0, pageNum);
 
         return { view: 'book', book, lang, page: pageNum };
     }
 
+    // Leitet den Nutzer auf die entsprechende Ansicht um (Buch, Raster oder Impressum)
     async function handleRouting() {
-        if (isInternalHashUpdate) return;
+        if (isInternalHashUpdate) return; // Wenn eine Blätter-Animation läuft: Abbrechen!
 
         let params = getHashParams();
 
+        // Beim ersten Laden der Webseite:
         if (isInitialLoad) {
             isInitialLoad = false;
             if (params.view === 'book' || !params.view) {
@@ -142,6 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // Steuerung der Bildschirme (Ein- und Ausblenden)
         if (params.view === 'grid') {
             bookView.style.display = 'none';
             legalView.style.display = 'none';
@@ -161,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         legalView.style.display = 'none';
         bookView.style.display = 'block';
 
+        // Läd das Buch nur neu, wenn es sich wirklich geändert hat. Ansonsten wird nur geblättert.
         if (currentBook !== params.book || currentLang !== params.lang || !pageFlip) {
             await loadBook(params.book, params.lang, params.page);
         } else {
@@ -170,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- 5. BERECHNUNG DER BUCHGRÖSSE & ICON-POSITION ---
     function updateBookSize() {
         const w = window.innerWidth;
         const h = window.innerHeight;
@@ -182,18 +200,22 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let finalWidth, finalHeight;
         
+        // Mathematik: Bestimmt, ob auf dem Bildschirm schwarze Balken an den Seiten oder oben/unten sind
         if (bookAspectRatio > windowRatio) {
+            // Bildschirm ist hochkant (Smartphone)
             finalWidth = w;
             finalHeight = w / bookAspectRatio;
             document.body.classList.add('fit-width');
             document.body.classList.remove('fit-height');
         } else {
+            // Bildschirm ist breit (Laptop)
             finalHeight = h;
             finalWidth = h * bookAspectRatio;
             document.body.classList.add('fit-height');
             document.body.classList.remove('fit-width');
         }
         
+        // Schickt die finalen Maße ans CSS
         document.body.style.setProperty('--real-book-width', finalWidth + 'px');
         document.body.style.setProperty('--real-book-height', finalHeight + 'px');
         
@@ -204,19 +226,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Achtet darauf, wenn das Fenster verzogen wird (Laptop)
     let lastWinW = window.innerWidth;
 
     window.addEventListener('resize', () => {
         const currentW = window.innerWidth;
         if (currentW !== lastWinW) {
             lastWinW = currentW;
-            if(bookWrapper) bookWrapper.style.opacity = '0';
+            if(bookWrapper) bookWrapper.style.opacity = '0'; // Kurzer Blackout für sauberes Rechnen
             updateBookSize();
             if (pageFlip) pageFlip.update();
             setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
         }
     });
 
+    // Achtet darauf, wenn das Handy gedreht wird (Hochformat -> Querformat)
     window.addEventListener('orientationchange', () => {
         setTimeout(() => {
             lastWinW = window.innerWidth;
@@ -233,11 +257,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Klick auf den H1-Titel wechselt den Text durch
     function cycleTitle() {
         currentTitleIndex = (currentTitleIndex + 1) % 4;
         updateHeading();
     }
 
+    // --- 6. HIGH-PERFORMANCE BILD-LADER ---
+    
+    // Holt sich exakt 1x die Bildmaße vom Cover
     async function loadCoverImage(url) {
         return new Promise((resolve) => {
             const img = new Image();
@@ -247,6 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Die Methode nutzt das native Image-Objekt und räumt danach den Speicher (`img.src = ''`) wieder auf.
     async function checkPageExists(url) {
         try {
             const controller = new AbortController();
@@ -259,11 +288,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Baut das Grid (Die Bibliothek)
     async function initGrid() {
         const myGridId = ++activeGridId; 
         const gridContainer = document.querySelector('.grid-container');
         gridContainer.innerHTML = ''; 
         
+        // Prüft parallel für jedes Projekt in der Liste, ob es ein deutsches/englisches etc. Cover gibt
         const gridPromises = portfolioBooks.map((bookName, index) => {
             const folder = `${bookName}/pages_${currentLang}/`;
             return checkPageExists(`${folder}0${extension}`).then(exists => ({
@@ -275,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const gridResults = await Promise.all(gridPromises);
-        if (myGridId !== activeGridId) return;
+        if (myGridId !== activeGridId) return; // Stoppt, falls der User schon wieder weitergeklickt hat
 
         gridContainer.innerHTML = ''; 
 
@@ -283,10 +314,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (book.exists) {
                 const tile = document.createElement('div');
                 tile.className = 'book-tile';
+                // Tauscht eventuelle Bindestriche im Ordnernamen gegen Leerzeichen für eine schönere Ansicht
                 const niceName = book.name.replace(/-/g, ' '); 
                 tile.innerHTML = `<img src="${book.folder}0${extension}" alt="${niceName}">`;
                 tile.onclick = () => {
-                    // NEU: Saubere Path-URL
+                    // Saubere Path-URL
                     window.location.hash = `/${book.name}/${currentLang}/1`;
                 };
                 gridContainer.appendChild(tile);
@@ -294,12 +326,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- 7. BUCH SUCHEN UND AUFBAUEN ---
     async function loadBook(bookName, lang, initialPage = 0) {
         const myLoadId = ++activeLoadId;
 
         currentBook = bookName;
         currentLang = lang;
         
+        // UI-Icons beim Laden verstecken
         const homeBtn = document.getElementById('home-btn');
         const fsBtn = document.getElementById('fullscreen-btn');
         if (homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
@@ -308,6 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (menuPositioner) menuPositioner.style.visibility = 'hidden'; 
         updateHeading();
         
+        // Ladescreen vorbereiten
         loadingScreen.innerHTML = `
             <div class="menu-row" style="justify-content: center;">
                 <span class="bracket">[</span>
@@ -316,6 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         
+        // Texte übersetzen
         document.querySelectorAll('.all-books-trigger').forEach(el => el.innerText = translations[lang].allBooks);
         document.getElementById('grid-heading').innerText = translations[lang].allBooks;
         document.getElementById('back-to-book-btn').innerText = translations[lang].close;
@@ -324,10 +360,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (homeBtn) homeBtn.innerHTML = translations[lang].home;
 
+        // Sprach-Schalter markieren
         langLinks.forEach(link => link.classList.remove('active'));
         const activeLink = document.querySelector(`[data-lang="${lang}"]`);
         if (activeLink) activeLink.classList.add('active');
         
+        // Altes Buch zerstören, falls vorhanden
         if (pageFlip) { pageFlip.destroy(); pageFlip = null; }
         bookWrapper.innerHTML = '<div id="book"></div>';
         bookWrapper.style.opacity = '0';
@@ -336,15 +374,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const folder = `${bookName}/pages_${lang}/`;
         const imageUrls = [];
         
+        // Gucken, ob es überhaupt ein Buchcover gibt
         const cover = await loadCoverImage(`${folder}0${extension}`);
-        if (myLoadId !== activeLoadId) return;
+        if (myLoadId !== activeLoadId) return; // Stoppt bei schnellem Geklicke
 
         if (cover.exists) { 
             imageUrls.push(`0${extension}`); 
             currentImgW = cover.width; 
             currentImgH = cover.height; 
         } else {
-            // NEU: Der Fallback-Link nutzt ebenfalls die saubere Grid-URL
+            // BUCH EXISTIERT NICHT: Zeigt den Fehlerbildschirm und bietet den Rückzug zur Bibliothek an
             loadingScreen.innerHTML = `
                 <div class="menu-row" style="justify-content: center; margin-bottom: 0.8rem;">
                     <span class="bracket">[</span>
@@ -359,10 +398,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="bracket">]</span>
                 </div>
             `;
-            return; 
+            return; // Ladevorgang wird hier komplett abgebrochen
         }
 
-        const batchSize = 3;
+        // Such-Schleife: Sucht so lange nach Seiten (1, 2, 3...), bis es keine mehr gibt
+        const batchSize = 3; 
         let pageCounter = 1;
         let checking = true;
 
@@ -387,6 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (checking) pageCounter += batchSize;
         }
 
+        // Prüft, ob es ein Back-Cover gibt (-1)
         const back = await checkPageExists(`${folder}-1${extension}`);
         if (myLoadId !== activeLoadId) return;
 
@@ -395,19 +436,25 @@ document.addEventListener('DOMContentLoaded', () => {
         buildBook(imageUrls, folder, currentImgW, currentImgH, initialPage);
     }
 
+    // Nimmt die gesammelten Bilder und baut das echte 3D Buch daraus
     function buildBook(imageUrls, folder, width, height, initialPage = 0) {
         const bookContainer = document.getElementById('book');
         
+        // Erschafft den HTML-Code für Google für SEO (Ersetzt die Striche im Namen durch Leerzeichen)
+        const niceBookName = currentBook.replace(/-/g, ' ');
+
         imageUrls.forEach((file) => {
             const pageDiv = document.createElement('div');
             pageDiv.className = 'page';
-            pageDiv.innerHTML = `<img src="${folder}${file}" alt="portfolio seite">`;
+            // Das alt-Attribut hilft Google, das Bild zu verstehen
+            pageDiv.innerHTML = `<img src="${folder}${file}" alt="Daniel Rösch Architektur Portfolio - ${niceBookName}">`;
             bookContainer.appendChild(pageDiv);
         });
 
         updateBookSize();
-        bookContainer.offsetHeight;
+        bookContainer.offsetHeight; // Zwingt den Browser, das Layout einmal zu rechnen
 
+        // Die magische 3D-Bibliothek wird gestartet
         pageFlip = new St.PageFlip(bookContainer, {
             width: width, height: height, size: "stretch", 
             showCover: true, 
@@ -436,6 +483,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const startPage = pageFlip.getCurrentPageIndex();
         const totalPages = pageFlip.getPageCount();
         
+        // Logik: Auf der allerersten und allerletzten Seite werden die UI-Icons unsichtbar
         if (startPage > 0 && startPage < totalPages - 2) {
             if(homeBtn) { homeBtn.style.opacity = '1'; homeBtn.style.pointerEvents = 'auto'; }
             if(fsBtn) { fsBtn.style.opacity = '1'; fsBtn.style.pointerEvents = 'auto'; }
@@ -444,6 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
         }
 
+        // Steuert, welches Text-Menü am Start aktiv sein soll
         if (startPage > 0) {
             if (startPage >= totalPages - 2) {
                 menuPositioner.style.zIndex = '3';
@@ -460,14 +509,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // Event: Wird ausgelöst, WÄHREND die Seite blättert
         pageFlip.on('flip', (e) => {
             const targetPage = e.data; 
             const totalPages = pageFlip.getPageCount();
             
-            isInternalHashUpdate = true;
-            // NEU: Saubere Path-URL während des Blätterns
+            isInternalHashUpdate = true; // Riegel vorschieben (Race-Condition Schutz!)
+            // Saubere Path-URL während des Blätterns
             window.location.hash = `/${currentBook}/${currentLang}/${targetPage + 1}`;
 
+            // Icons dynamisch während dem Flug aus/einblenden
             if (targetPage === 0 || targetPage >= totalPages - 2) {
                 if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
                 if(fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
@@ -477,20 +528,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Event: Wird ausgelöst, wenn die Seite GESTOPPT hat (Blättern beendet)
         pageFlip.on('changeState', (e) => {
             const state = e.data; 
             const currentPage = pageFlip.getCurrentPageIndex();
             const totalPages = pageFlip.getPageCount();
 
             if (state !== 'read') {
+                // Wenn Buch in der Luft ist -> Schriften unsichtbar
                 startMenu.style.opacity = '0';
                 startMenu.style.pointerEvents = 'none';
                 endOfBookMenu.style.opacity = '0';
                 endOfBookMenu.style.pointerEvents = 'none';
                 menuPositioner.style.zIndex = '1';
             } else {
-                isInternalHashUpdate = false;
+                isInternalHashUpdate = false; // Riegel aufheben!
 
+                // Schriften je nach Position (Start, Mitte, Ende) einblenden
                 if (currentPage === 0) {
                     menuPositioner.style.zIndex = '3'; 
                     startMenu.style.pointerEvents = 'auto';
@@ -522,14 +576,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
                     menuPositioner.style.zIndex = '3';
                     startMenu.style.pointerEvents = 'auto';
-                    menuPositioner.style.visibility = 'visible';
+                    menuPositioner.style.visibility = 'visible'; // Beendet das anfängliche Versteckspiel
                 }
                 isInternalHashUpdate = false;
             }, 100);
         }, 150);
     }
 
-    // --- GLOBALE EVENTS ---
+    // --- 8. EVENTS (KLICKS & TASTATUR) ---
 
     mainHeading.addEventListener('click', cycleTitle);
 
@@ -537,11 +591,12 @@ document.addEventListener('DOMContentLoaded', () => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const lang = e.currentTarget.getAttribute('data-lang'); 
-            // NEU: Saubere Path-URL beim Sprachenwechsel
+            // Saubere Path-URL beim Sprachenwechsel
             window.location.hash = `/${currentBook}/${lang}/1`;
         });
     });
 
+    // Fordert den Browser auf, in den echten Kino-Vollbildmodus zu wechseln
     async function toggleFullscreen() {
         const elem = document.documentElement;
         try {
@@ -553,14 +608,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (elem.msRequestFullscreen) {
                     await elem.msRequestFullscreen();
                 }
-                
-                if (screen.orientation && screen.orientation.lock) {
-                    try {
-                        await screen.orientation.lock('landscape');
-                    } catch (err) {
-                        console.log("Auto-Querformat blockiert.");
-                    }
-                }
             } else {
                 if (document.exitFullscreen) {
                     await document.exitFullscreen();
@@ -569,16 +616,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (document.msExitFullscreen) {
                     await document.msExitFullscreen();
                 }
-                
-                if (screen.orientation && screen.orientation.unlock) {
-                    screen.orientation.unlock();
-                }
             }
         } catch (error) {
             console.warn("Vollbild Fehler:", error);
         }
     }
 
+    // Ein globaler Klick-Wächter (Delegation) ist performanter als auf jedes Element einen EventListener zu legen
     document.addEventListener('click', (e) => {
         if (e.target.closest('#back-to-start-btn') || e.target.closest('#home-btn')) {
             e.preventDefault();
@@ -587,7 +631,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (e.target.closest('.all-books-trigger')) {
             e.preventDefault();
-            // NEU: Saubere Path-URL
+            // Saubere Path-URL
             window.location.hash = `/grid`;
         }
         
@@ -605,6 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Erlaubt das Blättern mit den Pfeiltasten und der Leertaste am Laptop
     document.addEventListener('keydown', (e) => {
         if (bookView.style.display !== 'none' && pageFlip) {
             if (e.key === 'ArrowRight' || e.key === ' ') {
@@ -616,8 +661,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // NEU: Saubere Path-URLs für das Legal-Menü und den Zurück-Button
+    // Saubere Path-URLs für das Legal-Menü und den Zurück-Button
     document.getElementById('link-legal').onclick = (e) => { e.preventDefault(); window.location.hash = `/legal`; };
+    
+    // Schließen der Untermenüs schickt den User wieder ins Buch
     document.getElementById('close-legal').onclick = (e) => { 
         e.preventDefault(); 
         const page = pageFlip ? pageFlip.getCurrentPageIndex() + 1 : 1;
@@ -629,7 +676,9 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.hash = `/${currentBook}/${currentLang}/${page}`; 
     };
 
+    // Horcht auf Änderungen der URL oben im Browser
     window.addEventListener('hashchange', handleRouting);
 
+    // Initialer Start-Befehl
     handleRouting();
 });
