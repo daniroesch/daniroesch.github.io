@@ -2,35 +2,49 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <!-- Viewport: Garantiert die richtige Skalierung auf Mobilgeräten und erlaubt dem Nutzer das freie Zoomen -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    
     <title>portfolio daniel rösch</title>
+    <!-- Meta-Description: Der Text, der bei Google unter dem Suchergebnis angezeigt wird -->
     <meta name="description" content="Portfolio von Daniel Rösch - Architektur Portfolio und Projekte präsentiert als interaktives digitales Buch.">
     
+    <!-- Favicon: Das kleine Icon oben im Browser-Tab -->
     <link rel="icon" type="image/png" href="hero/favicon.png">
 
+    <!-- Open Graph: Die Vorschau-Infos, wenn du deinen Link z.B. auf WhatsApp oder LinkedIn teilst -->
     <meta property="og:title" content="Portfolio Daniel Rösch">
     <meta property="og:description" content="Architektur Portfolio und Projekte präsentiert als interaktives digitales Buch.">
     <meta property="og:image" content="https://daniroesch.github.io/hero/social-preview.jpg">
     <meta property="og:url" content="https://daniroesch.github.io">
     <meta property="og:type" content="website">
 
+    <!-- Verknüpfung zu deiner Design-Schablone (style.css) -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+    <!-- ========================================== -->
+    <!-- ANZEIGE 1: DAS INTERAKTIVE BUCH            -->
+    <!-- ========================================== -->
     <main id="book-view">
         
+        <!-- UI-LAYER: Beinhaltet das Home-X und die Vollbild-Klammer -->
         <div id="ui-layer">
             <a href="#" id="home-btn" class="ui-btn"><span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span></a>
             <a href="#" id="fullscreen-btn" class="ui-btn">[&nbsp;&nbsp;&nbsp;]</a>
         </div>
 
+        <!-- POSITIONIERER: Richtet die Menütexte exakt auf dem virtuellen Buchdeckel aus -->
         <div id="menu-positioner">
             
+            <!-- START-MENÜ: Das Inhaltsverzeichnis auf dem Cover -->
             <nav class="static-menu" id="start-menu">
                 <div class="menu-wrapper">
+                    <!-- Hauptüberschrift (klickbar für fliegenden Textwechsel) -->
                     <h1 id="main-heading" class="cycle-title">es ist ein buch</h1>
                     
+                    <!-- Reihe 1: Die Sprachauswahl -->
                     <div class="menu-row">
                         <span class="bracket">[</span>
                         <span class="menu-links">
@@ -42,6 +56,7 @@
                         <span class="bracket">]</span>
                     </div>
 
+                    <!-- Reihe 2: Link zur Bibliotheks-Übersicht -->
                     <div class="menu-row">
                         <span class="bracket">[</span>
                         <span class="menu-links">
@@ -50,6 +65,7 @@
                         <span class="bracket">]</span>
                     </div>
                     
+                    <!-- Reihe 3: E-Mail & Impressum ganz unten -->
                     <div class="legal-links">
                         <a href="mailto:arch.daniroesch@gmail.com" id="link-email">arch.daniroesch@gmail.com</a>
                         <a href="#" id="link-legal">impressum & datenschutz</a>
@@ -57,6 +73,7 @@
                 </div>
             </nav>
 
+            <!-- END-MENÜ: Das Menü auf der allerletzten Buchseite -->
             <nav id="end-of-book-menu">
                 <div class="menu-wrapper">
                     <div class="menu-row">
@@ -73,6 +90,7 @@
             </nav>
         </div>
 
+        <!-- LADESCREEN: Sichtbar, während JavaScript die Bilder in Hintergrund prüft -->
         <div id="loading">
             <div class="menu-row" style="justify-content: center;">
                 <span class="bracket">[</span>
@@ -81,28 +99,39 @@
             </div>
         </div>
         
+        <!-- CONTAINER: Hier hinein baut das Skript das 3D-Buch auf -->
         <div class="flip-book-container" id="flip-book-container"></div>
     </main>
 
+    <!-- ========================================== -->
+    <!-- ANZEIGE 2: DIE BIBLIOTHEK (GRID)           -->
+    <!-- ========================================== -->
     <section id="grid-view" style="display: none;">
         <header class="grid-header">
             <h2 id="grid-heading">alle bücher</h2>
             <a href="#" id="back-to-book-btn">x</a>
         </header>
+        <!-- Raster-Container für die Vorschaubilder -->
         <div class="grid-container"></div>
     </section>
 
+    <!-- ========================================== -->
+    <!-- ANZEIGE 3: IMPRESSUM & DATENSCHUTZ         -->
+    <!-- ========================================== -->
     <section id="legal-view" style="display: none;">
         <header class="grid-header">
             <h2 id="legal-heading">impressum & datenschutz</h2>
             <a href="#" id="close-legal">x</a>
         </header>
         <div class="legal-content">
+            <!-- Das vorgefertigte Impressums-Bild -->
             <img src="hero/imp.webp" alt="impressum & datenschutz" class="legal-image">
         </div>
     </section>
 
+    <!-- Das Kern-Skript für die 3D-Blätter-Animation (PageFlip) -->
     <script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.min.js"></script>
+    <!-- Dein individuelles Steuer-Skript -->
     <script src="script.js"></script>
 </body>
 </html>
