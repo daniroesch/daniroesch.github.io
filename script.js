@@ -1,15 +1,10 @@
-// Wartet, bis die Webseite vollständig geladen ist, bevor das Skript startet
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ==========================================================================
-    // 1. ZOOM-WÄCHTER
-    // Erkennt, ob der Nutzer mit den Fingern ins Bild gezoomt hat
-    // ==========================================================================
+    // --- 1. ZOOM WÄCHTER ---
     function isZoomed() {
         return window.visualViewport && window.visualViewport.scale > 1.01;
     }
 
-    // Wenn gezoomt wurde, bekommt das Buch die Klasse "zoomed-state", wodurch Blättern deaktiviert wird
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
             const bookWrapper = document.getElementById('flip-book-container');
@@ -23,10 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ==========================================================================
-    // 2. PULL-TO-REFRESH WÄCHTER
-    // Erkennt, ob jemand auf dem Handy stark nach unten zieht, um die Seite neu zu laden
-    // ==========================================================================
+    // --- 2. PULL-TO-REFRESH WÄCHTER ---
     let pullStartY = 0;
     let pullStartX = 0;
 
@@ -44,15 +36,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const yDiff = pullEndY - pullStartY;
             const xDiff = Math.abs(pullEndX - pullStartX);
             
-            // Wenn massiv nach unten gezogen wurde und man nicht gezoomt ist
             if (yDiff > 130 && xDiff < 40 && !isZoomed()) {
+                // NEU: Saubere Path-URL für den Reload
                 window.location.hash = `/${currentBook}/${currentLang}/1`;
                 setTimeout(() => { window.location.reload(); }, 30);
             }
         }
     }, { passive: true });
 
-    // Blockiert Multi-Touch Gesten im Zoom, damit das Buch nicht "durchdreht"
     let zoomCooldown = false;
     let zoomTimeout;
 
@@ -79,9 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('pointerdown', protectZoom, { capture: true, passive: true });
     window.addEventListener('pointerup', protectZoom, { capture: true, passive: true });
 
-    // ==========================================================================
-    // 3. BASIS-VARIABLEN & PROJEKT-ORDNER
-    // ==========================================================================
+    // --- 3. PROJEKT VARIABLEN ---
     const bookView = document.getElementById('book-view');
     const bookWrapper = document.getElementById('flip-book-container');
     const loadingScreen = document.getElementById('loading');
@@ -93,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gridView = document.getElementById('grid-view');
     const legalView = document.getElementById('legal-view');
     
-    // WICHTIG: Hier trägst du deine zukünftigen GitHub Ordner-Namen ein!
+    // Trag hier deine echten Projektnamen ein!
     const portfolioBooks = [
         'book_1', 
         'book_2',
@@ -109,22 +98,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let isInitialLoad = true; 
     const extension = '.webp'; 
     
-    let activeLoadId = 0;
+    let currentImgW = 1123; 
+    let currentImgH = 794;
+    
+    let activeLoadId = 0; 
     let activeGridId = 0; 
     
-    let targetPageWhileFlipping = -1;
-    
-    // Die Übersetzungs-Datenbank für das Interface
     const translations = {
         'de': { titles: ["es ist ein buch", "blätter herum", "architektur portfolio", "daniroesch.de"], allBooks: "alle bücher", backToStart: "zurück zum anfang", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "buch wird geladen...", notAvailable: "buch noch nicht in dieser sprache verfügbar" },
         'en': { titles: ["it´s a book", "flip around", "architecture portfolio", "daniroesch.de"], allBooks: "all books", backToStart: "back to start", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "loading book...", notAvailable: "book not yet available in this language" },
         'es': { titles: ["es un libro", "hojea las páginas", "portafolio de arquitectura", "daniroesch.de"], allBooks: "todos los libros", backToStart: "volver al inicio", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "cargando libro...", notAvailable: "libro aún no disponible en este idioma" },
-        'pt': { titles: ["é um livro", "folheie as páginas", "portfólio de arquitetura", "daniroesch.de"], allBooks: "todos os livros", backToStart: "voltar ao início", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "carregando libro...", notAvailable: "livro ainda nicht verfügbar in dieser Sprache" }
+        'pt': { titles: ["é um livro", "folheie as páginas", "portfólio de arquitetura", "daniroesch.de"], allBooks: "todos os livros", backToStart: "voltar ao início", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "carregando libro...", notAvailable: "livro ainda não disponible en este idioma" }
     };
 
-    // ==========================================================================
-    // 4. URL & ROUTING (Path-Style)
-    // ==========================================================================
+    // --- 4. URL & ROUTING ---
     function getHashParams() {
         const hash = window.location.hash.replace(/^#\/?/, ''); 
         const parts = hash.split('/');
@@ -142,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function handleRouting() {
-        if (isInternalHashUpdate) return; // Wenn eine Blätter-Animation läuft: Abbrechen!
+        if (isInternalHashUpdate) return;
 
         let params = getHashParams();
 
@@ -151,11 +138,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (params.view === 'book' || !params.view) {
                 params.page = 0;
                 isInternalHashUpdate = true;
+                // Formatiert die URL beim allerersten Laden direkt extrem sauber
                 window.location.hash = `/${params.book}/${params.lang}/1`;
             }
         }
 
-        // Steuerung der Bildschirme
         if (params.view === 'grid') {
             bookView.style.display = 'none';
             legalView.style.display = 'none';
@@ -179,18 +166,10 @@ document.addEventListener('DOMContentLoaded', () => {
             await loadBook(params.book, params.lang, params.page);
         } else {
             if (pageFlip && pageFlip.getCurrentPageIndex() !== params.page) {
-                if (params.page !== targetPageWhileFlipping) {
-                    pageFlip.flip(params.page);
-                }
+                pageFlip.flip(params.page);
             }
         }
     }
-
-    // ==========================================================================
-    // 5. BERECHNUNG DER BUCHGRÖSSE & ICON-POSITION
-    // ==========================================================================
-    let currentImgW = 1123; 
-    let currentImgH = 794;
 
     function updateBookSize() {
         const w = window.innerWidth;
@@ -226,63 +205,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function refreshMenuVisibility() {
-        if (!pageFlip) return;
-        const currentPage = pageFlip.getCurrentPageIndex();
-        const totalPages = pageFlip.getPageCount();
-
-        if (currentPage === 0) {
-            menuPositioner.style.zIndex = '3'; 
-            startMenu.style.pointerEvents = 'auto';
-            startMenu.style.opacity = '1'; 
-            endOfBookMenu.style.pointerEvents = 'none';
-            endOfBookMenu.style.opacity = '0'; 
-        } else if (currentPage >= totalPages - 2) {
-            menuPositioner.style.zIndex = '3';
-            endOfBookMenu.style.pointerEvents = 'auto';
-            endOfBookMenu.style.opacity = '1'; 
-            startMenu.style.pointerEvents = 'none';
-            startMenu.style.opacity = '0'; 
-        } else {
-            menuPositioner.style.zIndex = '1'; 
-            startMenu.style.opacity = '0'; 
-            startMenu.style.pointerEvents = 'none';
-            endOfBookMenu.style.opacity = '0'; 
-            endOfBookMenu.style.pointerEvents = 'none';
-        }
-    }
-
-    let resizeTimer;
-    function handleResizeAndOrientation() {
-        clearTimeout(resizeTimer);
-        
-        updateBookSize();
-        if (pageFlip) pageFlip.update();
-
-        resizeTimer = setTimeout(() => {
-            updateBookSize();
-            if (pageFlip) pageFlip.update();
-            refreshMenuVisibility(); 
-        }, 300);
-    }
-
     let lastWinW = window.innerWidth;
 
     window.addEventListener('resize', () => {
         const currentW = window.innerWidth;
         if (currentW !== lastWinW) {
             lastWinW = currentW;
-            handleResizeAndOrientation();
+            if(bookWrapper) bookWrapper.style.opacity = '0';
+            updateBookSize();
+            if (pageFlip) pageFlip.update();
+            setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
         }
     });
 
     window.addEventListener('orientationchange', () => {
-        lastWinW = window.innerWidth;
-        handleResizeAndOrientation();
+        setTimeout(() => {
+            lastWinW = window.innerWidth;
+            if(bookWrapper) bookWrapper.style.opacity = '0';
+            updateBookSize();
+            if (pageFlip) pageFlip.update();
+            setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
+        }, 200);
     });
-
-    document.addEventListener('fullscreenchange', handleResizeAndOrientation);
-    document.addEventListener('webkitfullscreenchange', handleResizeAndOrientation);
 
     function updateHeading() {
         if (translations[currentLang]) {
@@ -295,9 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateHeading();
     }
 
-    // ==========================================================================
-    // 6. HIGH-PERFORMANCE BILD-LADER
-    // ==========================================================================
+    // --- 6. HIGH-PERFORMANCE BILD-LADER ---
     async function loadCoverImage(url) {
         return new Promise((resolve) => {
             const img = new Image();
@@ -346,6 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const niceName = book.name.replace(/-/g, ' '); 
                 tile.innerHTML = `<img src="${book.folder}0${extension}" alt="${niceName}">`;
                 tile.onclick = () => {
+                    // NEU: Saubere Path-URL
                     window.location.hash = `/${book.name}/${currentLang}/1`;
                 };
                 gridContainer.appendChild(tile);
@@ -353,9 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ==========================================================================
-    // 7. BUCH SUCHEN UND AUFBAUEN
-    // ==========================================================================
+    // --- 7. BUCH SUCHEN UND AUFBAUEN ---
     async function loadBook(bookName, lang, initialPage = 0) {
         const myLoadId = ++activeLoadId;
 
@@ -367,13 +308,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
         if (fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
 
+        // Unsichtbarkeit während des Ladens (sorgt für das Springen des Textes, was wir nun per CSS gelöst haben)
+        if (menuPositioner) menuPositioner.style.visibility = 'hidden'; 
         updateHeading();
-        
-        startMenu.style.opacity = '1';
-        startMenu.style.pointerEvents = 'auto';
-        endOfBookMenu.style.opacity = '0';
-        endOfBookMenu.style.pointerEvents = 'none';
-        menuPositioner.style.zIndex = '3';
         
         loadingScreen.innerHTML = `
             <div class="menu-row" style="justify-content: center;">
@@ -397,7 +334,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (pageFlip) { pageFlip.destroy(); pageFlip = null; }
         bookWrapper.innerHTML = '<div id="book"></div>';
-        
         bookWrapper.style.opacity = '0';
         loadingScreen.style.display = 'flex'; 
         
@@ -412,6 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentImgW = cover.width; 
             currentImgH = cover.height; 
         } else {
+            // NEU: Der Fallback-Link nutzt ebenfalls die saubere Grid-URL
             loadingScreen.innerHTML = `
                 <div class="menu-row" style="justify-content: center; margin-bottom: 0.8rem;">
                     <span class="bracket">[</span>
@@ -429,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return; 
         }
 
-        const batchSize = 3; 
+        const batchSize = 3;
         let pageCounter = 1;
         let checking = true;
 
@@ -474,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         updateBookSize();
-        bookContainer.offsetHeight; 
+        bookContainer.offsetHeight;
 
         pageFlip = new St.PageFlip(bookContainer, {
             width: width, height: height, size: "stretch", 
@@ -484,6 +421,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         pageFlip.loadFromHTML(bookContainer.querySelectorAll('.page'));
+        loadingScreen.style.display = 'none';
+        bookWrapper.style.opacity = '1';
         
         if (initialPage > 0 && initialPage < pageFlip.getPageCount()) {
             pageFlip.flip(initialPage);
@@ -492,6 +431,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const homeBtn = document.getElementById('home-btn');
         const fsBtn = document.getElementById('fullscreen-btn');
         
+        menuPositioner.style.zIndex = '3';
+        startMenu.style.pointerEvents = 'auto';
+        
+        endOfBookMenu.style.display = 'flex'; 
+        endOfBookMenu.style.pointerEvents = 'none';
+        endOfBookMenu.style.opacity = '0'; 
+
         const startPage = pageFlip.getCurrentPageIndex();
         const totalPages = pageFlip.getPageCount();
         
@@ -503,18 +449,29 @@ document.addEventListener('DOMContentLoaded', () => {
             if(fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
         }
 
+        if (startPage > 0) {
+            if (startPage >= totalPages - 2) {
+                menuPositioner.style.zIndex = '3';
+                endOfBookMenu.style.pointerEvents = 'auto';
+                endOfBookMenu.style.opacity = '1';
+                endOfBookMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
+                startMenu.style.opacity = '0';
+                startMenu.style.pointerEvents = 'none';
+            } else {
+                menuPositioner.style.zIndex = '1';
+                startMenu.style.opacity = '0';
+                startMenu.style.pointerEvents = 'none';
+                endOfBookMenu.style.opacity = '0';
+            }
+        }
+
         pageFlip.on('flip', (e) => {
             const targetPage = e.data; 
             const totalPages = pageFlip.getPageCount();
             
-            targetPageWhileFlipping = targetPage; 
+            isInternalHashUpdate = true;
+            // NEU: Saubere Path-URL während des Blätterns
             window.location.hash = `/${currentBook}/${currentLang}/${targetPage + 1}`;
-
-            startMenu.style.opacity = '0';
-            startMenu.style.pointerEvents = 'none';
-            endOfBookMenu.style.opacity = '0';
-            endOfBookMenu.style.pointerEvents = 'none';
-            menuPositioner.style.zIndex = '1';
 
             if (targetPage === 0 || targetPage >= totalPages - 2) {
                 if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
@@ -527,6 +484,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         pageFlip.on('changeState', (e) => {
             const state = e.data; 
+            const currentPage = pageFlip.getCurrentPageIndex();
+            const totalPages = pageFlip.getPageCount();
+
             if (state !== 'read') {
                 startMenu.style.opacity = '0';
                 startMenu.style.pointerEvents = 'none';
@@ -534,11 +494,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 endOfBookMenu.style.pointerEvents = 'none';
                 menuPositioner.style.zIndex = '1';
             } else {
-                targetPageWhileFlipping = -1; 
-                refreshMenuVisibility(); 
+                isInternalHashUpdate = false;
 
-                if (pageFlip.getCurrentPageIndex() === 0) {
-                    cycleTitle();
+                if (currentPage === 0) {
+                    menuPositioner.style.zIndex = '3'; 
+                    startMenu.style.pointerEvents = 'auto';
+                    startMenu.style.opacity = '1'; 
+                    endOfBookMenu.style.pointerEvents = 'none';
+                    endOfBookMenu.style.opacity = '0'; 
+                    cycleTitle(); 
+                } else if (currentPage >= totalPages - 2) {
+                    menuPositioner.style.zIndex = '3';
+                    endOfBookMenu.style.pointerEvents = 'auto';
+                    endOfBookMenu.style.opacity = '1'; 
+                    startMenu.style.pointerEvents = 'none';
+                    startMenu.style.opacity = '0'; 
+                } else {
+                    menuPositioner.style.zIndex = '1'; 
+                    startMenu.style.opacity = '0'; 
+                    startMenu.style.pointerEvents = 'none';
+                    endOfBookMenu.style.opacity = '0'; 
+                    endOfBookMenu.style.pointerEvents = 'none';
                 }
             }
         });
@@ -548,18 +524,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pageFlip) pageFlip.update();
             
             setTimeout(() => {
-                if (pageFlip) {
-                    refreshMenuVisibility();
-                    loadingScreen.style.display = 'none';
-                    bookWrapper.style.opacity = '1';
+                if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
+                    menuPositioner.style.zIndex = '3';
+                    startMenu.style.pointerEvents = 'auto';
+                    menuPositioner.style.visibility = 'visible';
                 }
-            }, 50);
-        }, 50);
+                isInternalHashUpdate = false;
+            }, 100);
+        }, 150);
     }
 
-    // ==========================================================================
-    // 8. INTERAKTIONS EVENTS
-    // ==========================================================================
+    // --- 8. GLOBALE EVENTS ---
 
     mainHeading.addEventListener('click', cycleTitle);
 
@@ -567,37 +542,45 @@ document.addEventListener('DOMContentLoaded', () => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const lang = e.currentTarget.getAttribute('data-lang'); 
+            // NEU: Saubere Path-URL beim Sprachenwechsel
             window.location.hash = `/${currentBook}/${lang}/1`;
         });
     });
 
-    function toggleFullscreen() {
+    async function toggleFullscreen() {
         const elem = document.documentElement;
-        
-        if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
-            if (elem.requestFullscreen) {
-                elem.requestFullscreen().catch(err => console.warn(err));
-            } else if (elem.webkitRequestFullscreen) {
-                elem.webkitRequestFullscreen();
-            } else if (elem.msRequestFullscreen) {
-                elem.msRequestFullscreen();
+        try {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                if (elem.requestFullscreen) {
+                    await elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) {
+                    await elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) {
+                    await elem.msRequestFullscreen();
+                }
+                
+                if (screen.orientation && screen.orientation.lock) {
+                    try {
+                        await screen.orientation.lock('landscape');
+                    } catch (err) {
+                        console.log("Auto-Querformat blockiert.");
+                    }
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    await document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    await document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    await document.msExitFullscreen();
+                }
+                
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
+                }
             }
-            
-            if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('landscape').catch(err => console.warn(err));
-            }
-        } else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            } else if (document.msExitFullscreen) {
-                document.msExitFullscreen();
-            }
-            
-            if (screen.orientation && screen.orientation.unlock) {
-                screen.orientation.unlock();
-            }
+        } catch (error) {
+            console.warn("Vollbild Fehler:", error);
         }
     }
 
@@ -609,6 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (e.target.closest('.all-books-trigger')) {
             e.preventDefault();
+            // NEU: Saubere Path-URL
             window.location.hash = `/grid`;
         }
         
