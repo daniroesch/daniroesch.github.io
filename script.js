@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 1. ZOOM WÄCHTER ---
     function isZoomed() {
         return window.visualViewport && window.visualViewport.scale > 1.01;
     }
@@ -18,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 2. PULL-TO-REFRESH WÄCHTER ---
     let pullStartY = 0;
     let pullStartX = 0;
 
@@ -33,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.changedTouches.length === 1) {
             const pullEndY = e.changedTouches[0].clientY;
             const pullEndX = e.changedTouches[0].clientX;
-            const yDiff = pullEndY - startY;
+            const yDiff = pullEndY - pullStartY;
             const xDiff = Math.abs(pullEndX - pullStartX);
             
             if (yDiff > 130 && xDiff < 40 && !isZoomed()) {
@@ -69,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('pointerdown', protectZoom, { capture: true, passive: true });
     window.addEventListener('pointerup', protectZoom, { capture: true, passive: true });
 
-    // --- 3. PROJEKT-VARIABLEN ---
+    const bookView = document.getElementById('book-view');
     const bookWrapper = document.getElementById('flip-book-container');
     const loadingScreen = document.getElementById('loading');
     const mainHeading = document.getElementById('main-heading');
@@ -77,10 +75,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const endOfBookMenu = document.getElementById('end-of-book-menu');
     const menuPositioner = document.getElementById('menu-positioner');
     const langLinks = document.querySelectorAll('[data-lang]');
-    const bookView = document.getElementById('book-view');
     const gridView = document.getElementById('grid-view');
     const legalView = document.getElementById('legal-view');
     
+    // Trag hier deine echten Projektnamen ein!
     const portfolioBooks = [
         'book_1', 
         'book_2',
@@ -92,23 +90,25 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentLang = 'de'; 
     let currentBook = portfolioBooks[0]; 
     let currentTitleIndex = 0; 
+    
+    let targetPageWhileFlipping = -1; 
+    
     let isInitialLoad = true; 
     const extension = '.webp'; 
     
     let currentImgW = 1123; 
     let currentImgH = 794;
     
-    let activeLoadId = 0;
+    let activeLoadId = 0; 
     let activeGridId = 0; 
     
     const translations = {
         'de': { titles: ["es ist ein buch", "blätter herum", "architektur portfolio", "daniroesch.de"], allBooks: "alle bücher", backToStart: "zurück zum anfang", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "buch wird geladen...", notAvailable: "buch noch nicht in dieser sprache verfügbar" },
         'en': { titles: ["it´s a book", "flip around", "architecture portfolio", "daniroesch.de"], allBooks: "all books", backToStart: "back to start", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "loading book...", notAvailable: "book not yet available in this language" },
-        'es': { titles: ["es un libro", "hojea las páginas", "portafolio de arquitectura", "daniroesch.de"], allBooks: "todos los livros", backToStart: "volver al inicio", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "cargando libro...", notAvailable: "libro aún no disponible en este idioma" },
-        'pt': { titles: ["é um livro", "folheie as páginas", "portfólio de arquitetura", "daniroesch.de"], allBooks: "todos os livros", backToStart: "voltar ao início", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "carregando livro...", notAvailable: "livro ainda nicht verfügbar in dieser Sprache" }
+        'es': { titles: ["es un libro", "hojea las páginas", "portafolio de arquitectura", "daniroesch.de"], allBooks: "todos los libros", backToStart: "volver al inicio", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "cargando libro...", notAvailable: "libro aún no disponible en este idioma" },
+        'pt': { titles: ["é um livro", "folheie as páginas", "portfólio de arquitetura", "daniroesch.de"], allBooks: "todos os livros", backToStart: "voltar ao início", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "carregando livro...", notAvailable: "livro ainda não disponível neste idioma" }
     };
 
-    // --- 4. PATH-ROUTING ---
     function getHashParams() {
         const hash = window.location.hash.replace(/^#\/?/, ''); 
         const parts = hash.split('/');
@@ -125,26 +125,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return { view: 'book', book, lang, page: pageNum };
     }
 
-    // FIX FÜR DIE EINGEFRORENEN LINKS:
-    // Der blockierende isInternalHashUpdate Riegel wurde komplett gelöscht!
-    // Das Skript prüft jetzt einfach synchron, ob das Buch bereits genau auf dieser Seite steht.
-    // Dadurch friert die Homepage NIEMALS wieder ein. Jeder Klick reagiert ab Sekunde 1 sofort.
     async function handleRouting() {
         let params = getHashParams();
-
-        if (pageFlip) {
-            const currentPage = pageFlip.getCurrentPageIndex();
-            if (currentPage === params.page && currentBook === params.book && currentLang === params.lang && bookView.style.display === 'block') {
-                return; // Wenn wir schon exakt da sind: Abbrechen und flüssig weiterlaufen!
-            }
-        }
 
         if (isInitialLoad) {
             isInitialLoad = false;
             if (params.view === 'book' || !params.view) {
                 params.page = 0;
                 window.location.hash = `/${params.book}/${params.lang}/1`;
-                return;
             }
         }
 
@@ -171,12 +159,13 @@ document.addEventListener('DOMContentLoaded', () => {
             await loadBook(params.book, params.lang, params.page);
         } else {
             if (pageFlip && pageFlip.getCurrentPageIndex() !== params.page) {
-                pageFlip.flip(params.page);
+                if (params.page !== targetPageWhileFlipping) {
+                    pageFlip.flip(params.page);
+                }
             }
         }
     }
 
-    // --- 5. BUCH-GRÖSSEN BERECHNUNG & STABILISATOR ---
     function updateBookSize() {
         const w = window.innerWidth;
         const h = window.innerHeight;
@@ -211,25 +200,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // FIX FÜR DAS DREHEN-CHAOS (Der Stabilisator):
-    // Wir lassen dem Handy/Tablet präzise 500 Millisekunden Zeit, um die Drehanimation
-    // im mobilen System vollkommen abzuschließen. Erst wenn der Bildschirm absolut stillsteht,
-    // werfen wir die Zentrierungs-Berechnung an. Das Buch sitzt immer perfekt mittig!
+    function refreshMenuVisibility() {
+        if (!pageFlip) return;
+        const currentPage = pageFlip.getCurrentPageIndex();
+        const totalPages = pageFlip.getPageCount();
+
+        if (currentPage === 0) {
+            menuPositioner.style.zIndex = '3'; 
+            startMenu.style.pointerEvents = 'auto';
+            startMenu.style.opacity = '1'; 
+            endOfBookMenu.style.pointerEvents = 'none';
+            endOfBookMenu.style.opacity = '0'; 
+        } else if (currentPage >= totalPages - 2) {
+            menuPositioner.style.zIndex = '3';
+            endOfBookMenu.style.pointerEvents = 'auto';
+            endOfBookMenu.style.opacity = '1'; 
+            startMenu.style.pointerEvents = 'none';
+            startMenu.style.opacity = '0'; 
+        } else {
+            menuPositioner.style.zIndex = '1'; 
+            startMenu.style.opacity = '0'; 
+            startMenu.style.pointerEvents = 'none';
+            endOfBookMenu.style.opacity = '0'; 
+            endOfBookMenu.style.pointerEvents = 'none';
+        }
+    }
+
+    // FIX: SAUBERER DREH-WÄCHTER!
+    // Statt den HTML-Container zu löschen (was das Buch zerstört hat), übergeben wir PageFlip 
+    // nach einer kurzen Pause einfach ruhig den offiziellen Update-Befehl.
     let resizeTimer;
     function handleResizeAndOrientation() {
         clearTimeout(resizeTimer);
-        if(bookWrapper) bookWrapper.style.opacity = '0'; // Kurzer Blackout schützt vor optischem Flackern
+        
+        // Berechnet sofort die neuen Maße
+        updateBookSize();
+        if (pageFlip) pageFlip.update();
 
+        // Wartet 300ms, bis das Betriebssystem (Handy) den Layout-Wechsel optisch abgeschlossen hat
+        // und zentriert dann final noch einmal nach.
         resizeTimer = setTimeout(() => {
             updateBookSize();
-            if (pageFlip) {
-                pageFlip.update(); // Korrigiert die inneren Koordinaten der Bibliothek fehlerfrei
-            }
-            if(bookWrapper) bookWrapper.style.opacity = '1';
-        }, 500); 
+            if (pageFlip) pageFlip.update();
+            refreshMenuVisibility(); // Sorgt dafür, dass Menüs beim Drehen nicht unsichtbar bleiben!
+        }, 300);
     }
 
     let lastWinW = window.innerWidth;
+
     window.addEventListener('resize', () => {
         const currentW = window.innerWidth;
         if (currentW !== lastWinW) {
@@ -246,41 +264,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('fullscreenchange', handleResizeAndOrientation);
     document.addEventListener('webkitfullscreenchange', handleResizeAndOrientation);
 
-    function refreshMenuVisibility() {
-        if (!pageFlip) return;
-        const currentPage = pageFlip.getCurrentPageIndex();
-        const totalPages = pageFlip.getPageCount();
-        const homeBtn = document.getElementById('home-btn');
-        const fsBtn = document.getElementById('fullscreen-btn');
+    function updateHeading() {
+        if (translations[currentLang]) {
+            mainHeading.innerText = translations[currentLang].titles[currentTitleIndex];
+        }
+    }
 
-        if (currentPage === 0) {
-            menuPositioner.style.zIndex = '3'; 
-            startMenu.style.pointerEvents = 'auto';
-            startMenu.style.opacity = '1'; 
-            endOfBookMenu.style.pointerEvents = 'none';
-            endOfBookMenu.style.opacity = '0'; 
-        } else if (currentPage >= totalPages - 2) {
-            menuPositioner.style.zIndex = '3';
-            endOfBookMenu.style.pointerEvents = 'auto';
-            endOfBookMenu.style.opacity = '1'; 
-            endOfBookMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
-            startMenu.style.pointerEvents = 'none';
-            startMenu.style.opacity = '0'; 
-        } else {
-            menuPositioner.style.zIndex = '1'; 
-            startMenu.style.opacity = '0'; 
-            startMenu.style.pointerEvents = 'none';
-            endOfBookMenu.style.opacity = '0'; 
-            endOfBookMenu.style.pointerEvents = 'none';
-        }
-        
-        if (currentPage === 0 || currentPage >= totalPages - 2) {
-            if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
-            if(fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
-        } else {
-            if(homeBtn) { homeBtn.style.opacity = '1'; homeBtn.style.pointerEvents = 'auto'; }
-            if(fsBtn) { fsBtn.style.opacity = '1'; fsBtn.style.pointerEvents = 'auto'; }
-        }
+    function cycleTitle() {
+        currentTitleIndex = (currentTitleIndex + 1) % 4;
+        updateHeading();
     }
 
     // --- 6. HIGH-PERFORMANCE BILD-LADER ---
@@ -339,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 7. BUCH LAEDT IM HINTERGRUND (Startmenü bleibt wie in Stein gemeißelt stehen) ---
+    // --- 7. BUCH SUCHEN UND AUFBAUEN ---
     async function loadBook(bookName, lang, initialPage = 0) {
         const myLoadId = ++activeLoadId;
 
@@ -351,30 +343,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
         if (fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
 
-        // FIX FÜR DAS STARTMENÜ: 
-        // Es wird nicht mehr unsichtbar geschaltet! Der Text ändert sich sofort flüssig
-        // nach dem Klick auf die neue Sprache und bleibt unerschütterlich sichtbar stehen.
         updateHeading();
-        document.querySelectorAll('.all-books-trigger').forEach(el => el.innerText = translations[lang].allBooks);
-        document.getElementById('grid-heading').innerText = translations[lang].allBooks;
-        document.getElementById('back-to-book-btn').innerText = translations[lang].close;
-        document.getElementById('close-legal').innerText = translations[lang].close;
-        document.getElementById('back-to-start-btn').innerText = translations[lang].backToStart;
-        if (homeBtn) homeBtn.innerHTML = translations[lang].home;
-
-        langLinks.forEach(link => link.classList.remove('active'));
-        const activeLink = document.querySelector(`[data-lang="${lang}"]`);
-        if (activeLink) activeLink.classList.add('active');
-
-        // Das Menü links steht felsenfest, während auf der rechten Seite das Ladesymbol erscheint
+        
+        // FIX: Startmenü sofort in voller Stärke einblenden, Text und Menü verschwinden nicht mehr!
         startMenu.style.opacity = '1';
         startMenu.style.pointerEvents = 'auto';
+        endOfBookMenu.style.opacity = '0';
+        endOfBookMenu.style.pointerEvents = 'none';
         menuPositioner.style.zIndex = '3';
         
-        if (pageFlip) { pageFlip.destroy(); pageFlip = null; }
-        bookWrapper.innerHTML = '<div id="book"></div>';
-        bookWrapper.style.opacity = '0';
-        
+        // Ladescreen baut sich nur auf der rechten Seite auf
         loadingScreen.innerHTML = `
             <div class="menu-row" style="justify-content: center;">
                 <span class="bracket">[</span>
@@ -382,6 +360,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="bracket">]</span>
             </div>
         `;
+        
+        document.querySelectorAll('.all-books-trigger').forEach(el => el.innerText = translations[lang].allBooks);
+        document.getElementById('grid-heading').innerText = translations[lang].allBooks;
+        document.getElementById('back-to-book-btn').innerText = translations[lang].close;
+        document.getElementById('close-legal').innerText = translations[lang].close;
+        document.getElementById('back-to-start-btn').innerText = translations[lang].backToStart;
+
+        if (homeBtn) homeBtn.innerHTML = translations[lang].home;
+
+        langLinks.forEach(link => link.classList.remove('active'));
+        const activeLink = document.querySelector(`[data-lang="${lang}"]`);
+        if (activeLink) activeLink.classList.add('active');
+        
+        if (pageFlip) { pageFlip.destroy(); pageFlip = null; }
+        bookWrapper.innerHTML = '<div id="book"></div>';
+        
+        // Das Buch-Objekt wird unsichtbar gehalten, während es rechnet
+        bookWrapper.style.opacity = '0';
         loadingScreen.style.display = 'flex'; 
         
         const folder = `${bookName}/pages_${lang}/`;
@@ -395,6 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentImgW = cover.width; 
             currentImgH = cover.height; 
         } else {
+            // Die Fallback-Meldung, wenn das Buch nicht existiert
             loadingScreen.innerHTML = `
                 <div class="menu-row" style="justify-content: center; margin-bottom: 0.8rem;">
                     <span class="bracket">[</span>
@@ -412,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return; 
         }
 
-        const batchSize = 3;
+        const batchSize = 3; 
         let pageCounter = 1;
         let checking = true;
 
@@ -439,6 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const back = await checkPageExists(`${folder}-1${extension}`);
         if (myLoadId !== activeLoadId) return;
+
         if (back) { imageUrls.push(`-1${extension}`); }
 
         buildBook(imageUrls, folder, currentImgW, currentImgH, initialPage);
@@ -492,7 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
             targetPageWhileFlipping = targetPage; 
             window.location.hash = `/${currentBook}/${currentLang}/${targetPage + 1}`;
 
-            // Macht Menüs während der Bewegung unsichtbar, um Geistertexte zu verhindern
+            // Macht Menüs während der Flug-Bewegung unsichtbar, um Geistertexte zu verhindern
             startMenu.style.opacity = '0';
             startMenu.style.pointerEvents = 'none';
             endOfBookMenu.style.opacity = '0';
@@ -518,14 +516,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 menuPositioner.style.zIndex = '1';
             } else {
                 targetPageWhileFlipping = -1; 
-                refreshMenuVisibility(); // Blendet Text verlässlich nach Stopp wieder ein
+                refreshMenuVisibility(); 
+
                 if (pageFlip.getCurrentPageIndex() === 0) {
                     cycleTitle();
                 }
             }
         });
 
-        // NAHTLOSES EINBLENDEN (Verschwindet synchron ohne Überlagerung)
+        // FIX: DER PERFEKTE LADESCREEN-ÜBERGANG
+        // Wartet, bis die Buch-Größe im Hintergrund absolut fertig berechnet ist.
         setTimeout(() => {
             updateBookSize();
             if (pageFlip) pageFlip.update();
@@ -533,14 +533,19 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 if (pageFlip) {
                     refreshMenuVisibility();
-                    loadingScreen.style.display = 'none';
+                    // In der selben Millisekunde, in der das Buch (opacity: 1) erscheint,
+                    // verschwindet das Ladesymbol (display: none). Keine Überschneidung!
                     bookWrapper.style.opacity = '1';
+                    loadingScreen.style.display = 'none';
                 }
             }, 50);
         }, 50);
     }
 
-    // --- GLOBALE SEITEN EVENTS ---
+    // ==========================================================================
+    // 8. INTERAKTIONS EVENTS
+    // ==========================================================================
+
     mainHeading.addEventListener('click', cycleTitle);
 
     langLinks.forEach(link => {
@@ -553,6 +558,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function toggleFullscreen() {
         const elem = document.documentElement;
+        
         if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
             if (elem.requestFullscreen) {
                 elem.requestFullscreen().catch(err => console.warn(err));
@@ -561,9 +567,12 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (elem.msRequestFullscreen) {
                 elem.msRequestFullscreen();
             }
+            
+            // Simultaner Drehbefehl fürs Handy (ohne Verzögerung, um Blockade zu umgehen)
             if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('landscape').catch(err => console.warn(err));
+                screen.orientation.lock('landscape').catch(err => console.warn("Auto-Querformat blockiert:", err));
             }
+            
         } else {
             if (document.exitFullscreen) {
                 document.exitFullscreen();
@@ -572,6 +581,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (document.msExitFullscreen) {
                 document.msExitFullscreen();
             }
+            
             if (screen.orientation && screen.orientation.unlock) {
                 screen.orientation.unlock();
             }
@@ -615,6 +625,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('link-legal').onclick = (e) => { e.preventDefault(); window.location.hash = `/legal`; };
+    
     document.getElementById('close-legal').onclick = (e) => { 
         e.preventDefault(); 
         const page = pageFlip ? pageFlip.getCurrentPageIndex() + 1 : 1;
