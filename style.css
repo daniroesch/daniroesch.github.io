@@ -1,3 +1,6 @@
+/* ==========================================================================
+   1. SCHRIFTARTEN (Lädt deine lokalen Fonts von GitHub)
+   ========================================================================== */
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
@@ -30,6 +33,9 @@
     src: url('fonts/montserrat-800.woff2') format('woff2');
 }
 
+/* ==========================================================================
+   2. ANTI-VERZERRUNG (Schützt das Design vor Eingriffen der Handy-Browser)
+   ========================================================================== */
 *, *::before, *::after {
     margin: 0;
     padding: 0;
@@ -54,6 +60,9 @@ body {
     height: 100dvh; 
 }
 
+/* ==========================================================================
+   3. STRUKTUR DER BUCH-ANSICHT
+   ========================================================================== */
 #book-view {
     position: relative;
     width: 100vw;
@@ -71,12 +80,15 @@ body {
     pointer-events: none; 
 }
 
-/* FIX: Sichtbarkeit bleibt ab sofort immer erhalten! Kein Verschwinden beim Starten. */
+/* FIX: Visibility hidden restlos gelöscht! Start-Menü ist ab Sekunde 0 sichtbar! */
 #menu-positioner { 
     z-index: 3; 
 }
 #ui-layer { z-index: 100; } 
 
+/* ==========================================================================
+   4. ASYMMETRISCHE UI-BUTTONS (Home & Vollbild)
+   ========================================================================== */
 .ui-btn {
     position: absolute;
     width: 4.5em; 
@@ -128,6 +140,9 @@ body.fit-height #fullscreen-btn {
     right: auto;
 }
 
+/* ==========================================================================
+   5. MENÜ-DESIGN UND TYPOGRAFIE
+   ========================================================================== */
 .static-menu {
     position: absolute;
     top: 0;
@@ -174,6 +189,7 @@ h1 {
     cursor: pointer;
     transition: color 0.3s ease;
 }
+
 h1:hover { color: #000; }
 
 .menu-row {
@@ -200,9 +216,13 @@ h1:hover { color: #000; }
     font-size: clamp(9px, calc(var(--real-book-height) * 0.03), 14px); 
     text-transform: lowercase;
 }
+
 .legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; }
 .legal-links a:hover { color: #000; }
 
+/* ==========================================================================
+   6. LADESCREEN & 3D BUCH
+   ========================================================================== */
 .flip-book-container, 
 .flip-book-container *, 
 .st-page-flip {
@@ -218,9 +238,10 @@ h1:hover { color: #000; }
     top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
     display: flex; justify-content: center; align-items: center;
     z-index: 2;
-    opacity: 0; transition: opacity 0.5s ease;
+    opacity: 0; transition: opacity 0.4s ease; /* Weicher Übergang für den Hard-Reset */
 }
 
+/* Ladescreen bleibt perfekt rechts zentriert */
 #loading {
     position: absolute; 
     top: 0; 
@@ -240,6 +261,9 @@ h1:hover { color: #000; }
 .page { background-color: #ffffff; position: relative; }
 .page img { width: 100%; height: 100%; object-fit: cover; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
 
+/* ==========================================================================
+   7. UNTER-ANSICHTEN (Bibliothek & Impressum)
+   ========================================================================== */
 #grid-view, #legal-view {
     position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
     padding: 5vw; background: #fff; overflow-y: auto; z-index: 20;
