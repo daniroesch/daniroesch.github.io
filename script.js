@@ -200,7 +200,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Regelt die korrekte Text-Sichtbarkeit passend zur aktuellen Seitenzahl (verhindert das Ausblenden beim Drehen!)
     function refreshMenuVisibility() {
         if (!pageFlip) return;
         const currentPage = pageFlip.getCurrentPageIndex();
@@ -227,37 +226,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // FIX: DER ULTIMATIVE ZENTRIERUNGS-WÄCHTER (Erzwingt eine perfekte Mitte beim Drehen)
+    // FIX: SAUBERER DREH-WÄCHTER!
+    // Statt den HTML-Container zu löschen (was das Buch zerstört hat), übergeben wir PageFlip 
+    // nach einer kurzen Pause einfach ruhig den offiziellen Update-Befehl.
     let resizeTimer;
     function handleResizeAndOrientation() {
         clearTimeout(resizeTimer);
         
-        const currentWrapper = document.getElementById('flip-book-container');
-        if(currentWrapper) currentWrapper.style.opacity = '0'; 
-        
-        // Stellt sicher, dass das Menü beim Rechnen sichtbar bleibt, sofern man auf Seite 1 steht
-        refreshMenuVisibility();
+        // Berechnet sofort die neuen Maße
+        updateBookSize();
+        if (pageFlip) pageFlip.update();
 
-        // 300ms warten, bis das iOS/Android System den Vollbild-Austritt fertig gezeichnet hat
+        // Wartet 300ms, bis das Betriebssystem (Handy) den Layout-Wechsel optisch abgeschlossen hat
+        // und zentriert dann final noch einmal nach.
         resizeTimer = setTimeout(() => {
-            // Trick: Um PageFlip wirklich zum perfekten Zentrieren zu zwingen, zerstören wir den Container
-            // kurz im DOM und setzen ihn direkt wieder ein.
-            const bookElement = document.getElementById('book');
-            if (bookElement && currentWrapper) {
-                // Den Wrapper "entwurzeln" und wieder einfügen setzt die fehlerhaften Margins zurück!
-                currentWrapper.innerHTML = '';
-                currentWrapper.appendChild(bookElement);
-            }
-
             updateBookSize();
-            if (pageFlip) {
-                pageFlip.update(); 
-            }
-            if(currentWrapper) currentWrapper.style.opacity = '1';
-            
-            // Zur Sicherheit nochmal Menüs updaten
-            refreshMenuVisibility();
-            
+            if (pageFlip) pageFlip.update();
+            refreshMenuVisibility(); // Sorgt dafür, dass Menüs beim Drehen nicht unsichtbar bleiben!
         }, 300);
     }
 
@@ -358,13 +343,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
         if (fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
 
-        // Start-Menü ist ab sofort SICHTBAR beim Laden!
-        startMenu.style.opacity = '1';
-        startMenu.style.pointerEvents = 'auto';
-        
         updateHeading();
         
-        // Ladescreen zentriert sich rechts (durchs CSS geregelt)
+        // FIX: Startmenü sofort in voller Stärke einblenden, Text und Menü verschwinden nicht mehr!
+        startMenu.style.opacity = '1';
+        startMenu.style.pointerEvents = 'auto';
+        endOfBookMenu.style.opacity = '0';
+        endOfBookMenu.style.pointerEvents = 'none';
+        menuPositioner.style.zIndex = '3';
+        
+        // Ladescreen baut sich nur auf der rechten Seite auf
         loadingScreen.innerHTML = `
             <div class="menu-row" style="justify-content: center;">
                 <span class="bracket">[</span>
@@ -385,10 +373,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeLink = document.querySelector(`[data-lang="${lang}"]`);
         if (activeLink) activeLink.classList.add('active');
         
-        const mainWrapper = document.getElementById('flip-book-container');
         if (pageFlip) { pageFlip.destroy(); pageFlip = null; }
-        mainWrapper.innerHTML = '<div id="book"></div>';
-        mainWrapper.style.opacity = '0';
+        bookWrapper.innerHTML = '<div id="book"></div>';
+        
+        // Das Buch-Objekt wird unsichtbar gehalten, während es rechnet
+        bookWrapper.style.opacity = '0';
         loadingScreen.style.display = 'flex'; 
         
         const folder = `${bookName}/pages_${lang}/`;
@@ -402,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentImgW = cover.width; 
             currentImgH = cover.height; 
         } else {
-            // FEHLER-MELDUNG: Setzt sich perfekt auf die rechte Hälfte unter das Menü
+            // Die Fallback-Meldung, wenn das Buch nicht existiert
             loadingScreen.innerHTML = `
                 <div class="menu-row" style="justify-content: center; margin-bottom: 0.8rem;">
                     <span class="bracket">[</span>
@@ -455,7 +444,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function buildBook(imageUrls, folder, width, height, initialPage = 0) {
         const bookContainer = document.getElementById('book');
-        const mainWrapper = document.getElementById('flip-book-container');
         const niceBookName = currentBook.replace(/-/g, ' ');
 
         imageUrls.forEach((file) => {
@@ -466,7 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         updateBookSize();
-        bookContainer.offsetHeight;
+        bookContainer.offsetHeight; 
 
         pageFlip = new St.PageFlip(bookContainer, {
             width: width, height: height, size: "stretch", 
@@ -484,10 +472,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const homeBtn = document.getElementById('home-btn');
         const fsBtn = document.getElementById('fullscreen-btn');
         
-        menuPositioner.style.zIndex = '3';
-        endOfBookMenu.style.display = 'flex'; 
-        endOfBookMenu.style.pointerEvents = 'none';
-
         const startPage = pageFlip.getCurrentPageIndex();
         const totalPages = pageFlip.getPageCount();
         
@@ -506,6 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
             targetPageWhileFlipping = targetPage; 
             window.location.hash = `/${currentBook}/${currentLang}/${targetPage + 1}`;
 
+            // Macht Menüs während der Flug-Bewegung unsichtbar, um Geistertexte zu verhindern
             startMenu.style.opacity = '0';
             startMenu.style.pointerEvents = 'none';
             endOfBookMenu.style.opacity = '0';
@@ -531,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 menuPositioner.style.zIndex = '1';
             } else {
                 targetPageWhileFlipping = -1; 
-                refreshMenuVisibility();
+                refreshMenuVisibility(); 
 
                 if (pageFlip.getCurrentPageIndex() === 0) {
                     cycleTitle();
@@ -539,9 +524,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // HIER PASSIERT DIE MAGIE DES SYNCHRONEN EINBLENDENS:
-        // Textmenü ist bereits sichtbar.
-        // Das Buch erscheint exakt in der Millisekunde, in der der Ladescreen stirbt.
+        // FIX: DER PERFEKTE LADESCREEN-ÜBERGANG
+        // Wartet, bis die Buch-Größe im Hintergrund absolut fertig berechnet ist.
         setTimeout(() => {
             updateBookSize();
             if (pageFlip) pageFlip.update();
@@ -549,7 +533,9 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 if (pageFlip) {
                     refreshMenuVisibility();
-                    mainWrapper.style.opacity = '1';
+                    // In der selben Millisekunde, in der das Buch (opacity: 1) erscheint,
+                    // verschwindet das Ladesymbol (display: none). Keine Überschneidung!
+                    bookWrapper.style.opacity = '1';
                     loadingScreen.style.display = 'none';
                 }
             }, 50);
@@ -570,7 +556,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Die echte User-Gesture Vollbildsteuerung ohne Blockade durch Handys!
     function toggleFullscreen() {
         const elem = document.documentElement;
         
@@ -583,7 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 elem.msRequestFullscreen();
             }
             
-            // Handy-Drehung
+            // Simultaner Drehbefehl fürs Handy (ohne Verzögerung, um Blockade zu umgehen)
             if (screen.orientation && screen.orientation.lock) {
                 screen.orientation.lock('landscape').catch(err => console.warn("Auto-Querformat blockiert:", err));
             }
