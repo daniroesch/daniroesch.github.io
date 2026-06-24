@@ -1,5 +1,5 @@
 /* ==========================================================================
-   1. SCHRIFTARTEN (Lädt deine lokalen Fonts von GitHub)
+   1. SCHRIFTARTEN 
    ========================================================================== */
 @font-face {
     font-family: 'Montserrat';
@@ -8,7 +8,6 @@
     font-display: swap; 
     src: url('fonts/montserrat-400.woff2') format('woff2');
 }
-
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
@@ -16,7 +15,6 @@
     font-display: swap;
     src: url('fonts/montserrat-500.woff2') format('woff2');
 }
-
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
@@ -24,7 +22,6 @@
     font-display: swap;
     src: url('fonts/montserrat-700.woff2') format('woff2');
 }
-
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
@@ -34,7 +31,7 @@
 }
 
 /* ==========================================================================
-   2. ANTI-VERZERRUNG (Schützt das Design vor Eingriffen der Handy-Browser)
+   2. ANTI-VERZERRUNG FÜR MOBILE BROWSER
    ========================================================================== */
 *, *::before, *::after {
     margin: 0;
@@ -80,14 +77,14 @@ body {
     pointer-events: none; 
 }
 
-/* FIX: Visibility hidden restlos gelöscht! Start-Menü ist ab Sekunde 0 sichtbar! */
+/* Das Menü ist nun von Anfang an sichtbar, visibility: hidden ist weg! */
 #menu-positioner { 
     z-index: 3; 
 }
 #ui-layer { z-index: 100; } 
 
 /* ==========================================================================
-   4. ASYMMETRISCHE UI-BUTTONS (Home & Vollbild)
+   4. ASYMMETRISCHE UI-BUTTONS
    ========================================================================== */
 .ui-btn {
     position: absolute;
@@ -221,7 +218,7 @@ h1:hover { color: #000; }
 .legal-links a:hover { color: #000; }
 
 /* ==========================================================================
-   6. LADESCREEN & 3D BUCH
+   6. 3D BUCH & LADESCREEN (Zentriert in der rechten Hälfte!)
    ========================================================================== */
 .flip-book-container, 
 .flip-book-container *, 
@@ -238,10 +235,10 @@ h1:hover { color: #000; }
     top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
     display: flex; justify-content: center; align-items: center;
     z-index: 2;
-    opacity: 0; transition: opacity 0.4s ease; /* Weicher Übergang für den Hard-Reset */
+    opacity: 0; transition: opacity 0.5s ease;
 }
 
-/* Ladescreen bleibt perfekt rechts zentriert */
+/* Der Ladetext liegt ab sofort immer auf der rechten Buchseite */
 #loading {
     position: absolute; 
     top: 0; 
