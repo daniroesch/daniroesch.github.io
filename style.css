@@ -1,11 +1,9 @@
-/* ==========================================================================
-   1. SCHRIFTARTEN 
-   ========================================================================== */
+/* --- SCHRIFTARTEN AUS DEINEM ORDNER LADEN --- */
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
     font-weight: 400;
-    font-display: swap; 
+    font-display: swap;
     src: url('fonts/montserrat-400.woff2') format('woff2');
 }
 @font-face {
@@ -30,9 +28,15 @@
     src: url('fonts/montserrat-800.woff2') format('woff2');
 }
 
-/* ==========================================================================
-   2. ANTI-VERZERRUNG FÜR MOBILE BROWSER
-   ========================================================================== */
+/* --- FIX FÜR DAS SCHRIFTEN-SPRINGEN --- */
+/* Wir hinterlegen hier mathematische Standardwerte. Sollte das JavaScript beim ersten Laden */
+/* noch nicht bereit sein, nutzt das CSS diese Werte als Basis. Dadurch laden alle Texte */
+/* ab der ersten Millisekunde in ihrer absolut korrekten Proportion! */
+:root {
+    --real-book-height: 80vh;
+    --real-book-width: 100vw;
+}
+
 *, *::before, *::after {
     margin: 0;
     padding: 0;
@@ -43,6 +47,7 @@
 }
 
 html, body {
+    /* Verhindert künstliches Vergrößern von Texten auf mobilen Geräten */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     touch-action: pan-x pan-y pinch-zoom !important;
@@ -57,9 +62,6 @@ body {
     height: 100dvh; 
 }
 
-/* ==========================================================================
-   3. STRUKTUR DER BUCH-ANSICHT
-   ========================================================================== */
 #book-view {
     position: relative;
     width: 100vw;
@@ -72,20 +74,18 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: var(--real-book-width, 100vw);
-    height: var(--real-book-height, 100vh);
+    width: var(--real-book-width);
+    height: var(--real-book-height);
     pointer-events: none; 
 }
 
-/* Das Menü ist nun von Anfang an sichtbar, visibility: hidden ist weg! */
+/* Das Menü ist von Anfang an dauerhaft sichtbar! visibility: hidden wurde gelöscht */
 #menu-positioner { 
     z-index: 3; 
 }
 #ui-layer { z-index: 100; } 
 
-/* ==========================================================================
-   4. ASYMMETRISCHE UI-BUTTONS
-   ========================================================================== */
+/* --- DIE ASYMMETRISCHEN UI-BUTTONS --- */
 .ui-btn {
     position: absolute;
     width: 4.5em; 
@@ -104,6 +104,7 @@ body {
     font-weight: 800;
 }
 
+/* STANDARD-POSITION (Im Buchdeckel gefangen) */
 #home-btn {
     top: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
     right: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
@@ -115,6 +116,7 @@ body {
     right: auto;
 }
 
+/* WENN DAS BUCH DIE VOLLE BREITE NUTZT (Leerraum oben/unten) */
 body.fit-width #home-btn {
     top: -2.5em; 
     right: 0;
@@ -126,6 +128,7 @@ body.fit-width #fullscreen-btn {
     right: auto;
 }
 
+/* WENN DAS BUCH DIE VOLLE HÖHE NUTZT (Leerraum links/rechts) */
 body.fit-height #home-btn {
     top: 10px;
     right: -5.5em; 
@@ -137,27 +140,25 @@ body.fit-height #fullscreen-btn {
     right: auto;
 }
 
-/* ==========================================================================
-   5. MENÜ-DESIGN UND TYPOGRAFIE
-   ========================================================================== */
+/* --- TEXT-MENÜ STYLING --- */
 .static-menu {
     position: absolute;
     top: 0;
     left: 0; 
-    width: 50%; 
+    width: 50%; /* Startmenü füllt exakt die linke Buchseite */
     height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
     pointer-events: auto; 
     opacity: 1;
-    transition: opacity 0.3s ease; 
+    transition: opacity 0.3s ease;
 }
 
 #end-of-book-menu {
     position: absolute;
     top: 0;
-    right: 0; 
+    right: 0; /* Endmenü füllt exakt die rechte Buchseite */
     width: 50%;
     height: 100%;
     display: flex;
@@ -186,7 +187,6 @@ h1 {
     cursor: pointer;
     transition: color 0.3s ease;
 }
-
 h1:hover { color: #000; }
 
 .menu-row {
@@ -213,13 +213,10 @@ h1:hover { color: #000; }
     font-size: clamp(9px, calc(var(--real-book-height) * 0.03), 14px); 
     text-transform: lowercase;
 }
-
 .legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; }
 .legal-links a:hover { color: #000; }
 
-/* ==========================================================================
-   6. 3D BUCH & LADESCREEN (Zentriert in der rechten Hälfte!)
-   ========================================================================== */
+/* --- BUCHCONTAINER & DER NEUE RECHTE LADESCREEN --- */
 .flip-book-container, 
 .flip-book-container *, 
 .st-page-flip {
@@ -238,7 +235,7 @@ h1:hover { color: #000; }
     opacity: 0; transition: opacity 0.5s ease;
 }
 
-/* Der Ladetext liegt ab sofort immer auf der rechten Buchseite */
+/* Das Ladesymbol sitzt ab sofort bombenfest auf der rechten Buchhälfte (über dem Cover) */
 #loading {
     position: absolute; 
     top: 0; 
@@ -249,18 +246,15 @@ h1:hover { color: #000; }
     display: flex; 
     flex-direction: column; 
     align-items: center;
-    justify-content: center; 
+    justify-content: center;
 }
-
 #loading a { color: #888; font-weight: 800; text-decoration: none; transition: color 0.2s; }
 #loading a:hover { color: #000; }
 
 .page { background-color: #ffffff; position: relative; }
 .page img { width: 100%; height: 100%; object-fit: cover; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
 
-/* ==========================================================================
-   7. UNTER-ANSICHTEN (Bibliothek & Impressum)
-   ========================================================================== */
+/* --- BIBLIOTHEK & OVERLAYS --- */
 #grid-view, #legal-view {
     position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
     padding: 5vw; background: #fff; overflow-y: auto; z-index: 20;
@@ -272,7 +266,7 @@ h1:hover { color: #000; }
 
 .grid-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; }
 .book-tile { cursor: pointer; transition: transform 0.2s; }
-.book-tile:hover { transform: scale(1.02); } 
+.book-tile:hover { transform: scale(1.02); }
 .book-tile img { height: 300px; width: auto; object-fit: cover; background: #f0f0f0; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: block; }
 .legal-content { max-width: 800px; margin: 0 auto; }
 .legal-image { display: block; margin: 0 auto; max-width: 100%; height: auto; box-shadow: 0 5px 25px rgba(0,0,0,0.05); }
