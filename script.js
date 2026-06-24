@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('pointerdown', protectZoom, { capture: true, passive: true });
     window.addEventListener('pointerup', protectZoom, { capture: true, passive: true });
 
-    // --- 3. BASIS-VARIABLEN ---
+    // --- 3. PROJEKT VARIABLEN ---
     const bookView = document.getElementById('book-view');
     const bookWrapper = document.getElementById('flip-book-container');
     const loadingScreen = document.getElementById('loading');
@@ -81,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gridView = document.getElementById('grid-view');
     const legalView = document.getElementById('legal-view');
     
+    // Trag hier deine echten Projektnamen ein!
     const portfolioBooks = [
         'book_1', 
         'book_2',
@@ -99,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentImgW = 1123; 
     let currentImgH = 794;
     
-    let activeLoadId = 0;
+    let activeLoadId = 0; 
     let activeGridId = 0; 
     
     let targetPageWhileFlipping = -1;
@@ -133,6 +134,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let params = getHashParams();
 
+        // FIX: Der Türsteher prüft JETZT richtig!
+        // Er blockiert nur noch dann, wenn der Nutzer tatsächlich auf "book" bleiben will 
+        // und exakt die gleiche Seite anfordert. Klicks auf "grid" oder "legal" gehen immer durch!
+        if (pageFlip && (!params.view || params.view === 'book')) {
+            const currentPage = pageFlip.getCurrentPageIndex();
+            if (currentPage === params.page && currentBook === params.book && currentLang === params.lang && bookView.style.display === 'block') {
+                return; 
+            }
+        }
+
         if (isInitialLoad) {
             isInitialLoad = false;
             if (params.view === 'book' || !params.view) {
@@ -147,6 +158,8 @@ document.addEventListener('DOMContentLoaded', () => {
             legalView.style.display = 'none';
             gridView.style.display = 'block';
             
+            // Löscht das Buch komplett, wenn man in die Übersicht geht,
+            // damit beim Zurückkehren das Buch perfekt in der Mitte auf Seite 1 startet.
             if (pageFlip) {
                 pageFlip.destroy();
                 pageFlip = null;
@@ -178,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 5. BERECHNUNG DER BUCHGRÖSSE & ICON-POSITION ---
+    // --- 5. BERECHNUNG DER BUCHGRÖSSE ---
     function updateBookSize() {
         const w = window.innerWidth;
         const h = window.innerHeight;
@@ -228,6 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
             menuPositioner.style.zIndex = '3';
             endOfBookMenu.style.pointerEvents = 'auto';
             endOfBookMenu.style.opacity = '1'; 
+            endOfBookMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
             startMenu.style.pointerEvents = 'none';
             startMenu.style.opacity = '0'; 
         } else {
@@ -237,8 +251,20 @@ document.addEventListener('DOMContentLoaded', () => {
             endOfBookMenu.style.opacity = '0'; 
             endOfBookMenu.style.pointerEvents = 'none';
         }
+        
+        const homeBtn = document.getElementById('home-btn');
+        const fsBtn = document.getElementById('fullscreen-btn');
+        
+        if (currentPage === 0 || currentPage >= totalPages - 2) {
+            if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
+            if(fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
+        } else {
+            if(homeBtn) { homeBtn.style.opacity = '1'; homeBtn.style.pointerEvents = 'auto'; }
+            if(fsBtn) { fsBtn.style.opacity = '1'; fsBtn.style.pointerEvents = 'auto'; }
+        }
     }
 
+    // Zentriert das Buch beim Handydrehen
     let resizeTimer;
     function handleResizeAndOrientation() {
         clearTimeout(resizeTimer);
@@ -264,8 +290,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('orientationchange', () => {
-        lastWinW = window.innerWidth;
-        handleResizeAndOrientation();
+        setTimeout(() => {
+            lastWinW = window.innerWidth;
+            handleResizeAndOrientation();
+        }, 100);
     });
 
     document.addEventListener('fullscreenchange', handleResizeAndOrientation);
@@ -338,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 7. BUCH SUCHEN UND AUFBAUEN ---
+    // --- 7. PROJEKT AUFBAUEN ---
     async function loadBook(bookName, lang, initialPage = 0) {
         const myLoadId = ++activeLoadId;
 
@@ -380,7 +408,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (pageFlip) { pageFlip.destroy(); pageFlip = null; }
         bookWrapper.innerHTML = '<div id="book"></div>';
-        
         bookWrapper.style.opacity = '0';
         loadingScreen.style.display = 'flex'; 
         
@@ -412,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return; 
         }
 
-        const batchSize = 3; 
+        const batchSize = 3;
         let pageCounter = 1;
         let checking = true;
 
@@ -472,20 +499,6 @@ document.addEventListener('DOMContentLoaded', () => {
             pageFlip.flip(initialPage);
         }
 
-        const homeBtn = document.getElementById('home-btn');
-        const fsBtn = document.getElementById('fullscreen-btn');
-        
-        const startPage = pageFlip.getCurrentPageIndex();
-        const totalPages = pageFlip.getPageCount();
-        
-        if (startPage > 0 && startPage < totalPages - 2) {
-            if(homeBtn) { homeBtn.style.opacity = '1'; homeBtn.style.pointerEvents = 'auto'; }
-            if(fsBtn) { fsBtn.style.opacity = '1'; fsBtn.style.pointerEvents = 'auto'; }
-        } else {
-            if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
-            if(fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
-        }
-
         pageFlip.on('flip', (e) => {
             const targetPage = e.data; 
             const totalPages = pageFlip.getPageCount();
@@ -498,6 +511,9 @@ document.addEventListener('DOMContentLoaded', () => {
             endOfBookMenu.style.opacity = '0';
             endOfBookMenu.style.pointerEvents = 'none';
             menuPositioner.style.zIndex = '1';
+            
+            const homeBtn = document.getElementById('home-btn');
+            const fsBtn = document.getElementById('fullscreen-btn');
 
             if (targetPage === 0 || targetPage >= totalPages - 2) {
                 if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
@@ -518,7 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 menuPositioner.style.zIndex = '1';
             } else {
                 targetPageWhileFlipping = -1; 
-                refreshMenuVisibility(); 
+                refreshMenuVisibility();
 
                 if (pageFlip.getCurrentPageIndex() === 0) {
                     cycleTitle();
@@ -562,7 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 elem.msRequestFullscreen();
             }
             if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('landscape').catch(err => console.warn(err));
+                screen.orientation.lock('landscape').catch(err => console.warn("Auto-Querformat blockiert:", err));
             }
         } else {
             if (document.exitFullscreen) {
@@ -628,10 +644,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('hashchange', handleRouting);
     
-    // FIX FÜR DAS SCHRIFTEN-SPRINGEN (FOUC):
-    // Das JavaScript zwingt das CSS hier noch VOR dem Ladevorgang in der ersten Millisekunde, 
-    // die korrekten Buchmaße als Basis für die Schriftgrößen zu verwenden! Kein Springen mehr!
+    // Zwingt das CSS vor dem ersten Laden, die korrekten Buchmaße als Basis für die Schriften zu verwenden
     updateBookSize(); 
-    
     handleRouting();
 });
