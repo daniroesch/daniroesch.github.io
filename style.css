@@ -1,11 +1,8 @@
-/* ==========================================================================
-   1. SCHRIFTARTEN (Lädt deine lokalen Fonts von GitHub)
-   ========================================================================== */
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
     font-weight: 400;
-    font-display: swap; /* swap: Zeigt sofort Text an, verhindert "unsichtbare" Schriften */
+    font-display: swap; 
     src: url('fonts/montserrat-400.woff2') format('woff2');
 }
 
@@ -33,21 +30,16 @@
     src: url('fonts/montserrat-800.woff2') format('woff2');
 }
 
-/* ==========================================================================
-   2. ANTI-VERZERRUNG (Schützt das Design vor Eingriffen der Handy-Browser)
-   ========================================================================== */
 *, *::before, *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: 'Montserrat', sans-serif; 
-    /* Zwingt mobile Browser dazu, die Schriftabstände in Ruhe zu lassen */
     letter-spacing: normal !important; 
     font-stretch: normal !important;
 }
 
 html, body {
-    /* Deaktiviert das fehlerhafte Auto-Vergrößern von Text auf iOS Safari */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     touch-action: pan-x pan-y pinch-zoom !important;
@@ -55,16 +47,13 @@ html, body {
 
 body {
     background-color: #ffffff;
-    overflow: hidden; /* Unterdrückt unerwünschte Scrollbalken */
+    overflow: hidden; 
     color: #000;
     width: 100vw;
     height: 100vh;
-    height: 100dvh; /* dvh: Bezieht die Adressleiste auf Handys in die Rechnung mit ein */
+    height: 100dvh; 
 }
 
-/* ==========================================================================
-   3. STRUKTUR DER BUCH-ANSICHT
-   ========================================================================== */
 #book-view {
     position: relative;
     width: 100vw;
@@ -72,7 +61,6 @@ body {
     height: 100dvh;
 }
 
-/* Die Rahmen für das UI werden vom JavaScript exakt auf Buchgröße skaliert */
 #menu-positioner, #ui-layer {
     position: absolute;
     top: 50%;
@@ -80,18 +68,15 @@ body {
     transform: translate(-50%, -50%);
     width: var(--real-book-width, 100vw);
     height: var(--real-book-height, 100vh);
-    pointer-events: none; /* Macht den Rahmen durchlässig für Klicks auf das Buch */
+    pointer-events: none; 
 }
 
 #menu-positioner { 
-    z-index: 3; /* Liegt über dem Buch, damit Texte gelesen werden können */
-    visibility: hidden; /* Unsichtbar, bis das JavaScript das Go gibt */
+    z-index: 3; 
+    /* Sichtbarkeit nicht mehr versteckt, da das Start-Menü sofort sichtbar sein soll */
 }
-#ui-layer { z-index: 100; } /* Vollbild-Klammer und Home-X liegen ganz oben */
+#ui-layer { z-index: 100; } 
 
-/* ==========================================================================
-   4. ASYMMETRISCHE UI-BUTTONS (Home & Vollbild)
-   ========================================================================== */
 .ui-btn {
     position: absolute;
     width: 4.5em; 
@@ -103,7 +88,6 @@ body {
     font-size: clamp(10px, calc(var(--real-book-height) * 0.045), 20px);
     opacity: 0;
     pointer-events: none; 
-    /* All-Transition ermöglicht das elegante Umherwandern beim Handy-Drehen */
     transition: all 0.3s ease; 
 }
 .ui-btn:hover {
@@ -111,7 +95,6 @@ body {
     font-weight: 800;
 }
 
-/* STANDARD (Innerhalb des Buches, wenn kein Leerraum vorhanden ist) */
 #home-btn {
     top: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
     right: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
@@ -123,51 +106,46 @@ body {
     right: auto;
 }
 
-/* BUCH IST BREIT (Leerraum befindet sich Oben und Unten) */
 body.fit-width #home-btn {
-    top: -2.5em; /* Schiebt das X über den oberen Rand hinaus */
+    top: -2.5em; 
     right: 0;
     left: auto;
 }
 body.fit-width #fullscreen-btn {
-    bottom: -2.5em; /* Schiebt das Vollbild unter den unteren Rand */
+    bottom: -2.5em; 
     left: 0;
     right: auto;
 }
 
-/* BUCH IST HOCH (Leerraum befindet sich Links und Rechts) */
 body.fit-height #home-btn {
     top: 10px;
-    right: -5.5em; /* Schiebt das X neben die rechte Buchkante */
+    right: -5.5em; 
     left: auto;
 }
 body.fit-height #fullscreen-btn {
     bottom: 10px;
-    left: -5.5em; /* Schiebt die Klammer neben die linke Buchkante */
+    left: -5.5em; 
     right: auto;
 }
 
-/* ==========================================================================
-   5. MENÜ-DESIGN UND TYPOGRAFIE
-   ========================================================================== */
 .static-menu {
     position: absolute;
     top: 0;
     left: 0; 
-    width: 50%; /* Das Startmenü belegt genau die linke Buchhälfte */
+    width: 50%; 
     height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    pointer-events: auto; /* Aktiviert Klicks für das Menü */
+    pointer-events: auto; 
     opacity: 1;
-    transition: opacity 0.3s ease; /* Ermöglicht stummes Ein/Ausblenden ohne Ruckeln */
+    transition: opacity 0.3s ease; 
 }
 
 #end-of-book-menu {
     position: absolute;
     top: 0;
-    right: 0; /* Das Endmenü belegt genau die rechte Buchhälfte */
+    right: 0; 
     width: 50%;
     height: 100%;
     display: flex;
@@ -196,7 +174,6 @@ h1 {
     cursor: pointer;
     transition: color 0.3s ease;
 }
-
 h1:hover { color: #000; }
 
 .menu-row {
@@ -223,13 +200,9 @@ h1:hover { color: #000; }
     font-size: clamp(9px, calc(var(--real-book-height) * 0.03), 14px); 
     text-transform: lowercase;
 }
-
 .legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; }
 .legal-links a:hover { color: #000; }
 
-/* ==========================================================================
-   6. LADESCREEN & 3D BUCH
-   ========================================================================== */
 .flip-book-container, 
 .flip-book-container *, 
 .st-page-flip {
@@ -237,7 +210,7 @@ h1:hover { color: #000; }
 }
 
 .flip-book-container.zoomed-state {
-    pointer-events: none !important; /* Blockiert Blättern im hineingezoomten Zustand */
+    pointer-events: none !important; 
 }
 
 .flip-book-container {
@@ -248,19 +221,27 @@ h1:hover { color: #000; }
     opacity: 0; transition: opacity 0.5s ease;
 }
 
+/* FIX: Der Ladescreen wurde wie das End-Menü nach rechts (in die Cover-Hälfte) verschoben! */
 #loading {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 100%;
+    position: absolute; 
+    top: 0; 
+    right: 0; /* Positioniert den Rahmen auf der rechten Hälfte */
+    width: 50%;
+    height: 100%;
     z-index: 10;
-    display: flex; flex-direction: column; align-items: center;
+    display: flex; 
+    flex-direction: column; 
+    align-items: center;
+    justify-content: center; /* Zentriert den Inhalt vertikal */
 }
+
+/* Fallback-Links im Ladescreen erhalten das klassische Aussehen */
+#loading a { color: #888; font-weight: 800; text-decoration: none; transition: color 0.2s; }
+#loading a:hover { color: #000; }
 
 .page { background-color: #ffffff; position: relative; }
 .page img { width: 100%; height: 100%; object-fit: cover; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
 
-/* ==========================================================================
-   7. UNTER-ANSICHTEN (Bibliothek & Impressum)
-   ========================================================================== */
 #grid-view, #legal-view {
     position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
     padding: 5vw; background: #fff; overflow-y: auto; z-index: 20;
@@ -272,7 +253,7 @@ h1:hover { color: #000; }
 
 .grid-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; }
 .book-tile { cursor: pointer; transition: transform 0.2s; }
-.book-tile:hover { transform: scale(1.02); }
+.book-tile:hover { transform: scale(1.02); } 
 .book-tile img { height: 300px; width: auto; object-fit: cover; background: #f0f0f0; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: block; }
 .legal-content { max-width: 800px; margin: 0 auto; }
 .legal-image { display: block; margin: 0 auto; max-width: 100%; height: auto; box-shadow: 0 5px 25px rgba(0,0,0,0.05); }
