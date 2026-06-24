@@ -1,10 +1,13 @@
+// Wartet, bis die Webseite vollständig geladen ist, bevor das Skript startet
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- 1. ZOOM WÄCHTER ---
+    // Erkennt, ob der Nutzer mit den Fingern ins Bild gezoomt hat
     function isZoomed() {
         return window.visualViewport && window.visualViewport.scale > 1.01;
     }
 
+    // Wenn gezoomt wurde, bekommt das Buch die Klasse "zoomed-state", wodurch Blättern deaktiviert wird
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
             const bookWrapper = document.getElementById('flip-book-container');
@@ -19,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 2. PULL-TO-REFRESH WÄCHTER ---
+    // Erkennt, ob jemand auf dem Handy stark nach unten zieht, um die Seite neu zu laden
     let pullStartY = 0;
     let pullStartX = 0;
 
@@ -36,14 +40,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const yDiff = pullEndY - pullStartY;
             const xDiff = Math.abs(pullEndX - pullStartX);
             
+            // Wenn massiv nach unten gezogen wurde (yDiff > 130) und man nicht gezoomt ist
             if (yDiff > 130 && xDiff < 40 && !isZoomed()) {
-                // NEU: Saubere Path-URL für den Reload
                 window.location.hash = `/${currentBook}/${currentLang}/1`;
                 setTimeout(() => { window.location.reload(); }, 30);
             }
         }
     }, { passive: true });
 
+    // Blockiert Multi-Touch Gesten, damit das Buch nicht durchdreht, wenn man wischt UND zoomt
     let zoomCooldown = false;
     let zoomTimeout;
 
@@ -82,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gridView = document.getElementById('grid-view');
     const legalView = document.getElementById('legal-view');
     
-    // Trag hier deine echten Projektnamen ein!
+    // WICHTIG: Hier trägst du deine zukünftigen GitHub Ordner-Namen ein!
     const portfolioBooks = [
         'book_1', 
         'book_2',
@@ -104,11 +109,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeLoadId = 0; 
     let activeGridId = 0; 
     
+    // DIE ÜBERSETZUNGS-DATENBANK (Die Wörter wurden zu "Projekt" geändert)
     const translations = {
-        'de': { titles: ["es ist ein buch", "blätter herum", "architektur portfolio", "daniroesch.de"], allBooks: "alle bücher", backToStart: "zurück zum anfang", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "buch wird geladen...", notAvailable: "buch noch nicht in dieser sprache verfügbar" },
-        'en': { titles: ["it´s a book", "flip around", "architecture portfolio", "daniroesch.de"], allBooks: "all books", backToStart: "back to start", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "loading book...", notAvailable: "book not yet available in this language" },
-        'es': { titles: ["es un libro", "hojea las páginas", "portafolio de arquitectura", "daniroesch.de"], allBooks: "todos los libros", backToStart: "volver al inicio", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "cargando libro...", notAvailable: "libro aún no disponible en este idioma" },
-        'pt': { titles: ["é um livro", "folheie as páginas", "portfólio de arquitetura", "daniroesch.de"], allBooks: "todos os livros", backToStart: "voltar ao início", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "carregando libro...", notAvailable: "livro ainda não disponible en este idioma" }
+        'de': { titles: ["meine projekte", "schau dich um", "architektur portfolio", "daniroesch.de"], allBooks: "alle projekte", backToStart: "zurück zum anfang", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "projekt wird geladen...", notAvailable: "projekt noch nicht in dieser sprache verfügbar" },
+        'en': { titles: ["my projects", "take a look", "architecture portfolio", "daniroesch.de"], allBooks: "all projects", backToStart: "back to start", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "loading project...", notAvailable: "project not yet available in this language" },
+        'es': { titles: ["mis proyectos", "echa un vistazo", "portafolio de arquitectura", "daniroesch.de"], allBooks: "todos los proyectos", backToStart: "volver al inicio", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "cargando proyecto...", notAvailable: "proyecto aún no disponible en este idioma" },
+        'pt': { titles: ["meus projetos", "dê uma olhada", "portfólio de arquitetura", "daniroesch.de"], allBooks: "todos os projetos", backToStart: "voltar ao início", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "carregando projeto...", notAvailable: "projeto ainda não disponível neste idioma" }
     };
 
     // --- 4. URL & ROUTING ---
@@ -138,7 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (params.view === 'book' || !params.view) {
                 params.page = 0;
                 isInternalHashUpdate = true;
-                // Formatiert die URL beim allerersten Laden direkt extrem sauber
                 window.location.hash = `/${params.book}/${params.lang}/1`;
             }
         }
@@ -171,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- 5. BERECHNUNG DER BUCHGRÖSSE & ICON-POSITION ---
     function updateBookSize() {
         const w = window.innerWidth;
         const h = window.innerHeight;
@@ -288,7 +294,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const niceName = book.name.replace(/-/g, ' '); 
                 tile.innerHTML = `<img src="${book.folder}0${extension}" alt="${niceName}">`;
                 tile.onclick = () => {
-                    // NEU: Saubere Path-URL
                     window.location.hash = `/${book.name}/${currentLang}/1`;
                 };
                 gridContainer.appendChild(tile);
@@ -308,7 +313,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
         if (fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
 
-        // Unsichtbarkeit während des Ladens (sorgt für das Springen des Textes, was wir nun per CSS gelöst haben)
         if (menuPositioner) menuPositioner.style.visibility = 'hidden'; 
         updateHeading();
         
@@ -348,7 +352,6 @@ document.addEventListener('DOMContentLoaded', () => {
             currentImgW = cover.width; 
             currentImgH = cover.height; 
         } else {
-            // NEU: Der Fallback-Link nutzt ebenfalls die saubere Grid-URL
             loadingScreen.innerHTML = `
                 <div class="menu-row" style="justify-content: center; margin-bottom: 0.8rem;">
                     <span class="bracket">[</span>
@@ -470,7 +473,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalPages = pageFlip.getPageCount();
             
             isInternalHashUpdate = true;
-            // NEU: Saubere Path-URL während des Blätterns
             window.location.hash = `/${currentBook}/${currentLang}/${targetPage + 1}`;
 
             if (targetPage === 0 || targetPage >= totalPages - 2) {
@@ -534,7 +536,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 150);
     }
 
-    // --- 8. GLOBALE EVENTS ---
+    // --- GLOBALE EVENTS ---
 
     mainHeading.addEventListener('click', cycleTitle);
 
@@ -542,7 +544,6 @@ document.addEventListener('DOMContentLoaded', () => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const lang = e.currentTarget.getAttribute('data-lang'); 
-            // NEU: Saubere Path-URL beim Sprachenwechsel
             window.location.hash = `/${currentBook}/${lang}/1`;
         });
     });
@@ -592,7 +593,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (e.target.closest('.all-books-trigger')) {
             e.preventDefault();
-            // NEU: Saubere Path-URL
             window.location.hash = `/grid`;
         }
         
