@@ -1,3 +1,6 @@
+/* ==========================================================================
+   1. SCHRIFTARTEN (Lädt deine lokalen Fonts von GitHub)
+   ========================================================================== */
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
@@ -30,6 +33,19 @@
     src: url('fonts/montserrat-800.woff2') format('woff2');
 }
 
+/* ==========================================================================
+   2. FIX FÜR DAS SCHRIFTEN-SPRINGEN (FOUC)
+   ========================================================================== */
+/* Gibt dem CSS sofort Startwerte für die Buchmaße, noch bevor das JavaScript lädt. */
+/* So berechnet die "clamp" Funktion die Schriftgröße sofort richtig und der Text springt nicht! */
+:root {
+    --real-book-width: 100vw;
+    --real-book-height: 100vh;
+}
+
+/* ==========================================================================
+   3. ANTI-VERZERRUNG (Schützt das Design vor Eingriffen der Handy-Browser)
+   ========================================================================== */
 *, *::before, *::after {
     margin: 0;
     padding: 0;
@@ -54,6 +70,9 @@ body {
     height: 100dvh; 
 }
 
+/* ==========================================================================
+   4. STRUKTUR DER BUCH-ANSICHT
+   ========================================================================== */
 #book-view {
     position: relative;
     width: 100vw;
@@ -71,12 +90,16 @@ body {
     pointer-events: none; 
 }
 
-/* FIX: Sichtbarkeit bleibt ab sofort immer erhalten! Kein Verschwinden beim Starten. */
+/* Menü bleibt beim ersten Laden versteckt, bis JS das Go gibt */
 #menu-positioner { 
     z-index: 3; 
+    visibility: hidden; 
 }
 #ui-layer { z-index: 100; } 
 
+/* ==========================================================================
+   5. ASYMMETRISCHE UI-BUTTONS (Home & Vollbild)
+   ========================================================================== */
 .ui-btn {
     position: absolute;
     width: 4.5em; 
@@ -128,6 +151,9 @@ body.fit-height #fullscreen-btn {
     right: auto;
 }
 
+/* ==========================================================================
+   6. MENÜ-DESIGN UND TYPOGRAFIE
+   ========================================================================== */
 .static-menu {
     position: absolute;
     top: 0;
@@ -174,6 +200,7 @@ h1 {
     cursor: pointer;
     transition: color 0.3s ease;
 }
+
 h1:hover { color: #000; }
 
 .menu-row {
@@ -200,9 +227,13 @@ h1:hover { color: #000; }
     font-size: clamp(9px, calc(var(--real-book-height) * 0.03), 14px); 
     text-transform: lowercase;
 }
+
 .legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; }
 .legal-links a:hover { color: #000; }
 
+/* ==========================================================================
+   7. 3D BUCH & LADESCREEN
+   ========================================================================== */
 .flip-book-container, 
 .flip-book-container *, 
 .st-page-flip {
@@ -221,6 +252,7 @@ h1:hover { color: #000; }
     opacity: 0; transition: opacity 0.5s ease;
 }
 
+/* Lade-Symbol sitzt zentriert in der rechten Buchhälfte */
 #loading {
     position: absolute; 
     top: 0; 
@@ -240,6 +272,9 @@ h1:hover { color: #000; }
 .page { background-color: #ffffff; position: relative; }
 .page img { width: 100%; height: 100%; object-fit: cover; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
 
+/* ==========================================================================
+   8. UNTER-ANSICHTEN (Bibliothek & Impressum)
+   ========================================================================== */
 #grid-view, #legal-view {
     position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
     padding: 5vw; background: #fff; overflow-y: auto; z-index: 20;
