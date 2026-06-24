@@ -1,11 +1,9 @@
-// Wartet, bis die Webseite vollständig im Browser geladen ist
 document.addEventListener('DOMContentLoaded', () => {
 
     // ==========================================================================
-    // 1. ZOOM-WÄCHTER (Schützt das Buch vor Fehlbedienungen im Zoom)
+    // 1. ZOOM & PULL-TO-REFRESH WÄCHTER
     // ==========================================================================
     function isZoomed() {
-        // Prüft, ob der Nutzer mit zwei Fingern in die Seite hineingezoomt hat
         return window.visualViewport && window.visualViewport.scale > 1.01;
     }
 
@@ -14,19 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const bookWrapper = document.getElementById('flip-book-container');
             if (bookWrapper) {
                 if (isZoomed()) {
-                    // Schaltet Blättern ab (pointer-events: none), wenn hineingezoomt wurde
                     bookWrapper.classList.add('zoomed-state');
                 } else {
-                    // Aktiviert Blättern wieder, wenn die Seite im Normalzustand ist
                     bookWrapper.classList.remove('zoomed-state');
                 }
             }
         });
     }
 
-    // ==========================================================================
-    // 2. PULL-TO-REFRESH (Wisch-Geste zum sicheren Neuladen auf Seite 1)
-    // ==========================================================================
     let pullStartY = 0;
     let pullStartX = 0;
 
@@ -44,22 +37,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const yDiff = pullEndY - pullStartY;
             const xDiff = Math.abs(pullEndX - pullStartX);
             
-            // Wenn der Nutzer auf dem Handy > 130px nach unten wischt und NICHT gezoomt ist
+            // Verhindert ungewolltes Neuladen bei diagonalem Wischen
             if (yDiff > 130 && xDiff < 40 && !isZoomed()) {
-                // Erzwingt, dass die URL vor dem Reload sicher auf das Startcover (Seite 1) springt
                 window.location.hash = `/${currentBook}/${currentLang}/1`;
                 setTimeout(() => { window.location.reload(); }, 30);
             }
         }
     }, { passive: true });
 
-    // Blockiert Multi-Touch-Konflikte, damit das System ruhig bleibt, wenn man unkontrolliert wischt
     let zoomCooldown = false;
     let zoomTimeout;
 
     function protectZoom(e) {
         const isMultiTouch = e.touches && e.touches.length > 1;
-        if (isMultiTouch || isZoomed()) {
+        const isCurrentlyZoomed = isZoomed();
+
+        if (isMultiTouch || isCurrentlyZoomed) {
             zoomCooldown = true;
             clearTimeout(zoomTimeout);
             e.stopPropagation(); 
@@ -79,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('pointerup', protectZoom, { capture: true, passive: true });
 
     // ==========================================================================
-    // 3. CODE-VARIABLEN & DEINE BÜCHER-LISTE
+    // 2. BASIS VARIABLEN & BÜCHER-VERZEICHNIS
     // ==========================================================================
     const bookWrapper = document.getElementById('flip-book-container');
     const loadingScreen = document.getElementById('loading');
@@ -92,8 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gridView = document.getElementById('grid-view');
     const legalView = document.getElementById('legal-view');
     
-    // WICHTIG: Hier trägst du deine Ordnernamen ein, sobald du sie auf GitHub umbenennst!
-    // Nutze Kebab-Case (z.B. 'museum-madrid', 'villa-am-see')
+    // Trag hier deine echten Ordnernamen von GitHub ein
     const portfolioBooks = [
         'book_1', 
         'book_2',
@@ -103,22 +95,18 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let pageFlip = null; 
     let currentLang = 'de'; 
-    let currentBook = portfolioBooks[0]; // Startet initial immer mit dem ersten Buch der Liste
+    let currentBook = portfolioBooks[0]; 
     let currentTitleIndex = 0; 
-    
-    // Smarter Animations-Wächter. Blockiert nur identische Blätter-Befehle, hält Klicks frei!
-    let targetPageWhileFlipping = -1; 
-    
+    let isInternalHashUpdate = false; 
     let isInitialLoad = true; 
-    const extension = '.webp'; // Deine Dateiendung für die Renderings
+    const extension = '.webp'; 
     
-    let currentImgW = 1123; 
-    let currentImgH = 794;
+    let activeLoadId = 0;
+    let activeGridId = 0; 
     
-    let activeLoadId = 0; // Bricht Ladevorgänge ab, wenn man im Menü wild herumklickt
-    let activeGridId = 0; // Schützt das Bibliotheks-Grid vor asynchronen Dopplungen
+    // Steuert, bei welcher Seite während der Bewegung das Menü blockiert bleiben soll
+    let targetPageWhileFlipping = -1;
     
-    // DIE INTERFACE-DATENBANK (Perfekt übersetzt)
     const translations = {
         'de': { titles: ["es ist ein buch", "blätter herum", "architektur portfolio", "daniroesch.de"], allBooks: "alle bücher", backToStart: "zurück zum anfang", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "buch wird geladen...", notAvailable: "buch noch nicht in dieser sprache verfügbar" },
         'en': { titles: ["it´s a book", "flip around", "architecture portfolio", "daniroesch.de"], allBooks: "all books", backToStart: "back to start", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "loading book...", notAvailable: "book not yet available in this language" },
@@ -127,41 +115,38 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ==========================================================================
-    // 4. PATH-ROUTING (Übersetzt verständliche URLs für das Skript)
+    // 3. ROUTING & URL-LOGIK (Path-Style)
     // ==========================================================================
     function getHashParams() {
-        const hash = window.location.hash.replace(/^#\/?/, ''); // Entfernt das # und eventuelle Schrägstriche
+        const hash = window.location.hash.replace(/^#\/?/, ''); 
         const parts = hash.split('/');
 
-        // Prüft, ob der Nutzer im Raster oder im Impressum steht
         if (parts[0] === 'grid') return { view: 'grid' };
         if (parts[0] === 'legal') return { view: 'legal' };
 
         const book = parts[0] || portfolioBooks[0];
         const lang = parts[1] || 'de';
         
-        // Kosmetik-Trick: Nutzer sieht Seite 1 in der URL, JS rechnet intern heimlich mit Seite 0
         let pageNum = parts[2] ? parseInt(parts[2]) - 1 : 0;
-        pageNum = Math.max(0, pageNum); // Verhindert Abstürze durch negative Zahlen
+        pageNum = Math.max(0, pageNum);
 
         return { view: 'book', book, lang, page: pageNum };
     }
 
-    // Der Weichensteller: Schaltet die Ansichten je nach URL-Adresse um
     async function handleRouting() {
+        if (isInternalHashUpdate) return;
+
         let params = getHashParams();
 
-        // Beim allerersten Aufruf der Seite
         if (isInitialLoad) {
             isInitialLoad = false;
             if (params.view === 'book' || !params.view) {
-                params.page = 0; // Internes Cover-Startsignal
-                // Formatiert den Link oben sofort wunderschön und verständlich (/#/book_1/de/1)
+                params.page = 0;
+                isInternalHashUpdate = true;
                 window.location.hash = `/${params.book}/${params.lang}/1`;
             }
         }
 
-        // Steuerung der Sichtbarkeiten von Grid, Impressum und Buch
         if (params.view === 'grid') {
             bookView.style.display = 'none';
             legalView.style.display = 'none';
@@ -181,12 +166,10 @@ document.addEventListener('DOMContentLoaded', () => {
         legalView.style.display = 'none';
         bookView.style.display = 'block';
 
-        // Läd das Buch nur neu, wenn sich Sprache oder Buch geändert haben. Ansonsten wird nur geblättert.
         if (currentBook !== params.book || currentLang !== params.lang || !pageFlip) {
             await loadBook(params.book, params.lang, params.page);
         } else {
             if (pageFlip && pageFlip.getCurrentPageIndex() !== params.page) {
-                // Verhindert Endlosschleifen beim automatischen Blättern, hält aber Klicks im Menü frei!
                 if (params.page !== targetPageWhileFlipping) {
                     pageFlip.flip(params.page);
                 }
@@ -195,8 +178,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================================================
-    // 5. MATHEMATISCHE GRÖSSEN-BERECHNUNG DES BUCHES
+    // 4. BUCH-GRÖSSEN BERECHNUNG & RESIZE-EVENTS
     // ==========================================================================
+    let currentImgW = 1123; 
+    let currentImgH = 794;
+
     function updateBookSize() {
         const w = window.innerWidth;
         const h = window.innerHeight;
@@ -209,22 +195,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let finalWidth, finalHeight;
         
-        // Mathematik: Bestimmt, ob auf dem Bildschirm schwarze Balken an den Seiten oder oben/unten sind
         if (bookAspectRatio > windowRatio) {
-            // Bildschirm ist hochkant (Smartphone)
             finalWidth = w;
             finalHeight = w / bookAspectRatio;
             document.body.classList.add('fit-width');
             document.body.classList.remove('fit-height');
         } else {
-            // Bildschirm ist breit (Laptop)
             finalHeight = h;
             finalWidth = h * bookAspectRatio;
             document.body.classList.add('fit-height');
             document.body.classList.remove('fit-width');
         }
         
-        // Reicht die exakten Pixelmaße an die CSS-Variablen weiter
         document.body.style.setProperty('--real-book-width', finalWidth + 'px');
         document.body.style.setProperty('--real-book-height', finalHeight + 'px');
         
@@ -235,20 +217,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Wächter für Größenänderungen am Laptop-Fenster
     let lastWinW = window.innerWidth;
+
     window.addEventListener('resize', () => {
         const currentW = window.innerWidth;
         if (currentW !== lastWinW) {
             lastWinW = currentW;
-            if(bookWrapper) bookWrapper.style.opacity = '0'; // Kurzer Blackout verhindert sichtbares Flackern
+            if(bookWrapper) bookWrapper.style.opacity = '0';
             updateBookSize();
             if (pageFlip) pageFlip.update();
             setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
         }
     });
 
-    // Wächter für das Drehen des Smartphones (Querformat / Hochformat)
     window.addEventListener('orientationchange', () => {
         setTimeout(() => {
             lastWinW = window.innerWidth;
@@ -271,10 +252,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================================================
-    // 6. ULTRA-LEICHTER SEITEN-PROBER (HEAD-Requests)
+    // 5. HIGHSPEED SERVER-ABFRAGEN (HEAD-Requests)
     // ==========================================================================
-    
-    // Lädt das allererste Cover ein einziges Mal voll, um die Maße des Papiers zu erfassen
     async function loadCoverImage(url) {
         return new Promise((resolve) => {
             const img = new Image();
@@ -284,11 +263,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Lädt kein einziges Bildpixel herunter! Fragt den Server nur kurz, ob die Datei existiert.
+    // Erzeugt absolut keinen Download-Traffic, fragt den Server nur nach der bloßen Existenz der Datei!
     async function checkPageExists(url) {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 4000); // 4-Sekunden Not-Aus
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
             const res = await fetch(url, { method: 'HEAD', signal: controller.signal, cache: 'no-store' });
             clearTimeout(timeoutId);
             return res.ok;
@@ -297,13 +276,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Baut das Bibliotheks-Grid auf
     async function initGrid() {
         const myGridId = ++activeGridId; 
         const gridContainer = document.querySelector('.grid-container');
         gridContainer.innerHTML = ''; 
         
-        // Prüft parallel für jedes Projekt in der Liste, ob es ein Cover gibt
         const gridPromises = portfolioBooks.map((bookName, index) => {
             const folder = `${bookName}/pages_${currentLang}/`;
             return checkPageExists(`${folder}0${extension}`).then(exists => ({
@@ -315,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const gridResults = await Promise.all(gridPromises);
-        if (myGridId !== activeGridId) return; // Stoppt, falls der User schon weitergeklickt hat
+        if (myGridId !== activeGridId) return;
 
         gridContainer.innerHTML = ''; 
 
@@ -334,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================================================
-    // 7. BUCH-VALIDIERUNG UND AUFBAU
+    // 6. BUCH-BAUMEISTER
     // ==========================================================================
     async function loadBook(bookName, lang, initialPage = 0) {
         const myLoadId = ++activeLoadId;
@@ -342,16 +319,15 @@ document.addEventListener('DOMContentLoaded', () => {
         currentBook = bookName;
         currentLang = lang;
         
-        // Icons beim Laden sofort unsichtbar schalten
         const homeBtn = document.getElementById('home-btn');
         const fsBtn = document.getElementById('fullscreen-btn');
         if (homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
         if (fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
 
+        // Startet den Berechnungsmodus: Menü-Container erst einmal hinter den Kulissen verstecken
         if (menuPositioner) menuPositioner.style.visibility = 'hidden'; 
         updateHeading();
         
-        // Baut das Lade-Skelett identisch zum CSS auf
         loadingScreen.innerHTML = `
             <div class="menu-row" style="justify-content: center;">
                 <span class="bracket">[</span>
@@ -360,7 +336,6 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         
-        // Setzt alle Übersetzungen live um
         document.querySelectorAll('.all-books-trigger').forEach(el => el.innerText = translations[lang].allBooks);
         document.getElementById('grid-heading').innerText = translations[lang].allBooks;
         document.getElementById('back-to-book-btn').innerText = translations[lang].close;
@@ -369,30 +344,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (homeBtn) homeBtn.innerHTML = translations[lang].home;
 
-        // Sprach-Schalter markieren
         langLinks.forEach(link => link.classList.remove('active'));
         const activeLink = document.querySelector(`[data-lang="${lang}"]`);
         if (activeLink) activeLink.classList.add('active');
         
-        // Altes Buch zerstören
         if (pageFlip) { pageFlip.destroy(); pageFlip = null; }
         bookWrapper.innerHTML = '<div id="book"></div>';
         bookWrapper.style.opacity = '0';
+        
+        // Stellt sicher, dass das Ladesymbol 100% sichtbar ist!
         loadingScreen.style.display = 'flex'; 
         
         const folder = `${bookName}/pages_${lang}/`;
         const imageUrls = [];
         
-        // Checkt das Cover voll ab für Breite und Höhe des Renderings
         const cover = await loadCoverImage(`${folder}0${extension}`);
-        if (myLoadId !== activeLoadId) return; // Falls der Nutzer gesprungen ist: Abbruch!
+        if (myLoadId !== activeLoadId) return;
 
         if (cover.exists) { 
             imageUrls.push(`0${extension}`); 
             currentImgW = cover.width; 
             currentImgH = cover.height; 
         } else {
-            // BUCH EXISTIERT NICHT: Zeigt den Fehlerbildschirm
             loadingScreen.innerHTML = `
                 <div class="menu-row" style="justify-content: center; margin-bottom: 0.8rem;">
                     <span class="bracket">[</span>
@@ -407,11 +380,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="bracket">]</span>
                 </div>
             `;
-            return; // Bricht das Laden hier endgültig ab
+            return; 
         }
 
-        // Sucht kontrolliert eine Seite nach der anderen (verhindert GitHub-Blockaden)
-        const batchSize = 3; 
+        const batchSize = 3;
         let pageCounter = 1;
         let checking = true;
 
@@ -436,13 +408,53 @@ document.addEventListener('DOMContentLoaded', () => {
             if (checking) pageCounter += batchSize;
         }
 
-        // Prüft, ob es ein Back-Cover gibt (-1)
         const back = await checkPageExists(`${folder}-1${extension}`);
         if (myLoadId !== activeLoadId) return;
 
         if (back) { imageUrls.push(`-1${extension}`); }
 
         buildBook(imageUrls, folder, currentImgW, currentImgH, initialPage);
+    }
+
+    // ==========================================================================
+    // 7. ZENTRALE MENÜ-STEUERUNG (Die Problemlöser-Funktion)
+    // ==========================================================================
+    // Sorgt dafür, dass die Opacity exakt nach Berechnung des Buches absolut verlässlich auf 1 steht
+    function refreshMenuVisibility() {
+        if (!pageFlip) return;
+        const currentPage = pageFlip.getCurrentPageIndex();
+        const totalPages = pageFlip.getPageCount();
+        const homeBtn = document.getElementById('home-btn');
+        const fsBtn = document.getElementById('fullscreen-btn');
+
+        if (currentPage === 0) {
+            menuPositioner.style.zIndex = '3'; 
+            startMenu.style.pointerEvents = 'auto';
+            startMenu.style.opacity = '1'; 
+            endOfBookMenu.style.pointerEvents = 'none';
+            endOfBookMenu.style.opacity = '0'; 
+        } else if (currentPage >= totalPages - 2) {
+            menuPositioner.style.zIndex = '3';
+            endOfBookMenu.style.pointerEvents = 'auto';
+            endOfBookMenu.style.opacity = '1'; 
+            endOfBookMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
+            startMenu.style.pointerEvents = 'none';
+            startMenu.style.opacity = '0'; 
+        } else {
+            menuPositioner.style.zIndex = '1'; 
+            startMenu.style.opacity = '0'; 
+            startMenu.style.pointerEvents = 'none';
+            endOfBookMenu.style.opacity = '0'; 
+            endOfBookMenu.style.pointerEvents = 'none';
+        }
+        
+        if (currentPage === 0 || currentPage >= totalPages - 2) {
+            if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
+            if(fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
+        } else {
+            if(homeBtn) { homeBtn.style.opacity = '1'; homeBtn.style.pointerEvents = 'auto'; }
+            if(fsBtn) { fsBtn.style.opacity = '1'; fsBtn.style.pointerEvents = 'auto'; }
+        }
     }
 
     function buildBook(imageUrls, folder, width, height, initialPage = 0) {
@@ -452,15 +464,13 @@ document.addEventListener('DOMContentLoaded', () => {
         imageUrls.forEach((file) => {
             const pageDiv = document.createElement('div');
             pageDiv.className = 'page';
-            // Injeziert SEO-optimierte Alt-Texte für Google Suchanfragen
             pageDiv.innerHTML = `<img src="${folder}${file}" alt="Daniel Rösch Architektur Portfolio - ${niceBookName}">`;
             bookContainer.appendChild(pageDiv);
         });
 
         updateBookSize();
-        bookContainer.offsetHeight; // Render-Zwang für den Browser
+        bookContainer.offsetHeight; // Browser-Zwang für sofortiges Rendern
 
-        // Initialisiert das 3D-Buch
         pageFlip = new St.PageFlip(bookContainer, {
             width: width, height: height, size: "stretch", 
             showCover: true, 
@@ -469,80 +479,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         pageFlip.loadFromHTML(bookContainer.querySelectorAll('.page'));
-        loadingScreen.style.display = 'none';
-        bookWrapper.style.opacity = '1';
         
-        // FIX 1: LÖST DEN "UNSICHTBARER TEXT"-MEMORY-BUG!
-        // Zwingt die Menüs bei jedem neuen Buch explizit dazu, wieder richtig sichtbar (opacity: 1) zu sein.
-        if (initialPage === 0) {
-            startMenu.style.opacity = '1';
-            endOfBookMenu.style.opacity = '0';
-        } else if (initialPage >= pageFlip.getPageCount() - 2) {
-            startMenu.style.opacity = '0';
-            endOfBookMenu.style.opacity = '1';
-        } else {
-            startMenu.style.opacity = '0';
-            endOfBookMenu.style.opacity = '0';
-        }
+        // HIER WIRD NOCH NICHTS AUSGEBLENDET! Der Ladebildschirm bleibt aktiv, um Lücken zu füllen.
+        bookWrapper.style.opacity = '1';
         
         if (initialPage > 0 && initialPage < pageFlip.getPageCount()) {
             pageFlip.flip(initialPage);
         }
 
-        const homeBtn = document.getElementById('home-btn');
-        const fsBtn = document.getElementById('fullscreen-btn');
-        
-        menuPositioner.style.zIndex = '3';
-        startMenu.style.pointerEvents = 'auto';
-        
-        endOfBookMenu.style.display = 'flex'; 
-        endOfBookMenu.style.pointerEvents = 'none';
-
-        const startPage = pageFlip.getCurrentPageIndex();
-        const totalPages = pageFlip.getPageCount();
-        
-        // Icons auf Cover- und Endseite unsichtbar machen
-        if (startPage > 0 && startPage < totalPages - 2) {
-            if(homeBtn) { homeBtn.style.opacity = '1'; homeBtn.style.pointerEvents = 'auto'; }
-            if(fsBtn) { fsBtn.style.opacity = '1'; fsBtn.style.pointerEvents = 'auto'; }
-        } else {
-            if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
-            if(fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
-        }
-
-        // Steuert, welches Text-Menü am Start aktiv sein soll
-        if (startPage > 0) {
-            if (startPage >= totalPages - 2) {
-                menuPositioner.style.zIndex = '3';
-                endOfBookMenu.style.pointerEvents = 'auto';
-                endOfBookMenu.style.opacity = '1';
-                endOfBookMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
-                startMenu.style.opacity = '0';
-                startMenu.style.pointerEvents = 'none';
-            } else {
-                menuPositioner.style.zIndex = '1';
-                startMenu.style.opacity = '0';
-                startMenu.style.pointerEvents = 'none';
-                endOfBookMenu.style.opacity = '0';
-            }
-        }
-
-        // Event: Fired, wenn das Blättern ANFÄNGT
         pageFlip.on('flip', (e) => {
             const targetPage = e.data; 
-            const totalPages = pageFlip.getPageCount();
-            
-            targetPageWhileFlipping = targetPage; // Riegel für den Wächter vorschieben!
+            targetPageWhileFlipping = targetPage; 
             window.location.hash = `/${currentBook}/${currentLang}/${targetPage + 1}`;
 
-            // Blendet das Menü in der ERSTEN Millisekunden aus. Verhindert die spiegelverkehrten Geistertexte!
+            // Verhindert Geistertext beim Blättern
             startMenu.style.opacity = '0';
             startMenu.style.pointerEvents = 'none';
             endOfBookMenu.style.opacity = '0';
             endOfBookMenu.style.pointerEvents = 'none';
             menuPositioner.style.zIndex = '1';
+            
+            const totalPages = pageFlip.getPageCount();
+            const homeBtn = document.getElementById('home-btn');
+            const fsBtn = document.getElementById('fullscreen-btn');
 
-            // Icons dynamisch während dem Flug aus/einblenden
             if (targetPage === 0 || targetPage >= totalPages - 2) {
                 if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
                 if(fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
@@ -552,12 +512,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Event: Fired, wenn das Blättern BEENDET ist
         pageFlip.on('changeState', (e) => {
             const state = e.data; 
-            const currentPage = pageFlip.getCurrentPageIndex();
-            const totalPages = pageFlip.getPageCount();
-
             if (state !== 'read') {
                 startMenu.style.opacity = '0';
                 startMenu.style.pointerEvents = 'none';
@@ -565,47 +521,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 endOfBookMenu.style.pointerEvents = 'none';
                 menuPositioner.style.zIndex = '1';
             } else {
-                targetPageWhileFlipping = -1; // Riegel wieder öffnen für freie Fahrt im Menü!
+                targetPageWhileFlipping = -1; 
+                // Sorgt dafür, dass nach dem Blättern der Text absolut verlässlich zurückkehrt
+                refreshMenuVisibility();
 
-                if (currentPage === 0) {
-                    menuPositioner.style.zIndex = '3'; 
-                    startMenu.style.pointerEvents = 'auto';
-                    startMenu.style.opacity = '1'; 
-                    endOfBookMenu.style.pointerEvents = 'none';
-                    endOfBookMenu.style.opacity = '0'; 
-                    cycleTitle(); 
-                } else if (currentPage >= totalPages - 2) {
-                    menuPositioner.style.zIndex = '3';
-                    endOfBookMenu.style.pointerEvents = 'auto';
-                    endOfBookMenu.style.opacity = '1'; 
-                    startMenu.style.pointerEvents = 'none';
-                    startMenu.style.opacity = '0'; 
-                } else {
-                    menuPositioner.style.zIndex = '1'; 
-                    startMenu.style.opacity = '0'; 
-                    startMenu.style.pointerEvents = 'none';
-                    endOfBookMenu.style.opacity = '0'; 
-                    endOfBookMenu.style.pointerEvents = 'none';
+                if (pageFlip.getCurrentPageIndex() === 0) {
+                    cycleTitle();
                 }
             }
         });
 
+        // DER MAGISCHE NAHTLOSE ÜBERGANG (Vermeidet Blink-Bug!)
         setTimeout(() => {
             updateBookSize();
             if (pageFlip) pageFlip.update();
             
             setTimeout(() => {
-                if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
-                    menuPositioner.style.zIndex = '3';
-                    startMenu.style.pointerEvents = 'auto';
+                if (pageFlip) {
+                    // 1. Zwingt das Skript, den Menü-Text final auf Opacity: 1 zu stellen
+                    refreshMenuVisibility();
+                    // 2. Macht den Container hinter den Kulissen endgültig sichtbar
                     menuPositioner.style.visibility = 'visible'; 
+                    // 3. Erst JETZT (in exakt derselben Sekunde) wird der Ladescreen gelöscht!
+                    loadingScreen.style.display = 'none';
                 }
+                isInternalHashUpdate = false;
             }, 100);
         }, 150);
     }
 
     // ==========================================================================
-    // 8. INTERAKTIONS EVENTS (Klicks & Tastatur)
+    // 8. GLOBALE STEUERUNG (Klicks, Vollbild & Tastatur)
     // ==========================================================================
 
     mainHeading.addEventListener('click', cycleTitle);
@@ -618,13 +564,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Bringt das Gerät in den echten Vollbildmodus
+    // Die geniale "Simultan-Vollbild" Lösung für Handys ohne Verzögerung
     function toggleFullscreen() {
         const elem = document.documentElement;
         
         if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
-            
-            // 1. Zuerst das Vollbild (Fullscreen) anfordern
+            // Vollbild-Befehl...
             if (elem.requestFullscreen) {
                 elem.requestFullscreen().catch(err => console.warn(err));
             } else if (elem.webkitRequestFullscreen) {
@@ -633,16 +578,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 elem.msRequestFullscreen();
             }
             
-            // FIX 2: LÖST DAS HANDY-DREH-PROBLEM (Landscape Lock)
-            // Die "await" Pausen wurden gelöscht. Beide Befehle (Vollbild + Handydrehung) 
-            // werden jetzt in exakt derselben Millisekunde abgefeuert.
-            // Der Browser erkennt das als direkte Nutzer-Geste an und blockiert die Drehung nicht mehr!
+            // ...und in der SELBEN Millisekunde die Drehung erzwingen! Kein 'await' Blockieren!
             if (screen.orientation && screen.orientation.lock) {
                 screen.orientation.lock('landscape').catch(err => console.warn("Auto-Querformat blockiert:", err));
             }
             
         } else {
-            // Vollbild verlassen
             if (document.exitFullscreen) {
                 document.exitFullscreen();
             } else if (document.webkitExitFullscreen) {
@@ -651,14 +592,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.msExitFullscreen();
             }
             
-            // Handydrehung wieder freigeben (Unlock)
             if (screen.orientation && screen.orientation.unlock) {
                 screen.orientation.unlock();
             }
         }
     }
 
-    // Ein zentraler Klick-Verteiler schont die Prozessorleistung
     document.addEventListener('click', (e) => {
         if (e.target.closest('#back-to-start-btn') || e.target.closest('#home-btn')) {
             e.preventDefault();
@@ -671,7 +610,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         if (e.target.id === 'link-email') {
-            // Kopiert deine E-Mail in die Zwischenablage des Nutzers
             navigator.clipboard.writeText('arch.daniroesch@gmail.com').then(() => {
                 const originalText = e.target.innerText;
                 e.target.innerText = 'kopiert!';
@@ -685,7 +623,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Blättern via Pfeiltasten und Leertaste am PC
     document.addEventListener('keydown', (e) => {
         if (bookView.style.display !== 'none' && pageFlip) {
             if (e.key === 'ArrowRight' || e.key === ' ') {
@@ -698,8 +635,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('link-legal').onclick = (e) => { e.preventDefault(); window.location.hash = `/legal`; };
-    
-    // Die Schließen-Kreuze werfen den Nutzer immer exakt auf die Inhaltsseite zurück
     document.getElementById('close-legal').onclick = (e) => { 
         e.preventDefault(); 
         const page = pageFlip ? pageFlip.getCurrentPageIndex() + 1 : 1;
@@ -711,9 +646,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.hash = `/${currentBook}/${currentLang}/${page}`; 
     };
 
-    // Horcht ununterbrochen auf Änderungen des Adress-Hashes
     window.addEventListener('hashchange', handleRouting);
-
-    // Der initiale Start-Befehl
     handleRouting();
 });
