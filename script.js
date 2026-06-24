@@ -1,9 +1,15 @@
+// Wartet, bis die Webseite vollständig geladen ist, bevor das Skript startet
 document.addEventListener('DOMContentLoaded', () => {
 
+    // ==========================================================================
+    // 1. ZOOM-WÄCHTER
+    // Erkennt, ob der Nutzer mit den Fingern ins Bild gezoomt hat
+    // ==========================================================================
     function isZoomed() {
         return window.visualViewport && window.visualViewport.scale > 1.01;
     }
 
+    // Wenn gezoomt wurde, bekommt das Buch die Klasse "zoomed-state", wodurch Blättern deaktiviert wird
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
             const bookWrapper = document.getElementById('flip-book-container');
@@ -17,6 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ==========================================================================
+    // 2. PULL-TO-REFRESH WÄCHTER
+    // Erkennt, ob jemand auf dem Handy stark nach unten zieht, um die Seite neu zu laden
+    // ==========================================================================
     let pullStartY = 0;
     let pullStartX = 0;
 
@@ -34,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const yDiff = pullEndY - pullStartY;
             const xDiff = Math.abs(pullEndX - pullStartX);
             
+            // Wenn massiv nach unten gezogen wurde und man nicht gezoomt ist
             if (yDiff > 130 && xDiff < 40 && !isZoomed()) {
                 window.location.hash = `/${currentBook}/${currentLang}/1`;
                 setTimeout(() => { window.location.reload(); }, 30);
@@ -41,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, { passive: true });
 
+    // Blockiert Multi-Touch Gesten im Zoom, damit das Buch nicht "durchdreht"
     let zoomCooldown = false;
     let zoomTimeout;
 
@@ -67,6 +79,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('pointerdown', protectZoom, { capture: true, passive: true });
     window.addEventListener('pointerup', protectZoom, { capture: true, passive: true });
 
+    // ==========================================================================
+    // 3. BASIS-VARIABLEN & PROJEKT-ORDNER
+    // ==========================================================================
     const bookView = document.getElementById('book-view');
     const bookWrapper = document.getElementById('flip-book-container');
     const loadingScreen = document.getElementById('loading');
@@ -78,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gridView = document.getElementById('grid-view');
     const legalView = document.getElementById('legal-view');
     
-    // Trag hier deine echten Projektnamen ein!
+    // WICHTIG: Hier trägst du deine zukünftigen GitHub Ordner-Namen ein!
     const portfolioBooks = [
         'book_1', 
         'book_2',
@@ -90,25 +105,26 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentLang = 'de'; 
     let currentBook = portfolioBooks[0]; 
     let currentTitleIndex = 0; 
-    
-    let targetPageWhileFlipping = -1; 
-    
+    let isInternalHashUpdate = false; 
     let isInitialLoad = true; 
     const extension = '.webp'; 
     
-    let currentImgW = 1123; 
-    let currentImgH = 794;
-    
-    let activeLoadId = 0; 
+    let activeLoadId = 0;
     let activeGridId = 0; 
     
+    let targetPageWhileFlipping = -1;
+    
+    // Die Übersetzungs-Datenbank für das Interface
     const translations = {
         'de': { titles: ["es ist ein buch", "blätter herum", "architektur portfolio", "daniroesch.de"], allBooks: "alle bücher", backToStart: "zurück zum anfang", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "buch wird geladen...", notAvailable: "buch noch nicht in dieser sprache verfügbar" },
         'en': { titles: ["it´s a book", "flip around", "architecture portfolio", "daniroesch.de"], allBooks: "all books", backToStart: "back to start", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "loading book...", notAvailable: "book not yet available in this language" },
         'es': { titles: ["es un libro", "hojea las páginas", "portafolio de arquitectura", "daniroesch.de"], allBooks: "todos los libros", backToStart: "volver al inicio", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "cargando libro...", notAvailable: "libro aún no disponible en este idioma" },
-        'pt': { titles: ["é um livro", "folheie as páginas", "portfólio de arquitetura", "daniroesch.de"], allBooks: "todos os livros", backToStart: "voltar ao início", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "carregando livro...", notAvailable: "livro ainda não disponível neste idioma" }
+        'pt': { titles: ["é um livro", "folheie as páginas", "portfólio de arquitetura", "daniroesch.de"], allBooks: "todos os livros", backToStart: "voltar ao início", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "carregando libro...", notAvailable: "livro ainda nicht verfügbar in dieser Sprache" }
     };
 
+    // ==========================================================================
+    // 4. URL & ROUTING (Path-Style)
+    // ==========================================================================
     function getHashParams() {
         const hash = window.location.hash.replace(/^#\/?/, ''); 
         const parts = hash.split('/');
@@ -126,16 +142,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function handleRouting() {
+        if (isInternalHashUpdate) return; // Wenn eine Blätter-Animation läuft: Abbrechen!
+
         let params = getHashParams();
 
         if (isInitialLoad) {
             isInitialLoad = false;
             if (params.view === 'book' || !params.view) {
                 params.page = 0;
+                isInternalHashUpdate = true;
                 window.location.hash = `/${params.book}/${params.lang}/1`;
             }
         }
 
+        // Steuerung der Bildschirme
         if (params.view === 'grid') {
             bookView.style.display = 'none';
             legalView.style.display = 'none';
@@ -165,6 +185,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+
+    // ==========================================================================
+    // 5. BERECHNUNG DER BUCHGRÖSSE & ICON-POSITION
+    // ==========================================================================
+    let currentImgW = 1123; 
+    let currentImgH = 794;
 
     function updateBookSize() {
         const w = window.innerWidth;
@@ -226,23 +252,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // FIX: SAUBERER DREH-WÄCHTER!
-    // Statt den HTML-Container zu löschen (was das Buch zerstört hat), übergeben wir PageFlip 
-    // nach einer kurzen Pause einfach ruhig den offiziellen Update-Befehl.
     let resizeTimer;
     function handleResizeAndOrientation() {
         clearTimeout(resizeTimer);
         
-        // Berechnet sofort die neuen Maße
         updateBookSize();
         if (pageFlip) pageFlip.update();
 
-        // Wartet 300ms, bis das Betriebssystem (Handy) den Layout-Wechsel optisch abgeschlossen hat
-        // und zentriert dann final noch einmal nach.
         resizeTimer = setTimeout(() => {
             updateBookSize();
             if (pageFlip) pageFlip.update();
-            refreshMenuVisibility(); // Sorgt dafür, dass Menüs beim Drehen nicht unsichtbar bleiben!
+            refreshMenuVisibility(); 
         }, 300);
     }
 
@@ -275,7 +295,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateHeading();
     }
 
-    // --- 6. HIGH-PERFORMANCE BILD-LADER ---
+    // ==========================================================================
+    // 6. HIGH-PERFORMANCE BILD-LADER
+    // ==========================================================================
     async function loadCoverImage(url) {
         return new Promise((resolve) => {
             const img = new Image();
@@ -331,7 +353,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 7. BUCH SUCHEN UND AUFBAUEN ---
+    // ==========================================================================
+    // 7. BUCH SUCHEN UND AUFBAUEN
+    // ==========================================================================
     async function loadBook(bookName, lang, initialPage = 0) {
         const myLoadId = ++activeLoadId;
 
@@ -345,14 +369,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateHeading();
         
-        // FIX: Startmenü sofort in voller Stärke einblenden, Text und Menü verschwinden nicht mehr!
         startMenu.style.opacity = '1';
         startMenu.style.pointerEvents = 'auto';
         endOfBookMenu.style.opacity = '0';
         endOfBookMenu.style.pointerEvents = 'none';
         menuPositioner.style.zIndex = '3';
         
-        // Ladescreen baut sich nur auf der rechten Seite auf
         loadingScreen.innerHTML = `
             <div class="menu-row" style="justify-content: center;">
                 <span class="bracket">[</span>
@@ -376,7 +398,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pageFlip) { pageFlip.destroy(); pageFlip = null; }
         bookWrapper.innerHTML = '<div id="book"></div>';
         
-        // Das Buch-Objekt wird unsichtbar gehalten, während es rechnet
         bookWrapper.style.opacity = '0';
         loadingScreen.style.display = 'flex'; 
         
@@ -391,7 +412,6 @@ document.addEventListener('DOMContentLoaded', () => {
             currentImgW = cover.width; 
             currentImgH = cover.height; 
         } else {
-            // Die Fallback-Meldung, wenn das Buch nicht existiert
             loadingScreen.innerHTML = `
                 <div class="menu-row" style="justify-content: center; margin-bottom: 0.8rem;">
                     <span class="bracket">[</span>
@@ -490,7 +510,6 @@ document.addEventListener('DOMContentLoaded', () => {
             targetPageWhileFlipping = targetPage; 
             window.location.hash = `/${currentBook}/${currentLang}/${targetPage + 1}`;
 
-            // Macht Menüs während der Flug-Bewegung unsichtbar, um Geistertexte zu verhindern
             startMenu.style.opacity = '0';
             startMenu.style.pointerEvents = 'none';
             endOfBookMenu.style.opacity = '0';
@@ -524,8 +543,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // FIX: DER PERFEKTE LADESCREEN-ÜBERGANG
-        // Wartet, bis die Buch-Größe im Hintergrund absolut fertig berechnet ist.
         setTimeout(() => {
             updateBookSize();
             if (pageFlip) pageFlip.update();
@@ -533,10 +550,8 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 if (pageFlip) {
                     refreshMenuVisibility();
-                    // In der selben Millisekunde, in der das Buch (opacity: 1) erscheint,
-                    // verschwindet das Ladesymbol (display: none). Keine Überschneidung!
-                    bookWrapper.style.opacity = '1';
                     loadingScreen.style.display = 'none';
+                    bookWrapper.style.opacity = '1';
                 }
             }, 50);
         }, 50);
@@ -568,11 +583,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 elem.msRequestFullscreen();
             }
             
-            // Simultaner Drehbefehl fürs Handy (ohne Verzögerung, um Blockade zu umgehen)
             if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('landscape').catch(err => console.warn("Auto-Querformat blockiert:", err));
+                screen.orientation.lock('landscape').catch(err => console.warn(err));
             }
-            
         } else {
             if (document.exitFullscreen) {
                 document.exitFullscreen();
