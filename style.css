@@ -2,9 +2,10 @@
     font-family: 'Montserrat';
     font-style: normal;
     font-weight: 400;
-    font-display: swap;
+    font-display: swap; 
     src: url('fonts/montserrat-400.woff2') format('woff2');
 }
+
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
@@ -12,6 +13,7 @@
     font-display: swap;
     src: url('fonts/montserrat-500.woff2') format('woff2');
 }
+
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
@@ -19,21 +21,13 @@
     font-display: swap;
     src: url('fonts/montserrat-700.woff2') format('woff2');
 }
+
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
     font-weight: 800;
     font-display: swap;
     src: url('fonts/montserrat-800.woff2') format('woff2');
-}
-
-/* FIX GEGEN DAS SCHRIFTEN-SPRINGEN (FOUC) */
-/* Wir definieren hier feste Fallback-Maße für die allererste Millisekunde. */
-/* Sollte JavaScript noch nicht fertig gerechnet haben, nutzt der Browser diese Werte. */
-/* Dadurch laden Überschriften und Texte sofort in der exakt richtigen Proportion! */
-:root {
-    --real-book-width: 90vw;
-    --real-book-height: 80vh;
 }
 
 *, *::before, *::after {
@@ -72,12 +66,12 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: var(--real-book-width);
-    height: var(--real-book-height);
+    width: var(--real-book-width, 100vw);
+    height: var(--real-book-height, 100vh);
     pointer-events: none; 
 }
 
-/* Das Menü ist ab Sekunde Null voll sichtbar! visibility: hidden wurde gelöscht */
+/* FIX: Sichtbarkeit bleibt ab sofort immer erhalten! Kein Verschwinden beim Starten. */
 #menu-positioner { 
     z-index: 3; 
 }
@@ -101,7 +95,6 @@ body {
     font-weight: 800;
 }
 
-/* --- ASYMMETRISCHE ICON PLATZIERUNG --- */
 #home-btn {
     top: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
     right: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
@@ -139,14 +132,14 @@ body.fit-height #fullscreen-btn {
     position: absolute;
     top: 0;
     left: 0; 
-    width: 50%;
+    width: 50%; 
     height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
     pointer-events: auto; 
     opacity: 1;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.3s ease; 
 }
 
 #end-of-book-menu {
@@ -228,7 +221,6 @@ h1:hover { color: #000; }
     opacity: 0; transition: opacity 0.5s ease;
 }
 
-/* Lade-Symbol sitzt zentriert in der rechten Buchhälfte */
 #loading {
     position: absolute; 
     top: 0; 
@@ -239,8 +231,9 @@ h1:hover { color: #000; }
     display: flex; 
     flex-direction: column; 
     align-items: center;
-    justify-content: center;
+    justify-content: center; 
 }
+
 #loading a { color: #888; font-weight: 800; text-decoration: none; transition: color 0.2s; }
 #loading a:hover { color: #000; }
 
@@ -258,7 +251,7 @@ h1:hover { color: #000; }
 
 .grid-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; }
 .book-tile { cursor: pointer; transition: transform 0.2s; }
-.book-tile:hover { transform: scale(1.02); }
+.book-tile:hover { transform: scale(1.02); } 
 .book-tile img { height: 300px; width: auto; object-fit: cover; background: #f0f0f0; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: block; }
 .legal-content { max-width: 800px; margin: 0 auto; }
 .legal-image { display: block; margin: 0 auto; max-width: 100%; height: auto; box-shadow: 0 5px 25px rgba(0,0,0,0.05); }
