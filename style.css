@@ -71,9 +71,9 @@ body {
     pointer-events: none; 
 }
 
+/* FIX: Sichtbarkeit bleibt ab sofort immer erhalten! Kein Verschwinden beim Starten. */
 #menu-positioner { 
     z-index: 3; 
-    /* Sichtbarkeit nicht mehr versteckt, da das Start-Menü sofort sichtbar sein soll */
 }
 #ui-layer { z-index: 100; } 
 
@@ -221,21 +221,19 @@ h1:hover { color: #000; }
     opacity: 0; transition: opacity 0.5s ease;
 }
 
-/* FIX: Der Ladescreen wurde wie das End-Menü nach rechts (in die Cover-Hälfte) verschoben! */
 #loading {
     position: absolute; 
     top: 0; 
-    right: 0; /* Positioniert den Rahmen auf der rechten Hälfte */
+    right: 0; 
     width: 50%;
     height: 100%;
     z-index: 10;
     display: flex; 
     flex-direction: column; 
     align-items: center;
-    justify-content: center; /* Zentriert den Inhalt vertikal */
+    justify-content: center; 
 }
 
-/* Fallback-Links im Ladescreen erhalten das klassische Aussehen */
 #loading a { color: #888; font-weight: 800; text-decoration: none; transition: color 0.2s; }
 #loading a:hover { color: #000; }
 
