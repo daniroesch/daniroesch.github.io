@@ -1,13 +1,10 @@
-// Wartet, bis die Webseite vollständig geladen ist, bevor das Skript startet
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- 1. ZOOM WÄCHTER ---
-    // Erkennt, ob der Nutzer mit den Fingern ins Bild gezoomt hat
     function isZoomed() {
         return window.visualViewport && window.visualViewport.scale > 1.01;
     }
 
-    // Wenn gezoomt wurde, bekommt das Buch die Klasse "zoomed-state", wodurch Blättern deaktiviert wird
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
             const bookWrapper = document.getElementById('flip-book-container');
@@ -22,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 2. PULL-TO-REFRESH WÄCHTER ---
-    // Erkennt, ob jemand auf dem Handy stark nach unten zieht, um die Seite neu zu laden
     let pullStartY = 0;
     let pullStartX = 0;
 
@@ -40,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const yDiff = pullEndY - pullStartY;
             const xDiff = Math.abs(pullEndX - pullStartX);
             
-            // Wenn massiv nach unten gezogen wurde (yDiff > 130) und man nicht gezoomt ist
             if (yDiff > 130 && xDiff < 40 && !isZoomed()) {
                 window.location.hash = `/${currentBook}/${currentLang}/1`;
                 setTimeout(() => { window.location.reload(); }, 30);
@@ -48,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, { passive: true });
 
-    // Blockiert Multi-Touch Gesten, damit das Buch nicht durchdreht, wenn man wischt UND zoomt
     let zoomCooldown = false;
     let zoomTimeout;
 
@@ -75,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('pointerdown', protectZoom, { capture: true, passive: true });
     window.addEventListener('pointerup', protectZoom, { capture: true, passive: true });
 
-    // --- 3. PROJEKT VARIABLEN ---
+    // --- 3. PROJEKT-VARIABLEN ---
     const bookView = document.getElementById('book-view');
     const bookWrapper = document.getElementById('flip-book-container');
     const loadingScreen = document.getElementById('loading');
@@ -87,7 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const gridView = document.getElementById('grid-view');
     const legalView = document.getElementById('legal-view');
     
-    // WICHTIG: Hier trägst du deine zukünftigen GitHub Ordner-Namen ein!
     const portfolioBooks = [
         'book_1', 
         'book_2',
@@ -109,7 +102,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeLoadId = 0; 
     let activeGridId = 0; 
     
-    // DIE ÜBERSETZUNGS-DATENBANK (Die Wörter wurden zu "Projekt" geändert)
+    let targetPageWhileFlipping = -1;
+    
     const translations = {
         'de': { titles: ["meine projekte", "schau dich um", "architektur portfolio", "daniroesch.de"], allBooks: "alle projekte", backToStart: "zurück zum anfang", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "projekt wird geladen...", notAvailable: "projekt noch nicht in dieser sprache verfügbar" },
         'en': { titles: ["my projects", "take a look", "architecture portfolio", "daniroesch.de"], allBooks: "all projects", backToStart: "back to start", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "loading project...", notAvailable: "project not yet available in this language" },
@@ -152,6 +146,15 @@ document.addEventListener('DOMContentLoaded', () => {
             bookView.style.display = 'none';
             legalView.style.display = 'none';
             gridView.style.display = 'block';
+            
+            // FIX: Sobald der Nutzer in die Übersicht geht, zerstören wir das aktuelle Buch komplett!
+            // Dadurch wird erzwungen, dass beim erneuten Öffnen über das Grid das Projekt absolut 
+            // frisch, fehlerfrei und sauber zentriert auf Seite 1 aufbaut – egal auf welcher Seite man vorher stand!
+            if (pageFlip) {
+                pageFlip.destroy();
+                pageFlip = null;
+            }
+            
             initGrid();
             return;
         }
@@ -171,12 +174,14 @@ document.addEventListener('DOMContentLoaded', () => {
             await loadBook(params.book, params.lang, params.page);
         } else {
             if (pageFlip && pageFlip.getCurrentPageIndex() !== params.page) {
-                pageFlip.flip(params.page);
+                if (params.page !== targetPageWhileFlipping) {
+                    pageFlip.flip(params.page);
+                }
             }
         }
     }
 
-    // --- 5. BERECHNUNG DER BUCHGRÖSSE & ICON-POSITION ---
+    // --- 5. GRÖSSENBERECHNUNG & DREH-WÄCHTER ---
     function updateBookSize() {
         const w = window.innerWidth;
         const h = window.innerHeight;
@@ -211,16 +216,61 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    let lastWinW = window.innerWidth;
+    function refreshMenuVisibility() {
+        if (!pageFlip) return;
+        const currentPage = pageFlip.getCurrentPageIndex();
+        const totalPages = pageFlip.getPageCount();
+        const homeBtn = document.getElementById('home-btn');
+        const fsBtn = document.getElementById('fullscreen-btn');
 
+        if (currentPage === 0) {
+            menuPositioner.style.zIndex = '3'; 
+            startMenu.style.pointerEvents = 'auto';
+            startMenu.style.opacity = '1'; 
+            endOfBookMenu.style.pointerEvents = 'none';
+            endOfBookMenu.style.opacity = '0'; 
+        } else if (currentPage >= totalPages - 2) {
+            menuPositioner.style.zIndex = '3';
+            endOfBookMenu.style.pointerEvents = 'auto';
+            endOfBookMenu.style.opacity = '1'; 
+            endOfBookMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
+            startMenu.style.pointerEvents = 'none';
+            startMenu.style.opacity = '0'; 
+        } else {
+            menuPositioner.style.zIndex = '1'; 
+            startMenu.style.opacity = '0'; 
+            startMenu.style.pointerEvents = 'none';
+            endOfBookMenu.style.opacity = '0'; 
+            endOfBookMenu.style.pointerEvents = 'none';
+        }
+        
+        if (currentPage === 0 || currentPage >= totalPages - 2) {
+            if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
+            if(fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
+        } else {
+            if(homeBtn) { homeBtn.style.opacity = '1'; homeBtn.style.pointerEvents = 'auto'; }
+            if(fsBtn) { fsBtn.style.opacity = '1'; fsBtn.style.pointerEvents = 'auto'; }
+        }
+    }
+
+    let resizeTimer;
+    function handleResizeAndOrientation() {
+        clearTimeout(resizeTimer);
+        if(bookWrapper) bookWrapper.style.opacity = '0';
+
+        resizeTimer = setTimeout(() => {
+            updateBookSize();
+            if (pageFlip) pageFlip.update();
+            setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
+        }, 200);
+    }
+
+    let lastWinW = window.innerWidth;
     window.addEventListener('resize', () => {
         const currentW = window.innerWidth;
         if (currentW !== lastWinW) {
             lastWinW = currentW;
-            if(bookWrapper) bookWrapper.style.opacity = '0';
-            updateBookSize();
-            if (pageFlip) pageFlip.update();
-            setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
+            handleResizeAndOrientation();
         }
     });
 
@@ -234,6 +284,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 200);
     });
 
+    document.addEventListener('fullscreenchange', handleResizeAndOrientation);
+    document.addEventListener('webkitfullscreenchange', handleResizeAndOrientation);
+
     function updateHeading() {
         if (translations[currentLang]) {
             mainHeading.innerText = translations[currentLang].titles[currentTitleIndex];
@@ -245,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateHeading();
     }
 
-    // --- 6. HIGH-PERFORMANCE BILD-LADER ---
+    // --- 6. HIGH-PERFORMANCE PROJEKT-LADER ---
     async function loadCoverImage(url) {
         return new Promise((resolve) => {
             const img = new Image();
@@ -301,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 7. BUCH SUCHEN UND AUFBAUEN ---
+    // --- 7. PROJEKT AUFBAUEN ---
     async function loadBook(bookName, lang, initialPage = 0) {
         const myLoadId = ++activeLoadId;
 
@@ -313,8 +366,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
         if (fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
 
-        if (menuPositioner) menuPositioner.style.visibility = 'hidden'; 
         updateHeading();
+        
+        startMenu.style.opacity = '1';
+        startMenu.style.pointerEvents = 'auto';
+        endOfBookMenu.style.opacity = '0';
+        endOfBookMenu.style.pointerEvents = 'none';
+        menuPositioner.style.zIndex = '3';
         
         loadingScreen.innerHTML = `
             <div class="menu-row" style="justify-content: center;">
@@ -414,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         updateBookSize();
-        bookContainer.offsetHeight;
+        bookContainer.offsetHeight; 
 
         pageFlip = new St.PageFlip(bookContainer, {
             width: width, height: height, size: "stretch", 
@@ -452,28 +510,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if(fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
         }
 
-        if (startPage > 0) {
-            if (startPage >= totalPages - 2) {
-                menuPositioner.style.zIndex = '3';
-                endOfBookMenu.style.pointerEvents = 'auto';
-                endOfBookMenu.style.opacity = '1';
-                endOfBookMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
-                startMenu.style.opacity = '0';
-                startMenu.style.pointerEvents = 'none';
-            } else {
-                menuPositioner.style.zIndex = '1';
-                startMenu.style.opacity = '0';
-                startMenu.style.pointerEvents = 'none';
-                endOfBookMenu.style.opacity = '0';
-            }
-        }
-
         pageFlip.on('flip', (e) => {
             const targetPage = e.data; 
             const totalPages = pageFlip.getPageCount();
             
-            isInternalHashUpdate = true;
+            targetPageWhileFlipping = targetPage;
             window.location.hash = `/${currentBook}/${currentLang}/${targetPage + 1}`;
+
+            startMenu.style.opacity = '0';
+            startMenu.style.pointerEvents = 'none';
+            endOfBookMenu.style.opacity = '0';
+            endOfBookMenu.style.pointerEvents = 'none';
+            menuPositioner.style.zIndex = '1';
 
             if (targetPage === 0 || targetPage >= totalPages - 2) {
                 if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
@@ -526,18 +574,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pageFlip) pageFlip.update();
             
             setTimeout(() => {
-                if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
-                    menuPositioner.style.zIndex = '3';
-                    startMenu.style.pointerEvents = 'auto';
-                    menuPositioner.style.visibility = 'visible';
+                if (pageFlip) {
+                    refreshMenuVisibility();
+                    loadingScreen.style.display = 'none';
+                    bookWrapper.style.opacity = '1';
                 }
-                isInternalHashUpdate = false;
-            }, 100);
-        }, 150);
+            }, 50);
+        }, 50);
     }
 
     // --- GLOBALE EVENTS ---
-
     mainHeading.addEventListener('click', cycleTitle);
 
     langLinks.forEach(link => {
