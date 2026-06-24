@@ -1,5 +1,5 @@
 /* ==========================================================================
-   1. SCHRIFTARTEN (Lädt deine lokalen Fonts von GitHub)
+   1. SCHRIFTARTEN (Montserrat aus deinem lokalen Ordner laden)
    ========================================================================== */
 @font-face {
     font-family: 'Montserrat';
@@ -34,17 +34,7 @@
 }
 
 /* ==========================================================================
-   2. FIX FÜR DAS SCHRIFTEN-SPRINGEN (FOUC)
-   ========================================================================== */
-/* Gibt dem CSS sofort Startwerte für die Buchmaße, noch bevor das JavaScript lädt. */
-/* So berechnet die "clamp" Funktion die Schriftgröße sofort richtig und der Text springt nicht! */
-:root {
-    --real-book-width: 100vw;
-    --real-book-height: 100vh;
-}
-
-/* ==========================================================================
-   3. ANTI-VERZERRUNG (Schützt das Design vor Eingriffen der Handy-Browser)
+   2. ANTI-VERZERRUNG & GLOBALER RESET (Schützt Schriften auf Handys)
    ========================================================================== */
 *, *::before, *::after {
     margin: 0;
@@ -56,6 +46,7 @@
 }
 
 html, body {
+    /* Deaktiviert das fehlerhafte automatische Vergrößern von Text auf Smartphones */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     touch-action: pan-x pan-y pinch-zoom !important;
@@ -63,15 +54,15 @@ html, body {
 
 body {
     background-color: #ffffff;
-    overflow: hidden; 
+    overflow: hidden; /* Unterdrückt unerwünschte Scrollbalken am Browserrand */
     color: #000;
     width: 100vw;
     height: 100vh;
-    height: 100dvh; 
+    height: 100dvh; /* dvh: Beachtet die mobile Adressleiste auf Handys */
 }
 
 /* ==========================================================================
-   4. STRUKTUR DER BUCH-ANSICHT
+   3. STRUKTUR DER PROJEKT-ANSICHT
    ========================================================================== */
 #book-view {
     position: relative;
@@ -80,6 +71,7 @@ body {
     height: 100dvh;
 }
 
+/* UI-Layer & Menü-Rahmen: Werden vom JS exakt auf die Echtzeit-Größe des Buches skaliert */
 #menu-positioner, #ui-layer {
     position: absolute;
     top: 50%;
@@ -87,18 +79,17 @@ body {
     transform: translate(-50%, -50%);
     width: var(--real-book-width, 100vw);
     height: var(--real-book-height, 100vh);
-    pointer-events: none; 
+    pointer-events: none; /* Klicks fallen durch den Rahmen durch direkt auf das Buch */
 }
 
-/* Menü bleibt beim ersten Laden versteckt, bis JS das Go gibt */
+/* FIX: Sichtbarkeit bleibt dauerhaft erhalten! Kein Verschwinden beim Starten. */
 #menu-positioner { 
     z-index: 3; 
-    visibility: hidden; 
 }
-#ui-layer { z-index: 100; } 
+#ui-layer { z-index: 100; } /* Die Icons schweben ganz oben auf Ebene 100 */
 
 /* ==========================================================================
-   5. ASYMMETRISCHE UI-BUTTONS (Home & Vollbild)
+   4. ASYMMETRISCHE UI-BUTTONS (Home-X & Vollbild)
    ========================================================================== */
 .ui-btn {
     position: absolute;
@@ -129,6 +120,7 @@ body {
     right: auto;
 }
 
+/* WENN DAS PROJEKT DIE VOLLE BREITE NUTZT (Leerraum oben & unten) */
 body.fit-width #home-btn {
     top: -2.5em; 
     right: 0;
@@ -140,6 +132,7 @@ body.fit-width #fullscreen-btn {
     right: auto;
 }
 
+/* WENN DAS PROJEKT DIE VOLLE HÖHE NUTZT (Leerraum links & rechts) */
 body.fit-height #home-btn {
     top: 10px;
     right: -5.5em; 
@@ -152,13 +145,13 @@ body.fit-height #fullscreen-btn {
 }
 
 /* ==========================================================================
-   6. MENÜ-DESIGN UND TYPOGRAFIE
+   5. MENÜ-DESIGN UND TYPOGRAFIE
    ========================================================================== */
 .static-menu {
     position: absolute;
     top: 0;
     left: 0; 
-    width: 50%; 
+    width: 50%; /* Das Startmenü füllt genau die linke Coverhälfte */
     height: 100%;
     display: flex;
     justify-content: center;
@@ -171,7 +164,7 @@ body.fit-height #fullscreen-btn {
 #end-of-book-menu {
     position: absolute;
     top: 0;
-    right: 0; 
+    right: 0; /* Das Endmenü füllt genau die rechte Coverhälfte */
     width: 50%;
     height: 100%;
     display: flex;
@@ -200,7 +193,6 @@ h1 {
     cursor: pointer;
     transition: color 0.3s ease;
 }
-
 h1:hover { color: #000; }
 
 .menu-row {
@@ -227,12 +219,11 @@ h1:hover { color: #000; }
     font-size: clamp(9px, calc(var(--real-book-height) * 0.03), 14px); 
     text-transform: lowercase;
 }
-
 .legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; }
 .legal-links a:hover { color: #000; }
 
 /* ==========================================================================
-   7. 3D BUCH & LADESCREEN
+   6. 3D PROJEKTCONTAINER & RECHTER LADESCREEN
    ========================================================================== */
 .flip-book-container, 
 .flip-book-container *, 
@@ -252,19 +243,19 @@ h1:hover { color: #000; }
     opacity: 0; transition: opacity 0.5s ease;
 }
 
-/* Lade-Symbol sitzt zentriert in der Mitte */
+/* Lade-Symbol sitzt zentriert in der rechten Hälfte (über dem Cover) */
 #loading {
     position: absolute; 
-    top: 50%; 
-    left: 50%; 
-    transform: translate(-50%, -50%);
-    width: 100%;
+    top: 0; 
+    right: 0; 
+    width: 50%;
+    height: 100%;
     z-index: 10;
     display: flex; 
     flex-direction: column; 
     align-items: center;
+    justify-content: center; 
 }
-
 #loading a { color: #888; font-weight: 800; text-decoration: none; transition: color 0.2s; }
 #loading a:hover { color: #000; }
 
@@ -272,7 +263,7 @@ h1:hover { color: #000; }
 .page img { width: 100%; height: 100%; object-fit: cover; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
 
 /* ==========================================================================
-   8. UNTER-ANSICHTEN (Bibliothek & Impressum)
+   7. UNTER-ANSICHTEN (Übersicht & Impressum)
    ========================================================================== */
 #grid-view, #legal-view {
     position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
