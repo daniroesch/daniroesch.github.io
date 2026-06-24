@@ -1,4 +1,3 @@
-/* --- SCHRIFTARTEN AUS DEINEM ORDNER LADEN --- */
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
@@ -28,13 +27,13 @@
     src: url('fonts/montserrat-800.woff2') format('woff2');
 }
 
-/* --- FIX FÜR DAS SCHRIFTEN-SPRINGEN --- */
-/* Wir hinterlegen hier mathematische Standardwerte. Sollte das JavaScript beim ersten Laden */
-/* noch nicht bereit sein, nutzt das CSS diese Werte als Basis. Dadurch laden alle Texte */
-/* ab der ersten Millisekunde in ihrer absolut korrekten Proportion! */
+/* FIX GEGEN DAS SCHRIFTEN-SPRINGEN (FOUC) */
+/* Wir definieren hier feste Fallback-Maße für die allererste Millisekunde. */
+/* Sollte JavaScript noch nicht fertig gerechnet haben, nutzt der Browser diese Werte. */
+/* Dadurch laden Überschriften und Texte sofort in der exakt richtigen Proportion! */
 :root {
+    --real-book-width: 90vw;
     --real-book-height: 80vh;
-    --real-book-width: 100vw;
 }
 
 *, *::before, *::after {
@@ -47,7 +46,6 @@
 }
 
 html, body {
-    /* Verhindert künstliches Vergrößern von Texten auf mobilen Geräten */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     touch-action: pan-x pan-y pinch-zoom !important;
@@ -79,13 +77,12 @@ body {
     pointer-events: none; 
 }
 
-/* Das Menü ist von Anfang an dauerhaft sichtbar! visibility: hidden wurde gelöscht */
+/* Das Menü ist ab Sekunde Null voll sichtbar! visibility: hidden wurde gelöscht */
 #menu-positioner { 
     z-index: 3; 
 }
 #ui-layer { z-index: 100; } 
 
-/* --- DIE ASYMMETRISCHEN UI-BUTTONS --- */
 .ui-btn {
     position: absolute;
     width: 4.5em; 
@@ -104,7 +101,7 @@ body {
     font-weight: 800;
 }
 
-/* STANDARD-POSITION (Im Buchdeckel gefangen) */
+/* --- ASYMMETRISCHE ICON PLATZIERUNG --- */
 #home-btn {
     top: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
     right: clamp(8px, calc(var(--real-book-height) * 0.035), 20px);
@@ -116,7 +113,6 @@ body {
     right: auto;
 }
 
-/* WENN DAS BUCH DIE VOLLE BREITE NUTZT (Leerraum oben/unten) */
 body.fit-width #home-btn {
     top: -2.5em; 
     right: 0;
@@ -128,7 +124,6 @@ body.fit-width #fullscreen-btn {
     right: auto;
 }
 
-/* WENN DAS BUCH DIE VOLLE HÖHE NUTZT (Leerraum links/rechts) */
 body.fit-height #home-btn {
     top: 10px;
     right: -5.5em; 
@@ -140,12 +135,11 @@ body.fit-height #fullscreen-btn {
     right: auto;
 }
 
-/* --- TEXT-MENÜ STYLING --- */
 .static-menu {
     position: absolute;
     top: 0;
     left: 0; 
-    width: 50%; /* Startmenü füllt exakt die linke Buchseite */
+    width: 50%;
     height: 100%;
     display: flex;
     justify-content: center;
@@ -158,7 +152,7 @@ body.fit-height #fullscreen-btn {
 #end-of-book-menu {
     position: absolute;
     top: 0;
-    right: 0; /* Endmenü füllt exakt die rechte Buchseite */
+    right: 0; 
     width: 50%;
     height: 100%;
     display: flex;
@@ -216,7 +210,6 @@ h1:hover { color: #000; }
 .legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; }
 .legal-links a:hover { color: #000; }
 
-/* --- BUCHCONTAINER & DER NEUE RECHTE LADESCREEN --- */
 .flip-book-container, 
 .flip-book-container *, 
 .st-page-flip {
@@ -235,7 +228,7 @@ h1:hover { color: #000; }
     opacity: 0; transition: opacity 0.5s ease;
 }
 
-/* Das Ladesymbol sitzt ab sofort bombenfest auf der rechten Buchhälfte (über dem Cover) */
+/* Lade-Symbol sitzt zentriert in der rechten Buchhälfte */
 #loading {
     position: absolute; 
     top: 0; 
@@ -254,7 +247,6 @@ h1:hover { color: #000; }
 .page { background-color: #ffffff; position: relative; }
 .page img { width: 100%; height: 100%; object-fit: cover; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
 
-/* --- BIBLIOTHEK & OVERLAYS --- */
 #grid-view, #legal-view {
     position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
     padding: 5vw; background: #fff; overflow-y: auto; z-index: 20;
