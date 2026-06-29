@@ -436,6 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         menuPositioner.style.zIndex = '3';
         startMenu.style.pointerEvents = 'auto';
+        startMenu.style.opacity = '1'; // FIX: Hier setzen wir das Menü beim Bauen immer erst mal sichtbar!
         
         endOfBookMenu.style.display = 'flex'; 
         endOfBookMenu.style.pointerEvents = 'none';
@@ -529,6 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
                     menuPositioner.style.zIndex = '3';
                     startMenu.style.pointerEvents = 'auto';
+                    startMenu.style.opacity = '1'; // FIX: Und hier auch nochmal zur Sicherheit
                     menuPositioner.style.visibility = 'visible';
                 }
                 isInternalHashUpdate = false;
