@@ -213,10 +213,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let lastWinW = window.innerWidth;
 
+    // NEU: Hilfsfunktion, die mobile Browser beim Drehen dazu zwingt, 
+    // ungewollte Zooms und Verschiebungen zu löschen und alles wieder mittig zu setzen.
+    function forceRepaintAndCenter() {
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        document.body.scrollLeft = 0;
+
+        const viewport = document.querySelector('meta[name="viewport"]');
+        if (viewport) {
+            const originalContent = viewport.content;
+            // Kurzzeitig das Zoomen verbieten, um das Handy zum "Herauszoomen" zu zwingen
+            viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+            setTimeout(() => {
+                // Danach sofort wieder erlauben, falls der Nutzer selbst zoomen möchte
+                viewport.content = originalContent;
+            }, 300);
+        }
+    }
+
     window.addEventListener('resize', () => {
         const currentW = window.innerWidth;
         if (currentW !== lastWinW) {
             lastWinW = currentW;
+            window.scrollTo(0, 0); // Zur Sicherheit auch beim normalen Resize immer nach oben/links zentrieren
             if(bookWrapper) bookWrapper.style.opacity = '0';
             updateBookSize();
             if (pageFlip) pageFlip.update();
@@ -225,13 +245,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('orientationchange', () => {
+        if(bookWrapper) bookWrapper.style.opacity = '0';
+        
+        // Löscht den heimlichen "Zoom"- und "Verschiebungs"-Fehler beim Drehen!
+        forceRepaintAndCenter(); 
+        
+        // Etwas längere Wartezeit (250ms), da das Handy beim Drehen oft einen Moment braucht, 
+        // um die echten neuen Maße von Breite und Höhe bereitzustellen.
         setTimeout(() => {
             lastWinW = window.innerWidth;
-            if(bookWrapper) bookWrapper.style.opacity = '0';
             updateBookSize();
             if (pageFlip) pageFlip.update();
             setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
-        }, 200);
+        }, 250); 
     });
 
     function updateHeading() {
@@ -436,7 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         menuPositioner.style.zIndex = '3';
         startMenu.style.pointerEvents = 'auto';
-        startMenu.style.opacity = '1'; // FIX: Hier setzen wir das Menü beim Bauen immer erst mal sichtbar!
+        startMenu.style.opacity = '1'; 
         
         endOfBookMenu.style.display = 'flex'; 
         endOfBookMenu.style.pointerEvents = 'none';
@@ -530,7 +556,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
                     menuPositioner.style.zIndex = '3';
                     startMenu.style.pointerEvents = 'auto';
-                    startMenu.style.opacity = '1'; // FIX: Und hier auch nochmal zur Sicherheit
+                    startMenu.style.opacity = '1'; 
                     menuPositioner.style.visibility = 'visible';
                 }
                 isInternalHashUpdate = false;
