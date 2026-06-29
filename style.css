@@ -14,16 +14,15 @@
     font-style: normal;
     font-weight: 600;
     font-display: swap;
-    /* Falls du keine 600er Datei im Ordner hast, trage hier stattdessen montserrat-500.woff2 ein */
     src: url('fonts/montserrat-600.woff2') format('woff2');
 }
 
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
-    font-weight: 700;
+    font-weight: 800;
     font-display: swap;
-    src: url('fonts/montserrat-700.woff2') format('woff2');
+    src: url('fonts/montserrat-800.woff2') format('woff2');
 }
 
 /* ==========================================================================
@@ -184,7 +183,7 @@ body.fit-height #fullscreen-btn {
 
 h1 {
     font-size: clamp(14px, calc(var(--real-book-height) * 0.055), 26px); 
-    font-weight: 600; /* Der Titel ist standardmäßig auf 600 */
+    font-weight: 600;
     text-align: center;
     white-space: nowrap; 
     margin-bottom: 0.5rem;
@@ -196,7 +195,7 @@ h1 {
 
 h1:hover { 
     color: #000; 
-    font-weight: 700; /* Beim Hovern wird die Schrift auf 700 hochskaliert */
+    font-weight: 800; /* Skaliert auf die extrem dicke Schriftart hoch */
 }
 
 .menu-row {
@@ -224,8 +223,17 @@ h1:hover {
     text-transform: lowercase;
 }
 
-.legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; font-weight: 300; }
-.legal-links a:hover { color: #000; }
+.legal-links a { 
+    color: #a0a0a0; 
+    text-decoration: none; 
+    transition: color 0.2s, font-weight 0.2s ease; /* transition ergänzt */
+    font-weight: 300; 
+}
+
+.legal-links a:hover { 
+    color: #000; 
+    font-weight: 600; /* Hover Effekt (dicke Schrift) für Mail und Impressum aktiviert */
+}
 
 /* ==========================================================================
    7. 3D BUCH & LADESCREEN
