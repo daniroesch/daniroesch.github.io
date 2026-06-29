@@ -2,12 +2,10 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- 1. ZOOM WÄCHTER ---
-    // Erkennt, ob der Nutzer mit den Fingern ins Bild gezoomt hat
     function isZoomed() {
         return window.visualViewport && window.visualViewport.scale > 1.01;
     }
 
-    // Wenn gezoomt wurde, bekommt das Buch die Klasse "zoomed-state", wodurch Blättern deaktiviert wird
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
             const bookWrapper = document.getElementById('flip-book-container');
@@ -22,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 2. PULL-TO-REFRESH WÄCHTER ---
-    // Erkennt, ob jemand auf dem Handy stark nach unten zieht, um die Seite neu zu laden
     let pullStartY = 0;
     let pullStartX = 0;
 
@@ -40,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const yDiff = pullEndY - pullStartY;
             const xDiff = Math.abs(pullEndX - pullStartX);
             
-            // Wenn massiv nach unten gezogen wurde (yDiff > 130) und man nicht gezoomt ist
             if (yDiff > 130 && xDiff < 40 && !isZoomed()) {
                 window.location.hash = `/${currentBook}/${currentLang}/1`;
                 setTimeout(() => { window.location.reload(); }, 30);
@@ -48,7 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, { passive: true });
 
-    // Blockiert Multi-Touch Gesten, damit das Buch nicht durchdreht, wenn man wischt UND zoomt
     let zoomCooldown = false;
     let zoomTimeout;
 
@@ -108,8 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let activeLoadId = 0; 
     let activeGridId = 0; 
+
+    // NEU: Diese Variable merkt sich exakt, auf welche Seite geblättert wird, um Überlagerungen zu verhindern.
+    let pendingTargetPage = -1; 
     
-    // DIE ÜBERSETZUNGS-DATENBANK (Die Wörter wurden zu "Projekt" geändert)
+    // DIE ÜBERSETZUNGS-DATENBANK
     const translations = {
         'de': { titles: ["meine projekte", "schau dich um", "architektur portfolio", "daniroesch.de"], allBooks: "alle projekte", backToStart: "zurück zum anfang", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "projekt wird geladen...", notAvailable: "projekt noch nicht in dieser sprache verfügbar" },
         'en': { titles: ["my projects", "take a look", "architecture portfolio", "daniroesch.de"], allBooks: "all projects", backToStart: "back to start", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "loading project...", notAvailable: "project not yet available in this language" },
@@ -492,6 +490,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetPage = e.data; 
             const totalPages = pageFlip.getPageCount();
             
+            // Speichere das anvisierte Ziel für das changeState Event ab
+            pendingTargetPage = targetPage;
+            
             isInternalHashUpdate = true;
             window.location.hash = `/${currentBook}/${currentLang}/${targetPage + 1}`;
 
@@ -503,10 +504,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(fsBtn) { fsBtn.style.opacity = '1'; fsBtn.style.pointerEvents = 'auto'; }
             }
 
-            // SICHERHEIT: Beim Klick-Blättern sofort den Hintergrund bereit machen
+            // STRIKTE REGEL: Nur das jeweilige Zielmenü wird vorbereitet. 
+            // Das andere Menü wird sofort und garantiert auf 0 (unsichtbar) gesetzt!
             menuPositioner.style.zIndex = '1';
-            startMenu.style.opacity = '1';
-            endOfBookMenu.style.opacity = '1';
+            if (targetPage === 0) {
+                startMenu.style.opacity = '1';
+                endOfBookMenu.style.opacity = '0'; // Garantiert aus!
+            } else if (targetPage >= totalPages - 2) {
+                startMenu.style.opacity = '0'; // Garantiert aus!
+                endOfBookMenu.style.opacity = '1';
+            } else {
+                startMenu.style.opacity = '0';
+                endOfBookMenu.style.opacity = '0';
+            }
         });
 
         pageFlip.on('changeState', (e) => {
@@ -515,45 +525,49 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalPages = pageFlip.getPageCount();
 
             if (state !== 'read') {
-                // Das Buch ist in Bewegung (Animation läuft oder Ecke wird per Touch/Maus gezogen)
+                // Das Buch ist in Bewegung. Interaktionen deaktivieren.
                 startMenu.style.pointerEvents = 'none';
                 endOfBookMenu.style.pointerEvents = 'none';
-                
-                // Menü wird sicher hinter das Buch gelegt
                 menuPositioner.style.zIndex = '1'; 
                 
-                // NEU: Wir machen BEIDE Menüs im Hintergrund sofort sichtbar!
-                // Da sie hinter dem Buch liegen (z-index 1 vs 2), stört das bei normalen Seiten nicht.
-                // Wenn du aber die ERSTE Seite leicht anhebst (Zublättern), ist der Start-Text
-                // sofort darunter zu sehen, weil dort keine Buchseiten mehr liegen.
-                startMenu.style.opacity = '1';
-                endOfBookMenu.style.opacity = '1';
+                // Falls man eine Seite anhebt (corner fold), ohne schon richtig zu blättern:
+                // Wir lassen das Start-Menü nur dann an, wenn wir WIRKLICH ganz vorne sind.
+                // Ansonsten setzen wir beide rigoros auf 0, um Überlappungen zu töten.
+                if (currentPage === 0 && pendingTargetPage === -1) {
+                    startMenu.style.opacity = '1';
+                    endOfBookMenu.style.opacity = '0';
+                } else if (currentPage >= totalPages - 2 && pendingTargetPage === -1) {
+                    startMenu.style.opacity = '0';
+                    endOfBookMenu.style.opacity = '1';
+                } else if (pendingTargetPage === -1) {
+                    startMenu.style.opacity = '0';
+                    endOfBookMenu.style.opacity = '0';
+                }
                 
             } else {
-                // Buch ist zur Ruhe gekommen
+                // Buch ist komplett umgeblättert und liegt flach
+                pendingTargetPage = -1; // Ziel resetten
                 isInternalHashUpdate = false;
 
+                // Endgültige Sichtbarkeit sicherstellen
                 if (currentPage === 0) {
                     menuPositioner.style.zIndex = '3'; 
                     startMenu.style.pointerEvents = 'auto';
                     startMenu.style.opacity = '1'; 
                     endOfBookMenu.style.pointerEvents = 'none';
-                    endOfBookMenu.style.opacity = '0'; 
+                    endOfBookMenu.style.opacity = '0'; // Garantiert aus
                     cycleTitle(); 
                 } else if (currentPage >= totalPages - 2) {
                     menuPositioner.style.zIndex = '3';
                     endOfBookMenu.style.pointerEvents = 'auto';
                     endOfBookMenu.style.opacity = '1'; 
                     startMenu.style.pointerEvents = 'none';
-                    startMenu.style.opacity = '0'; 
+                    startMenu.style.opacity = '0'; // Garantiert aus
                 } else {
                     menuPositioner.style.zIndex = '1'; 
-                    
-                    // Erst wenn das Buch komplett umgeblättert ist und wir mittendrin sind,
-                    // blenden wir die Texte im Hintergrund komplett aus, um eventuelle Bugs zu vermeiden.
-                    startMenu.style.opacity = '0'; 
+                    startMenu.style.opacity = '0'; // Garantiert aus
                     startMenu.style.pointerEvents = 'none';
-                    endOfBookMenu.style.opacity = '0'; 
+                    endOfBookMenu.style.opacity = '0'; // Garantiert aus
                     endOfBookMenu.style.pointerEvents = 'none';
                 }
             }
@@ -568,6 +582,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     menuPositioner.style.zIndex = '3';
                     startMenu.style.pointerEvents = 'auto';
                     startMenu.style.opacity = '1'; 
+                    endOfBookMenu.style.opacity = '0'; // Auch hier nochmal zur Absicherung
                     menuPositioner.style.visibility = 'visible';
                 }
                 isInternalHashUpdate = false;
