@@ -1,13 +1,9 @@
-// Wartet, bis die Webseite vollständig geladen ist, bevor das Skript startet
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 1. ZOOM WÄCHTER ---
-    // Erkennt, ob der Nutzer mit den Fingern ins Bild gezoomt hat
     function isZoomed() {
         return window.visualViewport && window.visualViewport.scale > 1.01;
     }
 
-    // Wenn gezoomt wurde, bekommt das Buch die Klasse "zoomed-state", wodurch Blättern deaktiviert wird
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
             const bookWrapper = document.getElementById('flip-book-container');
@@ -21,8 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 2. PULL-TO-REFRESH WÄCHTER ---
-    // Erkennt, ob jemand auf dem Handy stark nach unten zieht, um die Seite neu zu laden
     let pullStartY = 0;
     let pullStartX = 0;
 
@@ -40,7 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const yDiff = pullEndY - pullStartY;
             const xDiff = Math.abs(pullEndX - pullStartX);
             
-            // Wenn massiv nach unten gezogen wurde (yDiff > 130) und man nicht gezoomt ist
             if (yDiff > 130 && xDiff < 40 && !isZoomed()) {
                 window.location.hash = `/${currentBook}/${currentLang}/1`;
                 setTimeout(() => { window.location.reload(); }, 30);
@@ -48,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, { passive: true });
 
-    // Blockiert Multi-Touch Gesten, damit das Buch nicht durchdreht, wenn man wischt UND zoomt
     let zoomCooldown = false;
     let zoomTimeout;
 
@@ -75,7 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('pointerdown', protectZoom, { capture: true, passive: true });
     window.addEventListener('pointerup', protectZoom, { capture: true, passive: true });
 
-    // --- 3. PROJEKT VARIABLEN ---
     const bookView = document.getElementById('book-view');
     const bookWrapper = document.getElementById('flip-book-container');
     const loadingScreen = document.getElementById('loading');
@@ -87,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const gridView = document.getElementById('grid-view');
     const legalView = document.getElementById('legal-view');
     
-    // Trag hier deine echten Projektnamen ein!
     const portfolioBooks = [
         'book_1', 
         'book_2',
@@ -99,9 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentLang = 'de'; 
     let currentBook = portfolioBooks[0]; 
     let currentTitleIndex = 0; 
-    
-    let targetPageWhileFlipping = -1; 
-    
+    let isInternalHashUpdate = false; 
     let isInitialLoad = true; 
     const extension = '.webp'; 
     
@@ -111,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeLoadId = 0; 
     let activeGridId = 0; 
     
-    // DIE ÜBERSETZUNGS-DATENBANK: Komplett auf korrekte Groß- und Kleinschreibung umgestellt
+    // DIE KORRIGIERTEN ÜBERSETZUNGEN (Projekt statt Buch)
     const translations = {
         'de': { titles: ["Meine Projekte", "Schau dich um", "Architektur Portfolio", "daniroesch.de"], allBooks: "Alle Projekte", backToStart: "Zurück zum Anfang", close: "X", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "Projekt wird geladen...", notAvailable: "Projekt noch nicht in dieser Sprache verfügbar" },
         'en': { titles: ["My Projects", "Take a look", "Architecture Portfolio", "daniroesch.de"], allBooks: "All Projects", backToStart: "Back to Start", close: "X", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "Loading project...", notAvailable: "Project not yet available in this language" },
@@ -119,7 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
         'pt': { titles: ["Meus Projetos", "Dê uma olhada", "Portfólio de Arquitetura", "daniroesch.de"], allBooks: "Todos os projetos", backToStart: "Voltar ao início", close: "X", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "Carregando projeto...", notAvailable: "Projeto ainda não disponível neste idioma" }
     };
 
-    // --- 4. URL & ROUTING ---
     function getHashParams() {
         const hash = window.location.hash.replace(/^#\/?/, ''); 
         const parts = hash.split('/');
@@ -173,14 +160,11 @@ document.addEventListener('DOMContentLoaded', () => {
             await loadBook(params.book, params.lang, params.page);
         } else {
             if (pageFlip && pageFlip.getCurrentPageIndex() !== params.page) {
-                if (params.page !== targetPageWhileFlipping) {
-                    pageFlip.flip(params.page);
-                }
+                pageFlip.flip(params.page);
             }
         }
     }
 
-    // --- 5. BERECHNUNG DER BUCHGRÖSSE & ICON-POSITION ---
     function updateBookSize() {
         const w = window.innerWidth;
         const h = window.innerHeight;
@@ -215,67 +199,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function refreshMenuVisibility() {
-        if (!pageFlip) return;
-        const currentPage = pageFlip.getCurrentPageIndex();
-        const totalPages = pageFlip.getPageCount();
-
-        if (currentPage === 0) {
-            menuPositioner.style.zIndex = '3'; 
-            startMenu.style.pointerEvents = 'auto';
-            startMenu.style.opacity = '1'; 
-            endOfBookMenu.style.pointerEvents = 'none';
-            endOfBookMenu.style.opacity = '0'; 
-        } else if (currentPage >= totalPages - 2) {
-            menuPositioner.style.zIndex = '3';
-            endOfBookMenu.style.pointerEvents = 'auto';
-            endOfBookMenu.style.opacity = '1'; 
-            endOfBookMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
-            startMenu.style.pointerEvents = 'none';
-            startMenu.style.opacity = '0'; 
-        } else {
-            menuPositioner.style.zIndex = '1'; 
-            startMenu.style.opacity = '0'; 
-            startMenu.style.pointerEvents = 'none';
-            endOfBookMenu.style.opacity = '0'; 
-            endOfBookMenu.style.pointerEvents = 'none';
-        }
-    }
-
-    let resizeTimer;
-    function handleResizeAndOrientation() {
-        clearTimeout(resizeTimer);
-        if(bookWrapper) bookWrapper.style.opacity = '0';
-
-        resizeTimer = setTimeout(() => {
-            updateBookSize();
-            if (pageFlip) pageFlip.update();
-            setTimeout(() => { 
-                if(bookWrapper) bookWrapper.style.opacity = '1'; 
-                refreshMenuVisibility();
-            }, 50);
-        }, 300);
-    }
-
     let lastWinW = window.innerWidth;
 
     window.addEventListener('resize', () => {
         const currentW = window.innerWidth;
         if (currentW !== lastWinW) {
             lastWinW = currentW;
-            handleResizeAndOrientation();
+            if(bookWrapper) bookWrapper.style.opacity = '0';
+            updateBookSize();
+            if (pageFlip) pageFlip.update();
+            setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
         }
     });
 
     window.addEventListener('orientationchange', () => {
         setTimeout(() => {
             lastWinW = window.innerWidth;
-            handleResizeAndOrientation();
-        }, 100);
+            if(bookWrapper) bookWrapper.style.opacity = '0';
+            updateBookSize();
+            if (pageFlip) pageFlip.update();
+            setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
+        }, 200);
     });
-
-    document.addEventListener('fullscreenchange', handleResizeAndOrientation);
-    document.addEventListener('webkitfullscreenchange', handleResizeAndOrientation);
 
     function updateHeading() {
         if (translations[currentLang]) {
@@ -288,7 +233,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateHeading();
     }
 
-    // --- 6. HIGH-PERFORMANCE BILD-LADER ---
+    // --- DIE ABSTURZ-FREIE BILD-LADE METHODE ---
+    // Funktioniert immer – egal ob lokal auf deinem Laptop getestet oder live auf GitHub.
     async function loadCoverImage(url) {
         return new Promise((resolve) => {
             const img = new Image();
@@ -299,15 +245,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function checkPageExists(url) {
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 4000);
-            const res = await fetch(url, { method: 'HEAD', signal: controller.signal, cache: 'no-store' });
-            clearTimeout(timeoutId);
-            return res.ok;
-        } catch (e) {
-            return false;
-        }
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                img.src = ''; // Speicher wieder freigeben
+                resolve(true);
+            };
+            img.onerror = () => {
+                img.src = ''; 
+                resolve(false);
+            };
+            img.src = url;
+        });
     }
 
     async function initGrid() {
@@ -344,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 7. PROJEKT AUFBAUEN ---
+    // --- 7. BUCH SUCHEN UND AUFBAUEN ---
     async function loadBook(bookName, lang, initialPage = 0) {
         const myLoadId = ++activeLoadId;
 
@@ -356,13 +305,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
         if (fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
 
+        if (menuPositioner) menuPositioner.style.visibility = 'hidden'; 
         updateHeading();
-        
-        startMenu.style.opacity = '1';
-        startMenu.style.pointerEvents = 'auto';
-        endOfBookMenu.style.opacity = '0';
-        endOfBookMenu.style.pointerEvents = 'none';
-        menuPositioner.style.zIndex = '3';
         
         loadingScreen.innerHTML = `
             <div class="menu-row" style="justify-content: center;">
@@ -417,7 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return; 
         }
 
-        const batchSize = 3; 
+        const batchSize = 3;
         let pageCounter = 1;
         let checking = true;
 
@@ -482,6 +426,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const homeBtn = document.getElementById('home-btn');
         const fsBtn = document.getElementById('fullscreen-btn');
         
+        menuPositioner.style.zIndex = '3';
+        startMenu.style.pointerEvents = 'auto';
+        
+        endOfBookMenu.style.display = 'flex'; 
+        endOfBookMenu.style.pointerEvents = 'none';
+        endOfBookMenu.style.opacity = '0'; 
+
         const startPage = pageFlip.getCurrentPageIndex();
         const totalPages = pageFlip.getPageCount();
         
@@ -493,18 +444,28 @@ document.addEventListener('DOMContentLoaded', () => {
             if(fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
         }
 
+        if (startPage > 0) {
+            if (startPage >= totalPages - 2) {
+                menuPositioner.style.zIndex = '3';
+                endOfBookMenu.style.pointerEvents = 'auto';
+                endOfBookMenu.style.opacity = '1';
+                endOfBookMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
+                startMenu.style.opacity = '0';
+                startMenu.style.pointerEvents = 'none';
+            } else {
+                menuPositioner.style.zIndex = '1';
+                startMenu.style.opacity = '0';
+                startMenu.style.pointerEvents = 'none';
+                endOfBookMenu.style.opacity = '0';
+            }
+        }
+
         pageFlip.on('flip', (e) => {
             const targetPage = e.data; 
             const totalPages = pageFlip.getPageCount();
             
-            targetPageWhileFlipping = targetPage; 
+            isInternalHashUpdate = true;
             window.location.hash = `/${currentBook}/${currentLang}/${targetPage + 1}`;
-
-            startMenu.style.opacity = '0';
-            startMenu.style.pointerEvents = 'none';
-            endOfBookMenu.style.opacity = '0';
-            endOfBookMenu.style.pointerEvents = 'none';
-            menuPositioner.style.zIndex = '1';
 
             if (targetPage === 0 || targetPage >= totalPages - 2) {
                 if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
@@ -517,6 +478,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         pageFlip.on('changeState', (e) => {
             const state = e.data; 
+            const currentPage = pageFlip.getCurrentPageIndex();
+            const totalPages = pageFlip.getPageCount();
+
             if (state !== 'read') {
                 startMenu.style.opacity = '0';
                 startMenu.style.pointerEvents = 'none';
@@ -524,11 +488,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 endOfBookMenu.style.pointerEvents = 'none';
                 menuPositioner.style.zIndex = '1';
             } else {
-                targetPageWhileFlipping = -1; 
-                refreshMenuVisibility(); 
+                isInternalHashUpdate = false;
 
-                if (pageFlip.getCurrentPageIndex() === 0) {
-                    cycleTitle();
+                if (currentPage === 0) {
+                    menuPositioner.style.zIndex = '3'; 
+                    startMenu.style.pointerEvents = 'auto';
+                    startMenu.style.opacity = '1'; 
+                    endOfBookMenu.style.pointerEvents = 'none';
+                    endOfBookMenu.style.opacity = '0'; 
+                    cycleTitle(); 
+                } else if (currentPage >= totalPages - 2) {
+                    menuPositioner.style.zIndex = '3';
+                    endOfBookMenu.style.pointerEvents = 'auto';
+                    endOfBookMenu.style.opacity = '1'; 
+                    startMenu.style.pointerEvents = 'none';
+                    startMenu.style.opacity = '0'; 
+                } else {
+                    menuPositioner.style.zIndex = '1'; 
+                    startMenu.style.opacity = '0'; 
+                    startMenu.style.pointerEvents = 'none';
+                    endOfBookMenu.style.opacity = '0'; 
+                    endOfBookMenu.style.pointerEvents = 'none';
                 }
             }
         });
@@ -538,13 +518,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pageFlip) pageFlip.update();
             
             setTimeout(() => {
-                if (pageFlip) {
-                    refreshMenuVisibility();
-                    loadingScreen.style.display = 'none';
-                    bookWrapper.style.opacity = '1';
+                if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
+                    menuPositioner.style.zIndex = '3';
+                    startMenu.style.pointerEvents = 'auto';
+                    menuPositioner.style.visibility = 'visible';
                 }
-            }, 50);
-        }, 50);
+                isInternalHashUpdate = false;
+            }, 100);
+        }, 150);
     }
 
     // --- GLOBALE EVENTS ---
@@ -558,30 +539,40 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    function toggleFullscreen() {
+    async function toggleFullscreen() {
         const elem = document.documentElement;
-        if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
-            if (elem.requestFullscreen) {
-                elem.requestFullscreen().catch(err => console.warn(err));
-            } else if (elem.webkitRequestFullscreen) {
-                elem.webkitRequestFullscreen();
-            } else if (elem.msRequestFullscreen) {
-                elem.msRequestFullscreen();
+        try {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                if (elem.requestFullscreen) {
+                    await elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) {
+                    await elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) {
+                    await elem.msRequestFullscreen();
+                }
+                
+                if (screen.orientation && screen.orientation.lock) {
+                    try {
+                        await screen.orientation.lock('landscape');
+                    } catch (err) {
+                        console.log("Auto-Querformat blockiert.");
+                    }
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    await document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    await document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    await document.msExitFullscreen();
+                }
+                
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
+                }
             }
-            if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('landscape').catch(err => console.warn("Auto-Querformat blockiert:", err));
-            }
-        } else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            } else if (document.msExitFullscreen) {
-                document.msExitFullscreen();
-            }
-            if (screen.orientation && screen.orientation.unlock) {
-                screen.orientation.unlock();
-            }
+        } catch (error) {
+            console.warn("Vollbild Fehler:", error);
         }
     }
 
@@ -622,6 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('link-legal').onclick = (e) => { e.preventDefault(); window.location.hash = `/legal`; };
+    
     document.getElementById('close-legal').onclick = (e) => { 
         e.preventDefault(); 
         const page = pageFlip ? pageFlip.getCurrentPageIndex() + 1 : 1;
@@ -635,9 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('hashchange', handleRouting);
     
-    // FIX FÜR DAS SCHRIFTEN-SPRINGEN (FOUC)
-    // Das JavaScript zwingt das CSS hier noch VOR dem Ladevorgang in der ersten Millisekunde, 
-    // die korrekten Buchmaße als Basis für die Schriftgrößen zu verwenden! Kein Springen mehr!
+    // Setzt sofort die Größenberechnung an, damit die Schriften beim ersten Laden niemals springen!
     updateBookSize(); 
     handleRouting();
 });
