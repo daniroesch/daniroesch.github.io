@@ -103,8 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let activeLoadId = 0; 
     let activeGridId = 0; 
-
-    // NEU: Diese Variable merkt sich exakt, auf welche Seite geblättert wird, um Überlagerungen zu verhindern.
     let pendingTargetPage = -1; 
     
     // DIE ÜBERSETZUNGS-DATENBANK
@@ -490,7 +488,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetPage = e.data; 
             const totalPages = pageFlip.getPageCount();
             
-            // Speichere das anvisierte Ziel für das changeState Event ab
             pendingTargetPage = targetPage;
             
             isInternalHashUpdate = true;
@@ -504,14 +501,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(fsBtn) { fsBtn.style.opacity = '1'; fsBtn.style.pointerEvents = 'auto'; }
             }
 
-            // STRIKTE REGEL: Nur das jeweilige Zielmenü wird vorbereitet. 
-            // Das andere Menü wird sofort und garantiert auf 0 (unsichtbar) gesetzt!
+            // Garantiert Z-Index 1 (hinter das Buch) während der Bewegung
             menuPositioner.style.zIndex = '1';
+            
+            // Strikte Zonen-Regel: Einer ist an, der andere MUSS aus sein!
             if (targetPage === 0) {
                 startMenu.style.opacity = '1';
-                endOfBookMenu.style.opacity = '0'; // Garantiert aus!
+                endOfBookMenu.style.opacity = '0'; 
             } else if (targetPage >= totalPages - 2) {
-                startMenu.style.opacity = '0'; // Garantiert aus!
+                startMenu.style.opacity = '0'; 
                 endOfBookMenu.style.opacity = '1';
             } else {
                 startMenu.style.opacity = '0';
@@ -525,33 +523,45 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalPages = pageFlip.getPageCount();
 
             if (state !== 'read') {
-                // Das Buch ist in Bewegung. Interaktionen deaktivieren.
+                // Buch ist in Bewegung
                 startMenu.style.pointerEvents = 'none';
                 endOfBookMenu.style.pointerEvents = 'none';
                 menuPositioner.style.zIndex = '1'; 
                 
-                // Falls man eine Seite anhebt (corner fold), ohne schon richtig zu blättern:
-                // Wir lassen das Start-Menü nur dann an, wenn wir WIRKLICH ganz vorne sind.
-                // Ansonsten setzen wir beide rigoros auf 0, um Überlappungen zu töten.
-                if (currentPage === 0 && pendingTargetPage === -1) {
+                // PERFEKTE ZONEN-LOGIK: Wir laden den Text hinter den blickdichten Buchseiten vor!
+                // So ist er beim Zublättern (anheben der Ecke) bereits da und wird butterweich enthüllt.
+                
+                if (pendingTargetPage === 0) {
+                    // Fall 1: Wir wissen sicher, es geht zur Startseite
                     startMenu.style.opacity = '1';
                     endOfBookMenu.style.opacity = '0';
-                } else if (currentPage >= totalPages - 2 && pendingTargetPage === -1) {
+                } else if (pendingTargetPage >= totalPages - 2 && pendingTargetPage !== -1) {
+                    // Fall 2: Wir wissen sicher, es geht zur Endseite
                     startMenu.style.opacity = '0';
                     endOfBookMenu.style.opacity = '1';
-                } else if (pendingTargetPage === -1) {
-                    startMenu.style.opacity = '0';
-                    endOfBookMenu.style.opacity = '0';
+                } else {
+                    // Fall 3: Der Nutzer zieht nur leicht an einer Ecke (pendingTargetPage = -1)
+                    // Wir checken einfach, wo im Buch wir uns befinden. 
+                    if (currentPage <= 2) {
+                        startMenu.style.opacity = '1'; // Vorladen unter den ersten Seiten
+                        endOfBookMenu.style.opacity = '0';
+                    } else if (currentPage >= totalPages - 4) {
+                        startMenu.style.opacity = '0';
+                        endOfBookMenu.style.opacity = '1'; // Vorladen unter den letzten Seiten
+                    } else {
+                        // Tief in der Mitte des Buches -> Beide sicherheitshalber aus
+                        startMenu.style.opacity = '0';
+                        endOfBookMenu.style.opacity = '0';
+                    }
                 }
                 
             } else {
-                // Buch ist komplett umgeblättert und liegt flach
-                pendingTargetPage = -1; // Ziel resetten
+                // Buch ist komplett zur Ruhe gekommen
+                pendingTargetPage = -1; 
                 isInternalHashUpdate = false;
 
-                // Endgültige Sichtbarkeit sicherstellen
                 if (currentPage === 0) {
-                    menuPositioner.style.zIndex = '3'; 
+                    menuPositioner.style.zIndex = '3'; // Nach vorne holen, damit es klickbar wird
                     startMenu.style.pointerEvents = 'auto';
                     startMenu.style.opacity = '1'; 
                     endOfBookMenu.style.pointerEvents = 'none';
@@ -582,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     menuPositioner.style.zIndex = '3';
                     startMenu.style.pointerEvents = 'auto';
                     startMenu.style.opacity = '1'; 
-                    endOfBookMenu.style.opacity = '0'; // Auch hier nochmal zur Absicherung
+                    endOfBookMenu.style.opacity = '0'; 
                     menuPositioner.style.visibility = 'visible';
                 }
                 isInternalHashUpdate = false;
