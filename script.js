@@ -213,8 +213,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let lastWinW = window.innerWidth;
 
-    // Hilfsfunktion, die mobile Browser beim Drehen dazu zwingt, 
-    // ungewollte Zooms und Verschiebungen zu löschen und alles wieder mittig zu setzen.
     function forceRepaintAndCenter() {
         window.scrollTo(0, 0);
         document.body.scrollTop = 0;
@@ -505,16 +503,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(fsBtn) { fsBtn.style.opacity = '1'; fsBtn.style.pointerEvents = 'auto'; }
             }
 
-            // NEU: Z-Index auf 1 setzen, damit das Menü beim Blättern definitiv HINTER der Buchseite liegt.
+            // SICHERHEIT: Beim Klick-Blättern sofort den Hintergrund bereit machen
             menuPositioner.style.zIndex = '1';
-            
-            // NEU: Wir machen den Text sofort sichtbar, sobald das Blättern auf die erste oder letzte Seite beginnt.
-            // Die blätternde Seite verdeckt den Text dann natürlich.
-            if (targetPage === 0) {
-                startMenu.style.opacity = '1';
-            } else if (targetPage >= totalPages - 2) {
-                endOfBookMenu.style.opacity = '1';
-            }
+            startMenu.style.opacity = '1';
+            endOfBookMenu.style.opacity = '1';
         });
 
         pageFlip.on('changeState', (e) => {
@@ -523,13 +515,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalPages = pageFlip.getPageCount();
 
             if (state !== 'read') {
-                // NEU: Während das Buch blättert oder die Seite angehoben wird,
-                // löschen wir den Text NICHT aus! Wir machen ihn nur unklickbar.
-                // Dadurch sieht man ihn unter der sich drehenden Seite!
+                // Das Buch ist in Bewegung (Animation läuft oder Ecke wird per Touch/Maus gezogen)
                 startMenu.style.pointerEvents = 'none';
                 endOfBookMenu.style.pointerEvents = 'none';
-                menuPositioner.style.zIndex = '1';
+                
+                // Menü wird sicher hinter das Buch gelegt
+                menuPositioner.style.zIndex = '1'; 
+                
+                // NEU: Wir machen BEIDE Menüs im Hintergrund sofort sichtbar!
+                // Da sie hinter dem Buch liegen (z-index 1 vs 2), stört das bei normalen Seiten nicht.
+                // Wenn du aber die ERSTE Seite leicht anhebst (Zublättern), ist der Start-Text
+                // sofort darunter zu sehen, weil dort keine Buchseiten mehr liegen.
+                startMenu.style.opacity = '1';
+                endOfBookMenu.style.opacity = '1';
+                
             } else {
+                // Buch ist zur Ruhe gekommen
                 isInternalHashUpdate = false;
 
                 if (currentPage === 0) {
@@ -547,8 +548,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     startMenu.style.opacity = '0'; 
                 } else {
                     menuPositioner.style.zIndex = '1'; 
-                    // NEU: Erst wenn die Seite GANZ umgeschlagen wurde und fest im Buch liegt,
-                    // blenden wir die Menüs sicherheitshalber aus, um Bugs zu vermeiden.
+                    
+                    // Erst wenn das Buch komplett umgeblättert ist und wir mittendrin sind,
+                    // blenden wir die Texte im Hintergrund komplett aus, um eventuelle Bugs zu vermeiden.
                     startMenu.style.opacity = '0'; 
                     startMenu.style.pointerEvents = 'none';
                     endOfBookMenu.style.opacity = '0'; 
