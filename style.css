@@ -1,3 +1,13 @@
+/* --- SCHRIFTARTEN --- */
+/* NEU: Ladebefehl für die dünne 300er Schrift. Bitte montserrat-300.woff2 in den Ordner legen! */
+@font-face {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: 300; 
+    font-display: swap; 
+    src: url('fonts/montserrat-300.woff2') format('woff2');
+}
+
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
@@ -30,7 +40,7 @@
     src: url('fonts/montserrat-800.woff2') format('woff2');
 }
 
-/* FIX: Zwingt das CSS zu mathematischen Startwerten beim ersten Laden */
+/* Verhindert das Springen der Schriften beim ersten Laden */
 :root {
     --real-book-width: 100vw;
     --real-book-height: 100vh;
@@ -90,7 +100,7 @@ body {
     white-space: nowrap;
     color: #888;
     text-decoration: none;
-    font-weight: 300; /* Dünner gestaltet (vorher 400) */
+    font-weight: 300; /* Dünnere Icons */
     font-size: clamp(10px, calc(var(--real-book-height) * 0.045), 20px);
     opacity: 0;
     pointer-events: none; 
@@ -98,7 +108,7 @@ body {
 }
 .ui-btn:hover {
     color: #000;
-    font-weight: 500; /* Schwebelast von fett (800) auf elegant (500) reduziert */
+    font-weight: 500; /* Edlerer Hover-Effekt */
 }
 
 #home-btn {
@@ -171,7 +181,7 @@ body.fit-height #fullscreen-btn {
 
 h1 {
     font-size: clamp(14px, calc(var(--real-book-height) * 0.055), 26px); 
-    font-weight: 400; /* Titel radikal dünner gemacht (vorher wuchtige 800) */
+    font-weight: 400; /* Haupttitel radikal entschlackt und feiner gemacht */
     text-align: center;
     white-space: nowrap; 
     margin-bottom: 0.5rem;
@@ -179,6 +189,7 @@ h1 {
     cursor: pointer;
     transition: color 0.3s ease;
 }
+
 h1:hover { color: #000; }
 
 .menu-row {
@@ -190,11 +201,11 @@ h1:hover { color: #000; }
     margin-bottom: 0.3rem; 
 }
 
-.bracket { font-weight: 300; } /* Klammern eine Stufe dünner gemacht */
+.bracket { font-weight: 300; } /* Klammern dünner */
 
 .menu-links { flex-grow: 1; text-align: center; padding: 0 0.6em; }
-.menu-links a { color: #888; text-decoration: none; transition: color 0.2s; font-weight: 300; } /* Links dünner (300 statt 400) */
-.menu-links a:hover, .menu-links a.active { color: #000; font-weight: 500; } /* Aktiver Zustand feiner gestaltet */
+.menu-links a { color: #888; text-decoration: none; transition: color 0.2s; font-weight: 300; } /* Links dünner */
+.menu-links a:hover, .menu-links a.active { color: #000; font-weight: 500; }
 
 .legal-links {
     display: flex;
@@ -204,7 +215,8 @@ h1:hover { color: #000; }
     margin-top: clamp(8px, calc(var(--real-book-height) * 0.04), 20px); 
     font-size: clamp(9px, calc(var(--real-book-height) * 0.03), 14px); 
 }
-.legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; }
+
+.legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; font-weight: 300; }
 .legal-links a:hover { color: #000; }
 
 .flip-book-container, 
@@ -249,7 +261,7 @@ h1:hover { color: #000; }
 }
 
 .grid-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-.grid-header h2 { font-weight: 500; font-size: 1.5rem; } /* Grid-Titel schlanker gestaltet */
+.grid-header h2 { font-weight: 500; font-size: 1.5rem; }
 .grid-header a { color: #000; text-decoration: none; font-weight: 500; font-size: 1.5rem; }
 
 .grid-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; }
