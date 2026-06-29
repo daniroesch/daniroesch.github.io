@@ -1,5 +1,3 @@
-/* --- SCHRIFTARTEN --- */
-/* NEU: Ladebefehl für die dünne 300er Schrift. Bitte montserrat-300.woff2 in den Ordner legen! */
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
@@ -100,7 +98,7 @@ body {
     white-space: nowrap;
     color: #888;
     text-decoration: none;
-    font-weight: 300; /* Dünnere Icons */
+    font-weight: 300; /* Buttons nutzen die feine 300er Schrift */
     font-size: clamp(10px, calc(var(--real-book-height) * 0.045), 20px);
     opacity: 0;
     pointer-events: none; 
@@ -108,7 +106,7 @@ body {
 }
 .ui-btn:hover {
     color: #000;
-    font-weight: 500; /* Edlerer Hover-Effekt */
+    font-weight: 500; 
 }
 
 #home-btn {
@@ -181,10 +179,11 @@ body.fit-height #fullscreen-btn {
 
 h1 {
     font-size: clamp(14px, calc(var(--real-book-height) * 0.055), 26px); 
-    font-weight: 400; /* Haupttitel radikal entschlackt und feiner gemacht */
+    font-weight: 500; /* NEU: Titel genau eine Stufe angehoben auf Stärke 500 (Regular/Medium) */
     text-align: center;
     white-space: nowrap; 
     margin-bottom: 0.5rem;
+    text-transform: lowercase; /* Zwingt alles wieder in Kleinbuchstaben */
     color: #a0a0a0; 
     cursor: pointer;
     transition: color 0.3s ease;
@@ -201,10 +200,10 @@ h1:hover { color: #000; }
     margin-bottom: 0.3rem; 
 }
 
-.bracket { font-weight: 300; } /* Klammern dünner */
+.bracket { font-weight: 300; } 
 
-.menu-links { flex-grow: 1; text-align: center; padding: 0 0.6em; }
-.menu-links a { color: #888; text-decoration: none; transition: color 0.2s; font-weight: 300; } /* Links dünner */
+.menu-links { flex-grow: 1; text-align: center; text-transform: lowercase; padding: 0 0.6em; }
+.menu-links a { color: #888; text-decoration: none; transition: color 0.2s; font-weight: 300; } /* Links auf Stärke 300 */
 .menu-links a:hover, .menu-links a.active { color: #000; font-weight: 500; }
 
 .legal-links {
@@ -214,6 +213,7 @@ h1:hover { color: #000; }
     gap: 4px; 
     margin-top: clamp(8px, calc(var(--real-book-height) * 0.04), 20px); 
     font-size: clamp(9px, calc(var(--real-book-height) * 0.03), 14px); 
+    text-transform: lowercase;
 }
 
 .legal-links a { color: #a0a0a0; text-decoration: none; transition: color 0.2s; font-weight: 300; }
@@ -249,6 +249,8 @@ h1:hover { color: #000; }
     align-items: center;
 }
 
+#loading .menu-links { text-transform: lowercase; font-weight: 300; }
+
 #loading a { color: #888; font-weight: 500; text-decoration: none; transition: color 0.2s; }
 #loading a:hover { color: #000; }
 
@@ -261,8 +263,8 @@ h1:hover { color: #000; }
 }
 
 .grid-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-.grid-header h2 { font-weight: 500; font-size: 1.5rem; }
-.grid-header a { color: #000; text-decoration: none; font-weight: 500; font-size: 1.5rem; }
+.grid-header h2 { font-weight: 500; font-size: 1.5rem; text-transform: lowercase; } /* Grid-Titel auf 500 */
+.grid-header a { color: #000; text-decoration: none; font-weight: 500; font-size: 1.5rem; text-transform: lowercase; }
 
 .grid-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; }
 .book-tile { cursor: pointer; transition: transform 0.2s; }
