@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let lastWinW = window.innerWidth;
 
-    // NEU: Hilfsfunktion, die mobile Browser beim Drehen dazu zwingt, 
+    // Hilfsfunktion, die mobile Browser beim Drehen dazu zwingt, 
     // ungewollte Zooms und Verschiebungen zu löschen und alles wieder mittig zu setzen.
     function forceRepaintAndCenter() {
         window.scrollTo(0, 0);
@@ -223,10 +223,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const viewport = document.querySelector('meta[name="viewport"]');
         if (viewport) {
             const originalContent = viewport.content;
-            // Kurzzeitig das Zoomen verbieten, um das Handy zum "Herauszoomen" zu zwingen
             viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
             setTimeout(() => {
-                // Danach sofort wieder erlauben, falls der Nutzer selbst zoomen möchte
                 viewport.content = originalContent;
             }, 300);
         }
@@ -236,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentW = window.innerWidth;
         if (currentW !== lastWinW) {
             lastWinW = currentW;
-            window.scrollTo(0, 0); // Zur Sicherheit auch beim normalen Resize immer nach oben/links zentrieren
+            window.scrollTo(0, 0); 
             if(bookWrapper) bookWrapper.style.opacity = '0';
             updateBookSize();
             if (pageFlip) pageFlip.update();
@@ -247,11 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('orientationchange', () => {
         if(bookWrapper) bookWrapper.style.opacity = '0';
         
-        // Löscht den heimlichen "Zoom"- und "Verschiebungs"-Fehler beim Drehen!
         forceRepaintAndCenter(); 
         
-        // Etwas längere Wartezeit (250ms), da das Handy beim Drehen oft einen Moment braucht, 
-        // um die echten neuen Maße von Breite und Höhe bereitzustellen.
         setTimeout(() => {
             lastWinW = window.innerWidth;
             updateBookSize();
@@ -509,6 +504,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(homeBtn) { homeBtn.style.opacity = '1'; homeBtn.style.pointerEvents = 'auto'; }
                 if(fsBtn) { fsBtn.style.opacity = '1'; fsBtn.style.pointerEvents = 'auto'; }
             }
+
+            // NEU: Z-Index auf 1 setzen, damit das Menü beim Blättern definitiv HINTER der Buchseite liegt.
+            menuPositioner.style.zIndex = '1';
+            
+            // NEU: Wir machen den Text sofort sichtbar, sobald das Blättern auf die erste oder letzte Seite beginnt.
+            // Die blätternde Seite verdeckt den Text dann natürlich.
+            if (targetPage === 0) {
+                startMenu.style.opacity = '1';
+            } else if (targetPage >= totalPages - 2) {
+                endOfBookMenu.style.opacity = '1';
+            }
         });
 
         pageFlip.on('changeState', (e) => {
@@ -517,9 +523,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalPages = pageFlip.getPageCount();
 
             if (state !== 'read') {
-                startMenu.style.opacity = '0';
+                // NEU: Während das Buch blättert oder die Seite angehoben wird,
+                // löschen wir den Text NICHT aus! Wir machen ihn nur unklickbar.
+                // Dadurch sieht man ihn unter der sich drehenden Seite!
                 startMenu.style.pointerEvents = 'none';
-                endOfBookMenu.style.opacity = '0';
                 endOfBookMenu.style.pointerEvents = 'none';
                 menuPositioner.style.zIndex = '1';
             } else {
@@ -540,6 +547,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     startMenu.style.opacity = '0'; 
                 } else {
                     menuPositioner.style.zIndex = '1'; 
+                    // NEU: Erst wenn die Seite GANZ umgeschlagen wurde und fest im Buch liegt,
+                    // blenden wir die Menüs sicherheitshalber aus, um Bugs zu vermeiden.
                     startMenu.style.opacity = '0'; 
                     startMenu.style.pointerEvents = 'none';
                     endOfBookMenu.style.opacity = '0'; 
