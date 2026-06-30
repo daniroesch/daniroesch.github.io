@@ -4,7 +4,6 @@
 
 const CONFIG = {
     // 📁 DEINE PROJEKTE (BÜCHER)
-    // (Ich habe hier wie besprochen vorerst wieder Unterstriche eingefügt)
     books: [
         'book_1', 
         'book_2',
@@ -443,7 +442,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (menuPositioner) menuPositioner.style.visibility = 'hidden'; 
         updateHeading();
         
-        // NEU: Klammer-Struktur im Loading-Screen ergänzt (Eingebettet in menu-wrapper)
         loadingScreen.innerHTML = `
             <div class="menu-wrapper">
                 <div class="menu-row">
@@ -481,7 +479,6 @@ document.addEventListener('DOMContentLoaded', () => {
             currentImgW = cover.width; 
             currentImgH = cover.height; 
         } else {
-            // NEU: Auch der Fehler-Screen nutzt jetzt den menu-wrapper für exakt bündige Klammern
             loadingScreen.innerHTML = `
                 <div class="menu-wrapper">
                     <div class="menu-row" style="margin-bottom: 0.8rem;">
@@ -626,14 +623,17 @@ document.addEventListener('DOMContentLoaded', () => {
             menuPositioner.style.zIndex = '1';
             
             if (targetPage === 0) {
-                startMenu.style.transition = 'opacity 0.3s ease';
+                // NEU: Beim EINBLENDEN (während der Animation hinter dem Buch) 
+                // darf es KEINE Verzögerung geben!
+                startMenu.style.transition = 'none'; 
                 startMenu.style.opacity = '1';
                 endOfBookMenu.style.transition = 'none'; 
                 endOfBookMenu.style.opacity = '0'; 
             } else if (targetPage >= totalPages - 2) {
                 startMenu.style.transition = 'none'; 
                 startMenu.style.opacity = '0'; 
-                endOfBookMenu.style.transition = 'opacity 0.3s ease';
+                // NEU: Auch hier sofortiges Einblenden hinter dem Buch
+                endOfBookMenu.style.transition = 'none'; 
                 endOfBookMenu.style.opacity = '1';
             } else {
                 startMenu.style.transition = 'none';
@@ -654,25 +654,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 menuPositioner.style.zIndex = '1'; 
                 
                 if (pendingTargetPage === 0) {
-                    startMenu.style.transition = 'opacity 0.3s ease';
+                    // NEU: Auch hier überall 'none', damit die Texte für flüssiges
+                    // Vor- und Zurückblättern sofort im Hintergrund bereitliegen!
+                    startMenu.style.transition = 'none'; 
                     startMenu.style.opacity = '1';
                     endOfBookMenu.style.transition = 'none'; 
                     endOfBookMenu.style.opacity = '0';
                 } else if (pendingTargetPage >= totalPages - 2 && pendingTargetPage !== -1) {
                     startMenu.style.transition = 'none'; 
                     startMenu.style.opacity = '0';
-                    endOfBookMenu.style.transition = 'opacity 0.3s ease';
+                    endOfBookMenu.style.transition = 'none'; 
                     endOfBookMenu.style.opacity = '1';
                 } else {
                     if (currentPage <= 2) {
-                        startMenu.style.transition = 'opacity 0.3s ease';
+                        startMenu.style.transition = 'none'; 
                         startMenu.style.opacity = '1'; 
                         endOfBookMenu.style.transition = 'none';
                         endOfBookMenu.style.opacity = '0';
                     } else if (currentPage >= totalPages - 4) {
                         startMenu.style.transition = 'none';
                         startMenu.style.opacity = '0';
-                        endOfBookMenu.style.transition = 'opacity 0.3s ease';
+                        endOfBookMenu.style.transition = 'none'; 
                         endOfBookMenu.style.opacity = '1'; 
                     } else {
                         startMenu.style.transition = 'none';
@@ -689,7 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (currentPage === 0) {
                     menuPositioner.style.zIndex = '3'; 
                     startMenu.style.pointerEvents = 'auto';
-                    startMenu.style.transition = 'opacity 0.3s ease';
+                    startMenu.style.transition = 'opacity 0.3s ease'; 
                     startMenu.style.opacity = '1'; 
                     
                     endOfBookMenu.style.pointerEvents = 'none';
@@ -699,7 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (currentPage >= totalPages - 2) {
                     menuPositioner.style.zIndex = '3';
                     endOfBookMenu.style.pointerEvents = 'auto';
-                    endOfBookMenu.style.transition = 'opacity 0.3s ease';
+                    endOfBookMenu.style.transition = 'opacity 0.3s ease'; 
                     endOfBookMenu.style.opacity = '1'; 
                     
                     startMenu.style.pointerEvents = 'none';
@@ -721,6 +723,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             updateBookSize();
             if (pageFlip) pageFlip.update();
+            
             setTimeout(() => {
                 if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
                     menuPositioner.style.zIndex = '3';
