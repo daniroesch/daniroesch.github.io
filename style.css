@@ -125,9 +125,6 @@ body.fit-height #fullscreen-btn { bottom: 10px; left: -5.5em; right: auto; }
     flex-direction: column;
     align-items: stretch; 
     padding: 0 10px;
-    
-    /* NEU: Zwingt alle Kind-Elemente (.menu-row), sich exakt am breitesten Text auszurichten! 
-       Dadurch bilden die eckigen Klammern immer eine senkrechte Linie. */
     width: max-content;
     max-width: 100%;
     margin: 0 auto;
@@ -150,7 +147,7 @@ h1:hover { color: #000; font-weight: 800; }
 .menu-row {
     display: flex;
     justify-content: space-between; 
-    align-items: center; /* Bei Zeilenumbruch bleiben die Klammern vertikal mittig */
+    align-items: center; 
     font-size: clamp(11px, calc(var(--real-book-height) * 0.04), 20px); 
     color: #888;
     margin-bottom: 0.3rem; 
@@ -209,18 +206,10 @@ h1:hover { color: #000; font-weight: 800; }
     align-items: center;
 }
 
-/* NEU: Lade-Links haben jetzt standardmäßig 300 (dünn) und reagieren auf Hover mit 600 (dick) */
-#loading a { 
-    color: #888; 
-    font-weight: 300; 
-    text-decoration: none; 
-    transition: color 0.2s, font-weight 0.2s ease; 
-}
-#loading a:hover { 
-    color: #000; 
-    font-weight: 600;
-}
+#loading a { color: #888; font-weight: 300; text-decoration: none; transition: color 0.2s, font-weight 0.2s ease; }
+#loading a:hover { color: #000; font-weight: 600; }
 
+/* HIER IST WIEDER DER ZUVERLÄSSIGE WEISSE HINTERGRUND DES BUCHES */
 .page { background-color: #ffffff; position: relative; }
 .page img { width: 100%; height: 100%; object-fit: cover; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
 
