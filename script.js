@@ -9,10 +9,10 @@ const CONFIG = {
     // Trage hier die Namen deiner Ordner ein. Die Reihenfolge hier ist auch die Reihenfolge auf der Website.
     // WICHTIG: Verwende am besten Bindestriche (z.B. 'stadtvilla-muenchen').
     books: [
-        'book-1', 
-        'book-2',
-        'book-3',
-        'book-4'
+        'book_1', 
+        'book_2',
+        'book_3',
+        'book_4'
     ],
 
     // ✉️ DEINE KONTAKTDATEN
