@@ -451,10 +451,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         menuPositioner.style.zIndex = '3';
         startMenu.style.pointerEvents = 'auto';
+        startMenu.style.transition = 'opacity 0.3s ease';
         startMenu.style.opacity = '1'; 
         
         endOfBookMenu.style.display = 'flex'; 
         endOfBookMenu.style.pointerEvents = 'none';
+        endOfBookMenu.style.transition = 'none';
         endOfBookMenu.style.opacity = '0'; 
 
         const startPage = pageFlip.getCurrentPageIndex();
@@ -472,14 +474,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (startPage >= totalPages - 2) {
                 menuPositioner.style.zIndex = '3';
                 endOfBookMenu.style.pointerEvents = 'auto';
+                endOfBookMenu.style.transition = 'opacity 0.3s ease';
                 endOfBookMenu.style.opacity = '1';
                 endOfBookMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
+                
+                startMenu.style.transition = 'none'; // Sofort aus
                 startMenu.style.opacity = '0';
                 startMenu.style.pointerEvents = 'none';
             } else {
                 menuPositioner.style.zIndex = '1';
+                startMenu.style.transition = 'none';
                 startMenu.style.opacity = '0';
                 startMenu.style.pointerEvents = 'none';
+                endOfBookMenu.style.transition = 'none';
                 endOfBookMenu.style.opacity = '0';
             }
         }
@@ -501,18 +508,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(fsBtn) { fsBtn.style.opacity = '1'; fsBtn.style.pointerEvents = 'auto'; }
             }
 
-            // Garantiert Z-Index 1 (hinter das Buch) während der Bewegung
             menuPositioner.style.zIndex = '1';
             
-            // Strikte Zonen-Regel: Einer ist an, der andere MUSS aus sein!
+            // NEU: Härte-Regel gegen "Geister". Wenn es auf 0 geht, wird das CSS-Fade-Out blockiert!
             if (targetPage === 0) {
+                startMenu.style.transition = 'opacity 0.3s ease';
                 startMenu.style.opacity = '1';
+                
+                endOfBookMenu.style.transition = 'none'; // 0 Millisekunden Verzögerung beim Ausblenden
                 endOfBookMenu.style.opacity = '0'; 
             } else if (targetPage >= totalPages - 2) {
+                startMenu.style.transition = 'none'; // 0 Millisekunden Verzögerung beim Ausblenden
                 startMenu.style.opacity = '0'; 
+                
+                endOfBookMenu.style.transition = 'opacity 0.3s ease';
                 endOfBookMenu.style.opacity = '1';
             } else {
+                startMenu.style.transition = 'none';
                 startMenu.style.opacity = '0';
+                endOfBookMenu.style.transition = 'none';
                 endOfBookMenu.style.opacity = '0';
             }
         });
@@ -523,61 +537,71 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalPages = pageFlip.getPageCount();
 
             if (state !== 'read') {
-                // Buch ist in Bewegung
                 startMenu.style.pointerEvents = 'none';
                 endOfBookMenu.style.pointerEvents = 'none';
                 menuPositioner.style.zIndex = '1'; 
                 
-                // PERFEKTE ZONEN-LOGIK: Wir laden den Text hinter den blickdichten Buchseiten vor!
-                // So ist er beim Zublättern (anheben der Ecke) bereits da und wird butterweich enthüllt.
-                
+                // Gleiche Anti-Geister-Logik beim manuellen Ziehen (Corner Fold)
                 if (pendingTargetPage === 0) {
-                    // Fall 1: Wir wissen sicher, es geht zur Startseite
+                    startMenu.style.transition = 'opacity 0.3s ease';
                     startMenu.style.opacity = '1';
+                    endOfBookMenu.style.transition = 'none'; // Sofort aus
                     endOfBookMenu.style.opacity = '0';
                 } else if (pendingTargetPage >= totalPages - 2 && pendingTargetPage !== -1) {
-                    // Fall 2: Wir wissen sicher, es geht zur Endseite
+                    startMenu.style.transition = 'none'; // Sofort aus
                     startMenu.style.opacity = '0';
+                    endOfBookMenu.style.transition = 'opacity 0.3s ease';
                     endOfBookMenu.style.opacity = '1';
                 } else {
-                    // Fall 3: Der Nutzer zieht nur leicht an einer Ecke (pendingTargetPage = -1)
-                    // Wir checken einfach, wo im Buch wir uns befinden. 
                     if (currentPage <= 2) {
-                        startMenu.style.opacity = '1'; // Vorladen unter den ersten Seiten
+                        startMenu.style.transition = 'opacity 0.3s ease';
+                        startMenu.style.opacity = '1'; 
+                        endOfBookMenu.style.transition = 'none';
                         endOfBookMenu.style.opacity = '0';
                     } else if (currentPage >= totalPages - 4) {
+                        startMenu.style.transition = 'none';
                         startMenu.style.opacity = '0';
-                        endOfBookMenu.style.opacity = '1'; // Vorladen unter den letzten Seiten
+                        endOfBookMenu.style.transition = 'opacity 0.3s ease';
+                        endOfBookMenu.style.opacity = '1'; 
                     } else {
-                        // Tief in der Mitte des Buches -> Beide sicherheitshalber aus
+                        startMenu.style.transition = 'none';
                         startMenu.style.opacity = '0';
+                        endOfBookMenu.style.transition = 'none';
                         endOfBookMenu.style.opacity = '0';
                     }
                 }
                 
             } else {
-                // Buch ist komplett zur Ruhe gekommen
                 pendingTargetPage = -1; 
                 isInternalHashUpdate = false;
 
                 if (currentPage === 0) {
-                    menuPositioner.style.zIndex = '3'; // Nach vorne holen, damit es klickbar wird
+                    menuPositioner.style.zIndex = '3'; 
                     startMenu.style.pointerEvents = 'auto';
+                    startMenu.style.transition = 'opacity 0.3s ease';
                     startMenu.style.opacity = '1'; 
+                    
                     endOfBookMenu.style.pointerEvents = 'none';
-                    endOfBookMenu.style.opacity = '0'; // Garantiert aus
+                    endOfBookMenu.style.transition = 'none';
+                    endOfBookMenu.style.opacity = '0'; 
                     cycleTitle(); 
                 } else if (currentPage >= totalPages - 2) {
                     menuPositioner.style.zIndex = '3';
                     endOfBookMenu.style.pointerEvents = 'auto';
+                    endOfBookMenu.style.transition = 'opacity 0.3s ease';
                     endOfBookMenu.style.opacity = '1'; 
+                    
                     startMenu.style.pointerEvents = 'none';
-                    startMenu.style.opacity = '0'; // Garantiert aus
+                    startMenu.style.transition = 'none';
+                    startMenu.style.opacity = '0'; 
                 } else {
                     menuPositioner.style.zIndex = '1'; 
-                    startMenu.style.opacity = '0'; // Garantiert aus
+                    startMenu.style.transition = 'none';
+                    startMenu.style.opacity = '0'; 
                     startMenu.style.pointerEvents = 'none';
-                    endOfBookMenu.style.opacity = '0'; // Garantiert aus
+                    
+                    endOfBookMenu.style.transition = 'none';
+                    endOfBookMenu.style.opacity = '0'; 
                     endOfBookMenu.style.pointerEvents = 'none';
                 }
             }
@@ -591,7 +615,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
                     menuPositioner.style.zIndex = '3';
                     startMenu.style.pointerEvents = 'auto';
+                    startMenu.style.transition = 'opacity 0.3s ease';
                     startMenu.style.opacity = '1'; 
+                    
+                    endOfBookMenu.style.transition = 'none';
                     endOfBookMenu.style.opacity = '0'; 
                     menuPositioner.style.visibility = 'visible';
                 }
