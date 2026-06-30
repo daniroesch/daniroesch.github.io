@@ -1,7 +1,102 @@
-// Wartet, bis die Webseite vollständig geladen ist, bevor das Skript startet
+// ==========================================================================================
+// 🛑 1. DEIN KONTROLLZENTRUM (HIER KANNST DU ALLES ANPASSEN) 🛑
+// ==========================================================================================
+// In diesem Bereich machst du alle zukünftigen Änderungen. 
+// Du musst dafür nicht weiter nach unten in den komplizierten Code scrollen!
+
+const CONFIG = {
+    // 📁 DEINE PROJEKTE (BÜCHER)
+    // Trage hier die Namen deiner Ordner ein. Die Reihenfolge hier ist auch die Reihenfolge auf der Website.
+    // WICHTIG: Verwende am besten Bindestriche (z.B. 'stadtvilla-muenchen').
+    books: [
+        'book-1', 
+        'book-2',
+        'book-3',
+        'book-4'
+    ],
+
+    // ✉️ DEINE KONTAKTDATEN
+    email: 'arch.daniroesch@gmail.com',
+
+    // 🌍 DEINE TEXTE & SEO-DATEN (Für alle Sprachen)
+    translations: {
+        'de': { 
+            // Sichtbare Texte auf der Website
+            titles: ["meine projekte", "schau dich um", "architektur portfolio", "daniroesch.de"], 
+            allBooks: "alle projekte", 
+            backToStart: "zurück zum anfang", 
+            close: "x", 
+            home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
+            loading: "projekt wird geladen...", 
+            notAvailable: "projekt noch nicht in dieser sprache verfügbar",
+            
+            // Unsichtbare Texte für Google (SEO) & Screenreader
+            seoDesc: "Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch. Entdecken Sie meine Arbeiten, Entwürfe und Konzepte.", 
+            seoH1: "Architektur Portfolio von Daniel Rösch", 
+            seoIntro: "Willkommen auf dem digitalen Portfolio von Daniel Rösch. Hier finden Sie meine Architekturprojekte und Entwürfe:", 
+            seoContact: "Kontaktieren Sie mich gerne unter arch.daniroesch@gmail.com für Projektanfragen."
+        },
+        'en': { 
+            titles: ["my projects", "take a look", "architecture portfolio", "daniroesch.de"], 
+            allBooks: "all projects", 
+            backToStart: "back to start", 
+            close: "x", 
+            home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
+            loading: "loading project...", 
+            notAvailable: "project not yet available in this language",
+            
+            seoDesc: "Digital architecture projects and design portfolio of Daniel Rösch. Explore my work and concepts.", 
+            seoH1: "Architecture Portfolio by Daniel Rösch", 
+            seoIntro: "Welcome to the digital portfolio of Daniel Rösch. Here you can find my architecture projects:", 
+            seoContact: "Feel free to contact me at arch.daniroesch@gmail.com for inquiries."
+        },
+        'es': { 
+            titles: ["mis proyectos", "echa un vistazo", "portafolio de arquitectura", "daniroesch.de"], 
+            allBooks: "todos los proyectos", 
+            backToStart: "volver al inicio", 
+            close: "x", 
+            home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
+            loading: "cargando proyecto...", 
+            notAvailable: "proyecto aún no disponible en este idioma",
+            
+            seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabajo y conceptos.", 
+            seoH1: "Portafolio de Arquitectura de Daniel Rösch", 
+            seoIntro: "Bienvenido al portafolio digital de Daniel Rösch. Aquí puedes encontrar mis proyectos:", 
+            seoContact: "Contáctame en arch.daniroesch@gmail.com para consultas."
+        },
+        'pt': { 
+            titles: ["meus projetos", "dê uma olhada", "portfólio de arquitetura", "daniroesch.de"], 
+            allBooks: "todos os projetos", 
+            backToStart: "voltar ao início", 
+            close: "x", 
+            home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
+            loading: "carregando projeto...", 
+            notAvailable: "projeto ainda não disponível neste idioma",
+            
+            seoDesc: "Projetos de arquitetura digital e portfólio de design de Daniel Rösch. Explore meu trabalho e conceitos.", 
+            seoH1: "Portfólio de Arquitetura de Daniel Rösch", 
+            seoIntro: "Bem-vindo ao portfólio digital de Daniel Rösch. Aqui você pode encontrar meus projetos:", 
+            seoContact: "Contate-me em arch.daniroesch@gmail.com para dúvidas."
+        }
+    }
+};
+
+// ==========================================================================================
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) ⚙️
+// AB HIER AM BESTEN NICHTS MEHR ÄNDERN! DAS SKRIPT HOLT SICH ALLE INFOS VON OBEN.
+// ==========================================================================================
+
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 1. ZOOM WÄCHTER ---
+    // --- A. E-MAIL SETUP ---
+    // Trägt deine E-Mail-Adresse aus dem Kontrollzentrum automatisch in die HTML-Seite ein.
+    const emailLinkElem = document.getElementById('link-email');
+    if (emailLinkElem) {
+        emailLinkElem.href = `mailto:${CONFIG.email}`;
+        emailLinkElem.innerText = CONFIG.email;
+    }
+
+    // --- B. ZOOM & TOUCH WÄCHTER (Mobile Optimierung) ---
     function isZoomed() {
         return window.visualViewport && window.visualViewport.scale > 1.01;
     }
@@ -19,7 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 2. PULL-TO-REFRESH WÄCHTER ---
     let pullStartY = 0;
     let pullStartX = 0;
 
@@ -70,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('pointerdown', protectZoom, { capture: true, passive: true });
     window.addEventListener('pointerup', protectZoom, { capture: true, passive: true });
 
-    // --- 3. PROJEKT VARIABLEN ---
+    // --- C. GLOBALE SYSTEM-VARIABLEN ---
     const bookView = document.getElementById('book-view');
     const bookWrapper = document.getElementById('flip-book-container');
     const loadingScreen = document.getElementById('loading');
@@ -82,17 +176,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const gridView = document.getElementById('grid-view');
     const legalView = document.getElementById('legal-view');
     
-    // WICHTIG: Hier trägst du deine zukünftigen GitHub Ordner-Namen ein!
-    const portfolioBooks = [
-        'book_1', 
-        'book_2',
-        'book_3',
-        'book_4'
-    ]; 
-    
     let pageFlip = null; 
     let currentLang = 'de'; 
-    let currentBook = portfolioBooks[0]; 
+    let currentBook = CONFIG.books[0]; 
     let currentTitleIndex = 0; 
     let isInternalHashUpdate = false; 
     let isInitialLoad = true; 
@@ -104,16 +190,50 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeLoadId = 0; 
     let activeGridId = 0; 
     let pendingTargetPage = -1; 
-    
-    // DIE ÜBERSETZUNGS-DATENBANK
-    const translations = {
-        'de': { titles: ["meine projekte", "schau dich um", "architektur portfolio", "daniroesch.de"], allBooks: "alle projekte", backToStart: "zurück zum anfang", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "projekt wird geladen...", notAvailable: "projekt noch nicht in dieser sprache verfügbar" },
-        'en': { titles: ["my projects", "take a look", "architecture portfolio", "daniroesch.de"], allBooks: "all projects", backToStart: "back to start", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "loading project...", notAvailable: "project not yet available in this language" },
-        'es': { titles: ["mis proyectos", "echa un vistazo", "portafolio de arquitectura", "daniroesch.de"], allBooks: "todos los proyectos", backToStart: "volver al inicio", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "cargando proyecto...", notAvailable: "proyecto aún no disponible en este idioma" },
-        'pt': { titles: ["meus projetos", "dê uma olhada", "portfólio de arquitetura", "daniroesch.de"], allBooks: "todos os projetos", backToStart: "voltar ao início", close: "x", home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', loading: "carregando projeto...", notAvailable: "projeto ainda não disponível neste idioma" }
-    };
 
-    // --- 4. URL & ROUTING ---
+    // --- D. SEO AUTOMATISIERUNG ---
+    function updateSEO(lang) {
+        const t = CONFIG.translations[lang] || CONFIG.translations['de'];
+        
+        document.title = "Daniel Rösch | " + t.titles[2]; 
+        let metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) metaDesc.content = t.seoDesc;
+
+        let jsonLdScript = document.getElementById('seo-json-ld');
+        if (!jsonLdScript) {
+            jsonLdScript = document.createElement('script');
+            jsonLdScript.id = 'seo-json-ld';
+            jsonLdScript.type = 'application/ld+json';
+            document.head.appendChild(jsonLdScript);
+        }
+        jsonLdScript.textContent = JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Person",
+            "name": "Daniel Rösch",
+            "jobTitle": "Architekt",
+            "url": "https://daniroesch.github.io",
+            "knowsAbout": ["Architektur", "Design", "Portfolio", "3D Visualisierung"]
+        });
+
+        let srOnlyDiv = document.getElementById('seo-hidden-text');
+        if (!srOnlyDiv) {
+            srOnlyDiv = document.createElement('div');
+            srOnlyDiv.id = 'seo-hidden-text';
+            srOnlyDiv.className = 'sr-only'; 
+            document.body.insertBefore(srOnlyDiv, document.body.firstChild);
+        }
+        
+        let projectListHTML = CONFIG.books.map(book => `<li>${book.replace(/-/g, ' ')}</li>`).join('');
+
+        srOnlyDiv.innerHTML = `
+            <h1>${t.seoH1}</h1>
+            <p>${t.seoIntro}</p>
+            <ul>${projectListHTML}</ul>
+            <p>${t.seoContact}</p>
+        `;
+    }
+
+    // --- E. URL & ROUTING ---
     function getHashParams() {
         const hash = window.location.hash.replace(/^#\/?/, ''); 
         const parts = hash.split('/');
@@ -121,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (parts[0] === 'grid') return { view: 'grid' };
         if (parts[0] === 'legal') return { view: 'legal' };
 
-        const book = parts[0] || portfolioBooks[0];
+        const book = parts[0] || CONFIG.books[0];
         const lang = parts[1] || 'de';
         
         let pageNum = parts[2] ? parseInt(parts[2]) - 1 : 0;
@@ -134,6 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isInternalHashUpdate) return;
 
         let params = getHashParams();
+        updateSEO(params.lang || 'de');
 
         if (isInitialLoad) {
             isInitialLoad = false;
@@ -172,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 5. BERECHNUNG DER BUCHGRÖSSE & ICON-POSITION ---
+    // --- F. FENSTER-BERECHNUNG & AUSRICHTUNG ---
     function updateBookSize() {
         const w = window.innerWidth;
         const h = window.innerHeight;
@@ -218,9 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (viewport) {
             const originalContent = viewport.content;
             viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
-            setTimeout(() => {
-                viewport.content = originalContent;
-            }, 300);
+            setTimeout(() => { viewport.content = originalContent; }, 300);
         }
     }
 
@@ -238,9 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('orientationchange', () => {
         if(bookWrapper) bookWrapper.style.opacity = '0';
-        
         forceRepaintAndCenter(); 
-        
         setTimeout(() => {
             lastWinW = window.innerWidth;
             updateBookSize();
@@ -250,8 +367,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function updateHeading() {
-        if (translations[currentLang]) {
-            mainHeading.innerText = translations[currentLang].titles[currentTitleIndex];
+        if (CONFIG.translations[currentLang]) {
+            mainHeading.innerText = CONFIG.translations[currentLang].titles[currentTitleIndex];
         }
     }
 
@@ -260,7 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateHeading();
     }
 
-    // --- 6. HIGH-PERFORMANCE BILD-LADER ---
+    // --- G. BILDER LADEN & GRID AUFBAUEN ---
     async function loadCoverImage(url) {
         return new Promise((resolve) => {
             const img = new Image();
@@ -287,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const gridContainer = document.querySelector('.grid-container');
         gridContainer.innerHTML = ''; 
         
-        const gridPromises = portfolioBooks.map((bookName, index) => {
+        const gridPromises = CONFIG.books.map((bookName, index) => {
             const folder = `${bookName}/pages_${currentLang}/`;
             return checkPageExists(`${folder}0${extension}`).then(exists => ({
                 index: index,
@@ -316,12 +433,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 7. BUCH SUCHEN UND AUFBAUEN ---
+    // --- H. BUCH AUFBAUEN & BLÄTTER-LOGIK ---
     async function loadBook(bookName, lang, initialPage = 0) {
         const myLoadId = ++activeLoadId;
 
         currentBook = bookName;
         currentLang = lang;
+        const t = CONFIG.translations[lang];
         
         const homeBtn = document.getElementById('home-btn');
         const fsBtn = document.getElementById('fullscreen-btn');
@@ -334,18 +452,17 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingScreen.innerHTML = `
             <div class="menu-row" style="justify-content: center;">
                 <span class="bracket">[</span>
-                <span class="menu-links" style="flex-grow: 0; padding: 0 0.6em;">${translations[lang].loading}</span>
+                <span class="menu-links" style="flex-grow: 0; padding: 0 0.6em;">${t.loading}</span>
                 <span class="bracket">]</span>
             </div>
         `;
         
-        document.querySelectorAll('.all-books-trigger').forEach(el => el.innerText = translations[lang].allBooks);
-        document.getElementById('grid-heading').innerText = translations[lang].allBooks;
-        document.getElementById('back-to-book-btn').innerText = translations[lang].close;
-        document.getElementById('close-legal').innerText = translations[lang].close;
-        document.getElementById('back-to-start-btn').innerText = translations[lang].backToStart;
-
-        if (homeBtn) homeBtn.innerHTML = translations[lang].home;
+        document.querySelectorAll('.all-books-trigger').forEach(el => el.innerText = t.allBooks);
+        document.getElementById('grid-heading').innerText = t.allBooks;
+        document.getElementById('back-to-book-btn').innerText = t.close;
+        document.getElementById('close-legal').innerText = t.close;
+        document.getElementById('back-to-start-btn').innerText = t.backToStart;
+        if (homeBtn) homeBtn.innerHTML = t.home;
 
         langLinks.forEach(link => link.classList.remove('active'));
         const activeLink = document.querySelector(`[data-lang="${lang}"]`);
@@ -370,13 +487,13 @@ document.addEventListener('DOMContentLoaded', () => {
             loadingScreen.innerHTML = `
                 <div class="menu-row" style="justify-content: center; margin-bottom: 0.8rem;">
                     <span class="bracket">[</span>
-                    <span class="menu-links" style="flex-grow: 0; padding: 0 0.6em;">${translations[lang].notAvailable}</span>
+                    <span class="menu-links" style="flex-grow: 0; padding: 0 0.6em;">${t.notAvailable}</span>
                     <span class="bracket">]</span>
                 </div>
                 <div class="menu-row" style="justify-content: center;">
                     <span class="bracket">[</span>
                     <span class="menu-links" style="flex-grow: 0; padding: 0 0.6em;">
-                        <a href="#/grid" class="all-books-trigger">${translations[lang].allBooks}</a>
+                        <a href="#/grid" class="all-books-trigger">${t.allBooks}</a>
                     </span>
                     <span class="bracket">]</span>
                 </div>
@@ -411,7 +528,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const back = await checkPageExists(`${folder}-1${extension}`);
         if (myLoadId !== activeLoadId) return;
-
         if (back) { imageUrls.push(`-1${extension}`); }
 
         buildBook(imageUrls, folder, currentImgW, currentImgH, initialPage);
@@ -478,7 +594,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 endOfBookMenu.style.opacity = '1';
                 endOfBookMenu.querySelector('.menu-wrapper').style.transform = 'translateX(0)';
                 
-                startMenu.style.transition = 'none'; // Sofort aus
+                startMenu.style.transition = 'none'; 
                 startMenu.style.opacity = '0';
                 startMenu.style.pointerEvents = 'none';
             } else {
@@ -496,7 +612,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalPages = pageFlip.getPageCount();
             
             pendingTargetPage = targetPage;
-            
             isInternalHashUpdate = true;
             window.location.hash = `/${currentBook}/${currentLang}/${targetPage + 1}`;
 
@@ -510,17 +625,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             menuPositioner.style.zIndex = '1';
             
-            // NEU: Härte-Regel gegen "Geister". Wenn es auf 0 geht, wird das CSS-Fade-Out blockiert!
             if (targetPage === 0) {
                 startMenu.style.transition = 'opacity 0.3s ease';
                 startMenu.style.opacity = '1';
-                
-                endOfBookMenu.style.transition = 'none'; // 0 Millisekunden Verzögerung beim Ausblenden
+                endOfBookMenu.style.transition = 'none'; 
                 endOfBookMenu.style.opacity = '0'; 
             } else if (targetPage >= totalPages - 2) {
-                startMenu.style.transition = 'none'; // 0 Millisekunden Verzögerung beim Ausblenden
+                startMenu.style.transition = 'none'; 
                 startMenu.style.opacity = '0'; 
-                
                 endOfBookMenu.style.transition = 'opacity 0.3s ease';
                 endOfBookMenu.style.opacity = '1';
             } else {
@@ -541,14 +653,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 endOfBookMenu.style.pointerEvents = 'none';
                 menuPositioner.style.zIndex = '1'; 
                 
-                // Gleiche Anti-Geister-Logik beim manuellen Ziehen (Corner Fold)
                 if (pendingTargetPage === 0) {
                     startMenu.style.transition = 'opacity 0.3s ease';
                     startMenu.style.opacity = '1';
-                    endOfBookMenu.style.transition = 'none'; // Sofort aus
+                    endOfBookMenu.style.transition = 'none'; 
                     endOfBookMenu.style.opacity = '0';
                 } else if (pendingTargetPage >= totalPages - 2 && pendingTargetPage !== -1) {
-                    startMenu.style.transition = 'none'; // Sofort aus
+                    startMenu.style.transition = 'none'; 
                     startMenu.style.opacity = '0';
                     endOfBookMenu.style.transition = 'opacity 0.3s ease';
                     endOfBookMenu.style.opacity = '1';
@@ -610,14 +721,12 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             updateBookSize();
             if (pageFlip) pageFlip.update();
-            
             setTimeout(() => {
                 if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
                     menuPositioner.style.zIndex = '3';
                     startMenu.style.pointerEvents = 'auto';
                     startMenu.style.transition = 'opacity 0.3s ease';
                     startMenu.style.opacity = '1'; 
-                    
                     endOfBookMenu.style.transition = 'none';
                     endOfBookMenu.style.opacity = '0'; 
                     menuPositioner.style.visibility = 'visible';
@@ -627,8 +736,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 150);
     }
 
-    // --- GLOBALE EVENTS ---
-
+    // --- I. KLICK- UND TASTEN-EVENTS ---
     mainHeading.addEventListener('click', cycleTitle);
 
     langLinks.forEach(link => {
@@ -643,43 +751,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const elem = document.documentElement;
         try {
             if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
-                if (elem.requestFullscreen) {
-                    await elem.requestFullscreen();
-                } else if (elem.webkitRequestFullscreen) {
-                    await elem.webkitRequestFullscreen();
-                } else if (elem.msRequestFullscreen) {
-                    await elem.msRequestFullscreen();
-                }
+                if (elem.requestFullscreen) await elem.requestFullscreen();
+                else if (elem.webkitRequestFullscreen) await elem.webkitRequestFullscreen();
+                else if (elem.msRequestFullscreen) await elem.msRequestFullscreen();
                 
                 if (screen.orientation && screen.orientation.lock) {
-                    try {
-                        await screen.orientation.lock('landscape');
-                    } catch (err) {
-                        console.log("Auto-Querformat blockiert.");
-                    }
+                    try { await screen.orientation.lock('landscape'); } catch (err) {}
                 }
             } else {
-                if (document.exitFullscreen) {
-                    await document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                    await document.webkitExitFullscreen();
-                } else if (document.msExitFullscreen) {
-                    await document.msExitFullscreen();
-                }
+                if (document.exitFullscreen) await document.exitFullscreen();
+                else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
+                else if (document.msExitFullscreen) await document.msExitFullscreen();
                 
                 if (screen.orientation && screen.orientation.unlock) {
                     screen.orientation.unlock();
                 }
             }
-        } catch (error) {
-            console.warn("Vollbild Fehler:", error);
-        }
+        } catch (error) {}
     }
 
     document.addEventListener('click', (e) => {
         if (e.target.closest('#back-to-start-btn') || e.target.closest('#home-btn')) {
             e.preventDefault();
-            if (pageFlip && !isZoomed()) { pageFlip.flip(0); }
+            if (pageFlip && !isZoomed()) pageFlip.flip(0);
         }
 
         if (e.target.closest('.all-books-trigger')) {
@@ -688,7 +782,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         if (e.target.id === 'link-email') {
-            navigator.clipboard.writeText('arch.daniroesch@gmail.com').then(() => {
+            // Nutzt automatisch die E-Mail aus dem Kontrollzentrum!
+            navigator.clipboard.writeText(CONFIG.email).then(() => {
                 const originalText = e.target.innerText;
                 e.target.innerText = 'kopiert!';
                 setTimeout(() => { e.target.innerText = originalText; }, 2000);
@@ -713,7 +808,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('link-legal').onclick = (e) => { e.preventDefault(); window.location.hash = `/legal`; };
-    
     document.getElementById('close-legal').onclick = (e) => { 
         e.preventDefault(); 
         const page = pageFlip ? pageFlip.getCurrentPageIndex() + 1 : 1;
