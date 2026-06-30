@@ -1,63 +1,41 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <!-- Grundlegende technische Einstellungen (Zeichensatz und Mobile-Zoom-Verhalten) -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     
     <!-- ========================================================================================== -->
     <!-- 🛑 1. DEIN HTML-KONTROLLZENTRUM (SOCIAL MEDIA VORSCHAU & GRUND-SEO) 🛑                     -->
     <!-- ========================================================================================== -->
-    <!-- WICHTIG: Wenn du deinen Link per WhatsApp, iMessage, LinkedIn oder Facebook verschickst,  -->
-    <!-- lesen diese Apps das JavaScript NICHT aus. Sie schauen nur hier in dieses Kontrollzentrum! -->
-    
-    <!-- 1. Der Titel im Browser-Tab (bevor das JavaScript ihn übernimmt) -->
     <title>Daniel Rösch | Architektur Portfolio & Projekte</title>
-    
-    <!-- 2. Die normale Beschreibung für Suchmaschinen (Fallback) -->
     <meta name="description" content="Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch. Entdecken Sie meine Arbeiten, Entwürfe und Konzepte in einem interaktiven Format.">
-    
-    <!-- 3. Das Icon oben im Browser-Tab (Favicon) -->
     <link rel="icon" type="image/png" href="hero/favicon.png">
 
-    <!-- 4. Die "Open Graph" (og:) Daten -> Das ist die Vorschau für WhatsApp & Co.! -->
-    <!-- Hier kannst du anpassen, was Leute sehen, wenn du ihnen den Link schickst. -->
-    <meta property="og:title" content="Daniel Rösch | Architektur Portfolio">
-    <meta property="og:description" content="Architektur Portfolio und Projekte präsentiert als interaktives digitales Buch.">
-    
-    <!-- GANZ WICHTIG: Das Vorschaubild beim Teilen. Das muss ein absoluter Link (mit https) sein! -->
+    <!-- Open Graph (og:) Daten für WhatsApp, LinkedIn & Co. -->
+    <meta property="og:title" content="Daniel Rösch | Architecture Portfolio">
+    <meta property="og:description" content="Digital architecture projects and design portfolio by Daniel Rösch. Discover my interactive project presentations.">
     <meta property="og:image" content="https://daniroesch.github.io/hero/social-preview.jpg">
     <meta property="og:url" content="https://daniroesch.github.io">
     <meta property="og:type" content="website">
-    <!-- ========================================================================================== -->
 
-    <!-- Verknüpfung zur Design-Datei -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <!-- ========================================================================================== -->
     <!-- ⚙️ 2. SYSTEM-STRUKTUR (MASCHINENRAUM) ⚙️                                                  -->
-    <!-- AB HIER NICHTS MEHR ÄNDERN! Die Inhalte hier werden komplett von JavaScript gesteuert.     -->
     <!-- ========================================================================================== -->
 
-    <!-- HAUPTANSICHT: Das digitale Buch -->
     <main id="book-view">
-        
-        <!-- Die beiden UI Buttons (Home oben rechts, Vollbild unten links) -->
         <div id="ui-layer">
             <a href="#" id="home-btn" class="ui-btn"><span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span></a>
             <a href="#" id="fullscreen-btn" class="ui-btn">[&nbsp;&nbsp;&nbsp;]</a>
         </div>
 
-        <!-- Menü-Container (Startseite und Letzte Seite des Buches) -->
         <div id="menu-positioner">
-            
-            <!-- START-MENÜ (erste Seite) -->
             <nav class="static-menu" id="start-menu">
                 <div class="menu-wrapper">
                     <h1 id="main-heading" class="cycle-title">meine projekte</h1>
-                    
                     <div class="menu-row">
                         <span class="bracket">[</span>
                         <span class="menu-links">
@@ -68,7 +46,6 @@
                         </span>
                         <span class="bracket">]</span>
                     </div>
-
                     <div class="menu-row">
                         <span class="bracket">[</span>
                         <span class="menu-links">
@@ -76,7 +53,6 @@
                         </span>
                         <span class="bracket">]</span>
                     </div>
-                    
                     <div class="legal-links">
                         <a href="#" id="link-email">wird per JS geladen</a>
                         <a href="#" id="link-legal">impressum & datenschutz</a>
@@ -84,7 +60,6 @@
                 </div>
             </nav>
 
-            <!-- END-MENÜ (letzte Seite) -->
             <nav id="end-of-book-menu">
                 <div class="menu-wrapper">
                     <div class="menu-row">
@@ -103,28 +78,27 @@
 
         <!-- Lade-Bildschirm (Während die Bilder geladen werden) -->
         <div id="loading">
-            <div class="menu-row" style="justify-content: center;">
-                <span class="bracket">[</span>
-                <span class="menu-links" id="loading-text" style="flex-grow: 0; padding: 0 0.6em;">projekt wird geladen...</span>
-                <span class="bracket">]</span>
+            <!-- NEU: menu-wrapper sorgt hier für exakt bündige Klammern! -->
+            <div class="menu-wrapper">
+                <div class="menu-row">
+                    <span class="bracket">[</span>
+                    <span class="menu-links" id="loading-text">projekt wird geladen...</span>
+                    <span class="bracket">]</span>
+                </div>
             </div>
         </div>
         
-        <!-- Der leere Container, in den das JavaScript das 3D-Buch hineinbaut -->
         <div class="flip-book-container" id="flip-book-container"></div>
     </main>
 
-    <!-- UNTERANSICHT 1: Raster-Übersicht "Alle Projekte" -->
     <section id="grid-view" style="display: none;">
         <header class="grid-header">
             <h2 id="grid-heading">alle projekte</h2>
             <a href="#" id="back-to-book-btn">x</a>
         </header>
-        <!-- In diesen Container werden die Vorschaubilder der Projekte geladen -->
         <div class="grid-container"></div>
     </section>
 
-    <!-- UNTERANSICHT 2: Impressum & Datenschutz -->
     <section id="legal-view" style="display: none;">
         <header class="grid-header">
             <h2 id="legal-heading">impressum & datenschutz</h2>
@@ -135,7 +109,6 @@
         </div>
     </section>
 
-    <!-- Einbindung der externen Buch-Bibliothek und deines eigenen Skripts -->
     <script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.min.js"></script>
     <script src="script.js"></script>
 </body>
