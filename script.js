@@ -604,6 +604,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // ===================================================================================
+        // 🚀 DIE ZENTRALE BLÄTTER-LOGIK
+        // ===================================================================================
         pageFlip.on('flip', (e) => {
             const targetPage = e.data; 
             const totalPages = pageFlip.getPageCount();
@@ -612,6 +615,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isInternalHashUpdate = true;
             window.location.hash = `/${currentBook}/${currentLang}/${targetPage + 1}`;
 
+            // Buttons anpassen
             if (targetPage === 0 || targetPage >= totalPages - 2) {
                 if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
                 if(fsBtn) { fsBtn.style.opacity = '0'; fsBtn.style.pointerEvents = 'none'; }
@@ -620,25 +624,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(fsBtn) { fsBtn.style.opacity = '1'; fsBtn.style.pointerEvents = 'auto'; }
             }
 
+            // NEU ERZWUNGEN: Menüs hart und SOFORT im Hintergrund platzieren!
+            // Da das flip-Event beim Klick auslöst, passiert das, noch BEVOR die Buch-Seiten
+            // physisch über den Bildschirm rasen. Dadurch legen die weißen Seiten den Text
+            // beim Zurückblättern organisch frei.
             menuPositioner.style.zIndex = '1';
             
+            // Erst alle CSS-Übergänge abschalten, um Zeitverzögerungen zu killen
+            startMenu.style.transition = 'none';
+            endOfBookMenu.style.transition = 'none';
+
+            // Ein klitzekleiner Trick (offsetHeight auslesen) zwingt den Browser, das
+            // 'transition: none' SOFORT anzuwenden, bevor wir die Opacity auf 1 setzen.
+            void startMenu.offsetHeight; 
+            void endOfBookMenu.offsetHeight;
+
             if (targetPage === 0) {
-                // NEU: Beim EINBLENDEN (während der Animation hinter dem Buch) 
-                // darf es KEINE Verzögerung geben!
-                startMenu.style.transition = 'none'; 
+                // Wir schießen zur Startseite: Text SOFORT auf 1
                 startMenu.style.opacity = '1';
-                endOfBookMenu.style.transition = 'none'; 
                 endOfBookMenu.style.opacity = '0'; 
             } else if (targetPage >= totalPages - 2) {
-                startMenu.style.transition = 'none'; 
+                // Wir schießen zur Endseite: Text SOFORT auf 1
                 startMenu.style.opacity = '0'; 
-                // NEU: Auch hier sofortiges Einblenden hinter dem Buch
-                endOfBookMenu.style.transition = 'none'; 
                 endOfBookMenu.style.opacity = '1';
             } else {
-                startMenu.style.transition = 'none';
+                // Wir blättern irgendwo in der Mitte
                 startMenu.style.opacity = '0';
-                endOfBookMenu.style.transition = 'none';
                 endOfBookMenu.style.opacity = '0';
             }
         });
@@ -649,49 +660,39 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalPages = pageFlip.getPageCount();
 
             if (state !== 'read') {
+                // Buch in Bewegung (Corner-Fold ziehen oder langsames Blättern)
                 startMenu.style.pointerEvents = 'none';
                 endOfBookMenu.style.pointerEvents = 'none';
                 menuPositioner.style.zIndex = '1'; 
                 
-                if (pendingTargetPage === 0) {
-                    // NEU: Auch hier überall 'none', damit die Texte für flüssiges
-                    // Vor- und Zurückblättern sofort im Hintergrund bereitliegen!
-                    startMenu.style.transition = 'none'; 
-                    startMenu.style.opacity = '1';
-                    endOfBookMenu.style.transition = 'none'; 
-                    endOfBookMenu.style.opacity = '0';
-                } else if (pendingTargetPage >= totalPages - 2 && pendingTargetPage !== -1) {
-                    startMenu.style.transition = 'none'; 
-                    startMenu.style.opacity = '0';
-                    endOfBookMenu.style.transition = 'none'; 
-                    endOfBookMenu.style.opacity = '1';
-                } else {
+                // Falls man das Blatt nur mit der Maus/dem Finger anhebt (Corner Fold):
+                if (pendingTargetPage === -1) {
+                    startMenu.style.transition = 'none';
+                    endOfBookMenu.style.transition = 'none';
+                    void startMenu.offsetHeight; 
+                    void endOfBookMenu.offsetHeight;
+                    
                     if (currentPage <= 2) {
-                        startMenu.style.transition = 'none'; 
                         startMenu.style.opacity = '1'; 
-                        endOfBookMenu.style.transition = 'none';
                         endOfBookMenu.style.opacity = '0';
                     } else if (currentPage >= totalPages - 4) {
-                        startMenu.style.transition = 'none';
                         startMenu.style.opacity = '0';
-                        endOfBookMenu.style.transition = 'none'; 
                         endOfBookMenu.style.opacity = '1'; 
                     } else {
-                        startMenu.style.transition = 'none';
                         startMenu.style.opacity = '0';
-                        endOfBookMenu.style.transition = 'none';
                         endOfBookMenu.style.opacity = '0';
                     }
                 }
                 
             } else {
+                // Buch ist angekommen und liegt ruhig da
                 pendingTargetPage = -1; 
                 isInternalHashUpdate = false;
 
                 if (currentPage === 0) {
                     menuPositioner.style.zIndex = '3'; 
                     startMenu.style.pointerEvents = 'auto';
-                    startMenu.style.transition = 'opacity 0.3s ease'; 
+                    startMenu.style.transition = 'opacity 0.3s ease'; // Weichen Fade wieder aktivieren
                     startMenu.style.opacity = '1'; 
                     
                     endOfBookMenu.style.pointerEvents = 'none';
@@ -701,7 +702,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (currentPage >= totalPages - 2) {
                     menuPositioner.style.zIndex = '3';
                     endOfBookMenu.style.pointerEvents = 'auto';
-                    endOfBookMenu.style.transition = 'opacity 0.3s ease'; 
+                    endOfBookMenu.style.transition = 'opacity 0.3s ease'; // Weichen Fade wieder aktivieren
                     endOfBookMenu.style.opacity = '1'; 
                     
                     startMenu.style.pointerEvents = 'none';
@@ -723,7 +724,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             updateBookSize();
             if (pageFlip) pageFlip.update();
-            
             setTimeout(() => {
                 if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
                     menuPositioner.style.zIndex = '3';
