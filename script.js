@@ -1,13 +1,10 @@
 // ==========================================================================================
 // 🛑 1. DEIN KONTROLLZENTRUM (HIER KANNST DU ALLES ANPASSEN) 🛑
 // ==========================================================================================
-// In diesem Bereich machst du alle zukünftigen Änderungen. 
-// Du musst dafür nicht weiter nach unten in den komplizierten Code scrollen!
 
 const CONFIG = {
     // 📁 DEINE PROJEKTE (BÜCHER)
-    // Trage hier die Namen deiner Ordner ein. Die Reihenfolge hier ist auch die Reihenfolge auf der Website.
-    // WICHTIG: Verwende am besten Bindestriche (z.B. 'stadtvilla-muenchen').
+    // (Ich habe hier wie besprochen vorerst wieder Unterstriche eingefügt)
     books: [
         'book_1', 
         'book_2',
@@ -18,10 +15,9 @@ const CONFIG = {
     // ✉️ DEINE KONTAKTDATEN
     email: 'arch.daniroesch@gmail.com',
 
-    // 🌍 DEINE TEXTE & SEO-DATEN (Für alle Sprachen)
+    // 🌍 DEINE TEXTE & SEO-DATEN
     translations: {
         'de': { 
-            // Sichtbare Texte auf der Website
             titles: ["meine projekte", "schau dich um", "architektur portfolio", "daniroesch.de"], 
             allBooks: "alle projekte", 
             backToStart: "zurück zum anfang", 
@@ -30,7 +26,6 @@ const CONFIG = {
             loading: "projekt wird geladen...", 
             notAvailable: "projekt noch nicht in dieser sprache verfügbar",
             
-            // Unsichtbare Texte für Google (SEO) & Screenreader
             seoDesc: "Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch. Entdecken Sie meine Arbeiten, Entwürfe und Konzepte.", 
             seoH1: "Architektur Portfolio von Daniel Rösch", 
             seoIntro: "Willkommen auf dem digitalen Portfolio von Daniel Rösch. Hier finden Sie meine Architekturprojekte und Entwürfe:", 
@@ -83,13 +78,12 @@ const CONFIG = {
 
 // ==========================================================================================
 // ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) ⚙️
-// AB HIER AM BESTEN NICHTS MEHR ÄNDERN! DAS SKRIPT HOLT SICH ALLE INFOS VON OBEN.
+// AB HIER NICHTS MEHR ÄNDERN
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- A. E-MAIL SETUP ---
-    // Trägt deine E-Mail-Adresse aus dem Kontrollzentrum automatisch in die HTML-Seite ein.
     const emailLinkElem = document.getElementById('link-email');
     if (emailLinkElem) {
         emailLinkElem.href = `mailto:${CONFIG.email}`;
@@ -223,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.insertBefore(srOnlyDiv, document.body.firstChild);
         }
         
-        let projectListHTML = CONFIG.books.map(book => `<li>${book.replace(/-/g, ' ')}</li>`).join('');
+        let projectListHTML = CONFIG.books.map(book => `<li>${book.replace(/[-_]/g, ' ')}</li>`).join('');
 
         srOnlyDiv.innerHTML = `
             <h1>${t.seoH1}</h1>
@@ -423,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (book.exists) {
                 const tile = document.createElement('div');
                 tile.className = 'book-tile';
-                const niceName = book.name.replace(/-/g, ' '); 
+                const niceName = book.name.replace(/[-_]/g, ' '); 
                 tile.innerHTML = `<img src="${book.folder}0${extension}" alt="${niceName}">`;
                 tile.onclick = () => {
                     window.location.hash = `/${book.name}/${currentLang}/1`;
@@ -449,11 +443,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (menuPositioner) menuPositioner.style.visibility = 'hidden'; 
         updateHeading();
         
+        // NEU: Klammer-Struktur im Loading-Screen ergänzt (Eingebettet in menu-wrapper)
         loadingScreen.innerHTML = `
-            <div class="menu-row" style="justify-content: center;">
-                <span class="bracket">[</span>
-                <span class="menu-links" style="flex-grow: 0; padding: 0 0.6em;">${t.loading}</span>
-                <span class="bracket">]</span>
+            <div class="menu-wrapper">
+                <div class="menu-row">
+                    <span class="bracket">[</span>
+                    <span class="menu-links">${t.loading}</span>
+                    <span class="bracket">]</span>
+                </div>
             </div>
         `;
         
@@ -484,18 +481,21 @@ document.addEventListener('DOMContentLoaded', () => {
             currentImgW = cover.width; 
             currentImgH = cover.height; 
         } else {
+            // NEU: Auch der Fehler-Screen nutzt jetzt den menu-wrapper für exakt bündige Klammern
             loadingScreen.innerHTML = `
-                <div class="menu-row" style="justify-content: center; margin-bottom: 0.8rem;">
-                    <span class="bracket">[</span>
-                    <span class="menu-links" style="flex-grow: 0; padding: 0 0.6em;">${t.notAvailable}</span>
-                    <span class="bracket">]</span>
-                </div>
-                <div class="menu-row" style="justify-content: center;">
-                    <span class="bracket">[</span>
-                    <span class="menu-links" style="flex-grow: 0; padding: 0 0.6em;">
-                        <a href="#/grid" class="all-books-trigger">${t.allBooks}</a>
-                    </span>
-                    <span class="bracket">]</span>
+                <div class="menu-wrapper">
+                    <div class="menu-row" style="margin-bottom: 0.8rem;">
+                        <span class="bracket">[</span>
+                        <span class="menu-links">${t.notAvailable}</span>
+                        <span class="bracket">]</span>
+                    </div>
+                    <div class="menu-row">
+                        <span class="bracket">[</span>
+                        <span class="menu-links">
+                            <a href="#/grid" class="all-books-trigger">${t.allBooks}</a>
+                        </span>
+                        <span class="bracket">]</span>
+                    </div>
                 </div>
             `;
             return; 
@@ -535,7 +535,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function buildBook(imageUrls, folder, width, height, initialPage = 0) {
         const bookContainer = document.getElementById('book');
-        const niceBookName = currentBook.replace(/-/g, ' ');
+        const niceBookName = currentBook.replace(/[-_]/g, ' ');
 
         imageUrls.forEach((file) => {
             const pageDiv = document.createElement('div');
@@ -782,7 +782,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         if (e.target.id === 'link-email') {
-            // Nutzt automatisch die E-Mail aus dem Kontrollzentrum!
             navigator.clipboard.writeText(CONFIG.email).then(() => {
                 const originalText = e.target.innerText;
                 e.target.innerText = 'kopiert!';
