@@ -92,6 +92,12 @@ const CONFIG = {
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    // 🔥 NEU: Verhindert das "Font-Boosting" (riesigen Text) auf Android-Geräten.
+    document.documentElement.style.webkitTextSizeAdjust = '100%';
+    document.body.style.webkitTextSizeAdjust = '100%';
+    document.documentElement.style.textSizeAdjust = '100%';
+    document.body.style.textSizeAdjust = '100%';
+
     const emailLinkElem = document.getElementById('link-email');
     if (emailLinkElem) {
         emailLinkElem.href = `mailto:${CONFIG.email}`;
@@ -133,9 +139,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let zoomCooldown = false; let zoomTimeout;
     function protectZoom(e) {
-        // 🔥 NEU: Der VIP-Ausweis für das 3D-Modell.
-        // Wenn der Touch auf dem model-viewer landet, lassen wir ihn IMMER durch,
-        // damit du das Modell im gezoomten Zustand drehen kannst!
+        // 🔥 VIP-AUSWEIS: Wenn der Finger auf dem 3D-Modell ist, darf es immer gedreht werden, 
+        // auch wenn du herangezoomt bist!
         if (e.composedPath && e.composedPath().some(el => el.tagName && el.tagName.toUpperCase() === 'MODEL-VIEWER')) {
             return; 
         }
@@ -151,7 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Wächter ist weiterhin im "capture" Modus aktiv
     window.addEventListener('touchstart', protectZoom, { capture: true, passive: true });
     window.addEventListener('touchmove', protectZoom, { capture: true, passive: true });
     window.addEventListener('touchend', protectZoom, { capture: true, passive: true });
@@ -242,12 +246,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const w = window.innerWidth; 
         const h = window.innerHeight;
 
-        // 🔥 NEU: Verhindert sanft das "Font-Boosting" auf Android, ohne das Layout einzusperren!
-        document.documentElement.style.webkitTextSizeAdjust = '100%';
-        document.body.style.webkitTextSizeAdjust = '100%';
-        document.documentElement.style.textSizeAdjust = '100%';
-        document.body.style.textSizeAdjust = '100%';
-
         const bookAspectRatio = (currentImgW * 2) / currentImgH;
         const windowRatio = w / h;
         
@@ -270,9 +268,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 🔥 DIE GOLDFASSUNG FÜR TABLET UND HANDY (Toleranz + Debouncer)
     let lastWinW = window.innerWidth;
+    let lastWinH = window.innerHeight;
+    let resizeTimer;
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
-    // 🔥 ZURÜCKGESETZT: Das "temporäre Korsett" für sauberes Handy-Drehen
     function applyOrientationLock() {
         window.scrollTo(0, 0); 
         document.body.scrollTop = 0; document.body.scrollLeft = 0;
@@ -288,30 +289,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔥 ZURÜCKGESETZT: Der Toleranz-Filter (ignoriert kleines Wisch-Zucken der Adressleiste)
     window.addEventListener('resize', () => {
         const currentW = window.innerWidth;
-        if (Math.abs(currentW - lastWinW) > 20) {
-            lastWinW = currentW; 
+        const currentH = window.innerHeight;
+        
+        if (isTouchDevice) {
+            // Ignoriert Zucken unter 60 Pixeln (verhindert das Tablet-Flackern)
+            if (Math.abs(currentW - lastWinW) < 60 && Math.abs(currentH - lastWinH) < 60) {
+                return; 
+            }
+        } else {
+            if (currentW === lastWinW) return;
+        }
+
+        // Der 300ms Debouncer (Wartet geduldig, bis das Tablet fertig aktualisiert hat!)
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            lastWinW = window.innerWidth; 
+            lastWinH = window.innerHeight;
+            
             window.scrollTo(0, 0); 
             if(bookWrapper) bookWrapper.style.opacity = '0';
             updateBookSize();
             if (pageFlip) pageFlip.update();
             setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
-        }
+        }, 300);
     });
 
     window.addEventListener('orientationchange', () => {
+        clearTimeout(resizeTimer);
         if(bookWrapper) bookWrapper.style.opacity = '0';
         applyOrientationLock(); 
         
         setTimeout(() => {
             lastWinW = window.innerWidth; 
+            lastWinH = window.innerHeight;
             updateBookSize();
             if (pageFlip) pageFlip.update();
             applyOrientationLock(); 
             setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
-        }, 300); 
+        }, 400); 
     });
 
     function updateHeading() {
