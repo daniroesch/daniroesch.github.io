@@ -66,9 +66,9 @@ const CONFIG = {
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
             loading: "carregando projeto...", 
-            notAvailable: "projeto ainda não disponível neste idioma",
+            notAvailable: "projekt ainda não disponível neste idioma",
             
-            seoDesc: "Projetos de arquitetura digital e portfólio de design de Daniel Rösch. Explore meu trabalho e conceitos.", 
+            seoDesc: "Projetos de arquitectura digital e portfólio de design de Daniel Rösch. Explore meu trabalho e conceitos.", 
             seoH1: "Portfólio de Arquitetura de Daniel Rösch", 
             seoIntro: "Bem-vindo ao portfólio digital de Daniel Rösch. Aqui você pode encontrar meus projetos:", 
             seoContact: "Contate-me em arch.daniroesch@gmail.com para dúvidas."
@@ -275,6 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // NEU: Wir merken uns die exakte Breite des Displays beim Laden
     let lastWinW = window.innerWidth;
 
     function forceRepaintAndCenter() {
@@ -287,9 +288,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // OPTIMIERT: Der Tablet-Schutzfilter gegen das Adressleisten-Zucken
     window.addEventListener('resize', () => {
-        if (window.innerWidth !== lastWinW) {
-            lastWinW = window.innerWidth; window.scrollTo(0, 0); 
+        const currentW = window.innerWidth;
+        // WICHTIG: Das Buch wird NUR NOCH neu berechnet, wenn sich die BREITE des Fensters ändert!
+        // Ändert sich nur die Höhe (durch die mobile Adressleiste), ignorieren wir das komplett.
+        if (currentW !== lastWinW) {
+            lastWinW = currentW; 
+            window.scrollTo(0, 0); 
             if(bookWrapper) bookWrapper.style.opacity = '0';
             updateBookSize();
             if (pageFlip) pageFlip.update();
