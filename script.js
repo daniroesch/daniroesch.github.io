@@ -443,7 +443,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // 🔥 LOGIK: Beide Buttons sind immer am Buchrücken (der Mitte des Buches)
                 const isLeftPage = (pageNum % 2 !== 0);
-                const horizPos = isLeftPage ? 'right: 30px;' : 'left: 30px;';
+                
+                // 🔥 WICHTIG: Die !important Reset-Regeln (verhindern das Zerreißen durch die .ui-btn CSS-Klasse)
+                const horizPos = isLeftPage ? 'right: 30px !important; left: auto !important;' : 'left: 30px !important; right: auto !important;';
                 
                 const triggerDiv = document.createElement('div');
                 triggerDiv.className = 'threedee-trigger';
@@ -466,14 +468,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         triggerDiv.classList.add('model-active');
                         triggerDiv.style.cursor = 'default';
 
-                        // 🔥 NEU: Exakte Klone der Haupt-Buttons (inkl. gleicher Klasse ui-btn) 
-                        // -> Gleiche Schrift, gleiche Größe, zentriert untereinander!
+                        // 🔥 NEU: Die perfekten, zentrierten Boxen (geschützt durch !important)
                         triggerDiv.innerHTML = `
-                            <a href="#" class="close-3d-btn ui-btn" style="position: absolute; top: 30px; ${horizPos} z-index: 100; width: 50px; text-align: center; margin: 0; padding: 0; text-decoration: none; display: block; transform: none;">
+                            <a href="#" class="close-3d-btn ui-btn" style="position: absolute !important; top: 30px !important; bottom: auto !important; ${horizPos} z-index: 100 !important; width: 50px !important; height: 50px !important; display: flex !important; justify-content: center !important; align-items: center !important; text-decoration: none !important; opacity: 1 !important; pointer-events: auto !important; margin: 0 !important; padding: 0 !important; transform: none !important; background: none !important; border: none !important;">
                                 <span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>
                             </a>
                             
-                            <a href="#" class="fs-3d-btn ui-btn" style="position: absolute; bottom: 30px; ${horizPos} z-index: 100; width: 50px; text-align: center; margin: 0; padding: 0; text-decoration: none; display: block; transform: none;">
+                            <a href="#" class="fs-3d-btn ui-btn" style="position: absolute !important; bottom: 30px !important; top: auto !important; ${horizPos} z-index: 100 !important; width: 50px !important; height: 50px !important; display: flex !important; justify-content: center !important; align-items: center !important; text-decoration: none !important; opacity: 1 !important; pointer-events: auto !important; margin: 0 !important; padding: 0 !important; transform: none !important; background: none !important; border: none !important;">
                                 [&nbsp;&nbsp;&nbsp;]
                             </a>
                             
@@ -503,24 +504,24 @@ document.addEventListener('DOMContentLoaded', () => {
                         attachEventBlockers(closeBtn);
                         attachEventBlockers(fsBtn);
 
-                        // 🔥 NEU: X-Button unterscheidet zwischen Vollbild und Normal-Ansicht
+                        // X-Button: Schließt Vollbild ODER Modell
                         closeBtn.addEventListener('click', (evt) => {
                             killEvent(evt);
                             const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
                             
                             if (isFullscreen) {
-                                // Nur Vollbild verlassen, Modell bleibt aktiv!
+                                // Nur Vollbild verlassen
                                 if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
                                 else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(()=>{});
                             } else {
-                                // Wenn nicht im Vollbild: 3D Modell komplett schließen
+                                // 3D Modell schließen
                                 triggerDiv.innerHTML = triggerDiv.dataset.originalHtml;
                                 triggerDiv.classList.remove('model-active');
                                 triggerDiv.style.cursor = 'pointer';
                             }
                         });
 
-                        // Klammern-Button (Vollbild aktivieren/deaktivieren)
+                        // Vollbild aktivieren/deaktivieren
                         fsBtn.addEventListener('click', (evt) => {
                             killEvent(evt);
                             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
