@@ -21,9 +21,10 @@ const CONFIG = {
             titles: ["meine projekte", "schau dich um", "architektur portfolio", "daniroesch.de"], 
             allBooks: "alle projekte", 
             backToStart: "zurück zum anfang", 
+            nextProject: "nächstes projekt", // <-- NEU
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
-            loading: "projekt wird geladen...", 
+            loading: "wird geladen...", // <-- ANGEPASST
             notAvailable: "projekt noch nicht in dieser sprache verfügbar",
             
             seoDesc: "Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch. Entdecken Sie meine Arbeiten, Entwürfe und Konzepte.", 
@@ -35,9 +36,10 @@ const CONFIG = {
             titles: ["my projects", "take a look", "architecture portfolio", "daniroesch.de"], 
             allBooks: "all projects", 
             backToStart: "back to start", 
+            nextProject: "next project", // <-- NEU
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
-            loading: "loading project...", 
+            loading: "loading...", // <-- ANGEPASST
             notAvailable: "project not yet available in this language",
             
             seoDesc: "Digital architecture projects and design portfolio of Daniel Rösch. Explore my work and concepts.", 
@@ -49,9 +51,10 @@ const CONFIG = {
             titles: ["mis proyectos", "echa un vistazo", "portafolio de arquitectura", "daniroesch.de"], 
             allBooks: "todos los proyectos", 
             backToStart: "volver al inicio", 
+            nextProject: "siguiente proyecto", // <-- NEU
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
-            loading: "cargando proyecto...", 
+            loading: "cargando...", // <-- ANGEPASST
             notAvailable: "proyecto aún no disponible en este idioma",
             
             seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabajo y conceptos.", 
@@ -63,12 +66,13 @@ const CONFIG = {
             titles: ["meus projetos", "dê uma olhada", "portfólio de arquitetura", "daniroesch.de"], 
             allBooks: "todos os projetos", 
             backToStart: "voltar ao início", 
+            nextProject: "próximo projeto", // <-- NEU
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
-            loading: "carregando projeto...", 
-            notAvailable: "projekt ainda não disponível neste idioma",
+            loading: "carregando...", // <-- ANGEPASST
+            notAvailable: "projeto ainda não disponível neste idioma",
             
-            seoDesc: "Projetos de arquitectura digital e portfólio de design de Daniel Rösch. Explore meu trabalho e conceitos.", 
+            seoDesc: "Projetos de arquitetura digital e portfólio de design de Daniel Rösch. Explore meu trabalho e conceitos.", 
             seoH1: "Portfólio de Arquitetura de Daniel Rösch", 
             seoIntro: "Bem-vindo ao portfólio digital de Daniel Rösch. Aqui você pode encontrar meus projetos:", 
             seoContact: "Contate-me em arch.daniroesch@gmail.com para dúvidas."
@@ -275,7 +279,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // NEU: Wir merken uns die exakte Breite des Displays beim Laden
     let lastWinW = window.innerWidth;
 
     function forceRepaintAndCenter() {
@@ -288,11 +291,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // OPTIMIERT: Der Tablet-Schutzfilter gegen das Adressleisten-Zucken
     window.addEventListener('resize', () => {
         const currentW = window.innerWidth;
-        // WICHTIG: Das Buch wird NUR NOCH neu berechnet, wenn sich die BREITE des Fensters ändert!
-        // Ändert sich nur die Höhe (durch die mobile Adressleiste), ignorieren wir das komplett.
         if (currentW !== lastWinW) {
             lastWinW = currentW; 
             window.scrollTo(0, 0); 
@@ -392,6 +392,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('close-legal').innerText = t.close;
         document.getElementById('back-to-start-btn').innerText = t.backToStart;
         if (homeBtn) homeBtn.innerHTML = t.home;
+
+        // NEU: Den Text für "Nächstes Projekt" aktualisieren
+        const nextProjectBtn = document.getElementById('next-project-btn');
+        if (nextProjectBtn) nextProjectBtn.innerText = t.nextProject;
 
         langLinks.forEach(link => link.classList.remove('active'));
         const activeLink = document.querySelector(`[data-lang="${lang}"]`);
@@ -674,6 +678,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.closest('#back-to-start-btn') || e.target.closest('#home-btn')) {
             e.preventDefault();
             if (pageFlip && !isZoomed()) pageFlip.flip(0);
+        
+        // ====================================================================
+        // 🔥 NEU: Die Logik für den "Nächstes Projekt" Button
+        // ====================================================================
+        } else if (e.target.closest('#next-project-btn')) {
+            e.preventDefault();
+            
+            // Finde heraus, an welcher Stelle der Liste wir gerade sind
+            let currentIndex = CONFIG.books.indexOf(currentBook);
+            
+            // Berechne das nächste Buch. "% CONFIG.books.length" sorgt dafür, 
+            // dass es am Ende der Liste automatisch wieder beim 1. Buch anfängt!
+            let nextIndex = (currentIndex + 1) % CONFIG.books.length;
+            let nextBook = CONFIG.books[nextIndex];
+            
+            // Befehle dem Browser, das nächste Buch zu laden
+            window.location.hash = `/${nextBook}/${currentLang}/1`;
+
         } else if (e.target.closest('.all-books-trigger')) {
             e.preventDefault();
             window.location.hash = `/grid`;
