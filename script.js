@@ -253,30 +253,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let lastWinW = window.innerWidth;
 
-    // 🔥 DIE NEUE, STARKE REPARATUR: Der temporäre Viewport-Lock
-    function forceRepaintAndCenter() {
-        // 1. Position zurücksetzen
+    // 🔥 NEU: Der Lock wird NUR noch bei echter Drehung ausgelöst!
+    function applyOrientationLock() {
         window.scrollTo(0, 0); 
         document.body.scrollTop = 0; document.body.scrollLeft = 0;
         document.documentElement.scrollTop = 0; document.documentElement.scrollLeft = 0;
 
-        // 2. Den Viewport kurz in Handschellen legen (verhindert den Handy-Auto-Zoom)
         const viewport = document.querySelector('meta[name="viewport"]');
         if (viewport) {
             viewport.content = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no';
             
-            // 3. Nach der Drehung das normale Zoomen wieder erlauben!
             setTimeout(() => { 
                 viewport.content = 'width=device-width, initial-scale=1.0'; 
-            }, 600); // 600ms reicht für jede Handy-Drehanimation völlig aus
+            }, 600); 
         }
     }
 
     window.addEventListener('resize', () => {
         const currentW = window.innerWidth;
-        if (currentW !== lastWinW) {
+        
+        // 🔥 NEU: Der Toleranz-Filter! Kleine Sprünge (bis 20px) beim Blättern werden komplett ignoriert.
+        if (Math.abs(currentW - lastWinW) > 20) {
             lastWinW = currentW; 
-            forceRepaintAndCenter(); 
+            window.scrollTo(0, 0); 
             if(bookWrapper) bookWrapper.style.opacity = '0';
             updateBookSize();
             if (pageFlip) pageFlip.update();
@@ -286,13 +285,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('orientationchange', () => {
         if(bookWrapper) bookWrapper.style.opacity = '0';
-        forceRepaintAndCenter(); 
+        applyOrientationLock(); 
         
         setTimeout(() => {
             lastWinW = window.innerWidth; 
             updateBookSize();
             if (pageFlip) pageFlip.update();
-            forceRepaintAndCenter(); 
+            applyOrientationLock(); 
             setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
         }, 300); 
     });
