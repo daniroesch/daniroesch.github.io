@@ -20,10 +20,10 @@ const CONFIG = {
             titles: ["meine projekte", "schau dich um", "architektur portfolio", "daniroesch.de"], 
             allBooks: "alle projekte", 
             backToStart: "zurück zum anfang", 
-            nextProject: "nächstes projekt", // <-- NEU
+            nextProject: "nächstes projekt", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
-            loading: "wird geladen...", // <-- ANGEPASST
+            loading: "wird geladen . . .", // <-- WIEDERHERGESTELLT MIT ABSTÄNDEN
             notAvailable: "projekt noch nicht in dieser sprache verfügbar",
             
             seoDesc: "Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch. Entdecken Sie meine Arbeiten, Entwürfe und Konzepte.", 
@@ -35,10 +35,10 @@ const CONFIG = {
             titles: ["my projects", "take a look", "architecture portfolio", "daniroesch.de"], 
             allBooks: "all projects", 
             backToStart: "back to start", 
-            nextProject: "next project", // <-- NEU
+            nextProject: "next project", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
-            loading: "loading...", // <-- ANGEPASST
+            loading: "loading . . .", // <-- WIEDERHERGESTELLT MIT ABSTÄNDEN
             notAvailable: "project not yet available in this language",
             
             seoDesc: "Digital architecture projects and design portfolio of Daniel Rösch. Explore my work and concepts.", 
@@ -50,10 +50,10 @@ const CONFIG = {
             titles: ["mis proyectos", "echa un vistazo", "portafolio de arquitectura", "daniroesch.de"], 
             allBooks: "todos los proyectos", 
             backToStart: "volver al inicio", 
-            nextProject: "siguiente proyecto", // <-- NEU
+            nextProject: "siguiente proyecto", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
-            loading: "cargando...", // <-- ANGEPASST
+            loading: "cargando . . .", // <-- WIEDERHERGESTELLT MIT ABSTÄNDEN
             notAvailable: "proyecto aún no disponible en este idioma",
             
             seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabajo y conceptos.", 
@@ -65,10 +65,10 @@ const CONFIG = {
             titles: ["meus projetos", "dê uma olhada", "portfólio de arquitetura", "daniroesch.de"], 
             allBooks: "todos os projetos", 
             backToStart: "voltar ao início", 
-            nextProject: "próximo projeto", // <-- NEU
+            nextProject: "próximo projeto", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
-            loading: "carregando...", // <-- ANGEPASST
+            loading: "carregando . . .", // <-- WIEDERHERGESTELLT MIT ABSTÄNDEN
             notAvailable: "projeto ainda não disponível neste idioma",
             
             seoDesc: "Projetos de arquitetura digital e portfólio de design de Daniel Rösch. Explore meu trabalho e conceitos.", 
@@ -392,7 +392,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('back-to-start-btn').innerText = t.backToStart;
         if (homeBtn) homeBtn.innerHTML = t.home;
 
-        // NEU: Den Text für "Nächstes Projekt" aktualisieren
         const nextProjectBtn = document.getElementById('next-project-btn');
         if (nextProjectBtn) nextProjectBtn.innerText = t.nextProject;
 
