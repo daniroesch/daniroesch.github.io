@@ -441,15 +441,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (CONFIG.threedee && CONFIG.threedee[currentBook] && CONFIG.threedee[currentBook][pageNum]) {
                 const modelFile = CONFIG.threedee[currentBook][pageNum];
                 
-                // 🔥 LOGIK: Beide Buttons sind immer am Buchrücken (der Mitte des Buches)
                 const isLeftPage = (pageNum % 2 !== 0);
                 
-                // 🔥 WICHTIG: Die !important Reset-Regeln (verhindern das Zerreißen durch die .ui-btn CSS-Klasse)
-                const horizPos = isLeftPage ? 'right: 30px !important; left: auto !important;' : 'left: 30px !important; right: auto !important;';
+                // 🔥 NEU: Prozentuale Abstände! 4% oben/unten, 5% am Rand
+                // Egal ob auf dem riesigen Laptop oder kleinen Handy, der visuelle Abstand bleibt perfekt erhalten.
+                const horizPos = isLeftPage ? 'right: 5% !important; left: auto !important;' : 'left: 5% !important; right: auto !important;';
                 
                 const triggerDiv = document.createElement('div');
                 triggerDiv.className = 'threedee-trigger';
-                triggerDiv.style.cssText = 'width: 100%; height: 100%; cursor: pointer; display: block; position: relative;';
+                
+                // 🔥 NEU: Hier zwingen wir das div und den Fullscreen auf ein strahlendes Weiß (Dark Mode immun)
+                triggerDiv.style.cssText = 'width: 100%; height: 100%; cursor: pointer; display: block; position: relative; background-color: #ffffff !important; color-scheme: light !important;';
                 
                 const originalHtml = `<img src="${folder}${file}" alt="Daniel Rösch 3D Vorschau" style="width: 100%; height: 100%; object-fit: cover;">`;
                 triggerDiv.innerHTML = originalHtml;
@@ -468,20 +470,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         triggerDiv.classList.add('model-active');
                         triggerDiv.style.cursor = 'default';
 
-                        // 🔥 NEU: Die perfekten, zentrierten Boxen (geschützt durch !important)
+                        // Einbau der Buttons mit den relativen Prozent-Abständen
                         triggerDiv.innerHTML = `
-                            <a href="#" class="close-3d-btn ui-btn" style="position: absolute !important; top: 30px !important; bottom: auto !important; ${horizPos} z-index: 100 !important; width: 50px !important; height: 50px !important; display: flex !important; justify-content: center !important; align-items: center !important; text-decoration: none !important; opacity: 1 !important; pointer-events: auto !important; margin: 0 !important; padding: 0 !important; transform: none !important; background: none !important; border: none !important;">
+                            <a href="#" class="close-3d-btn ui-btn" style="position: absolute !important; top: 4% !important; bottom: auto !important; ${horizPos} z-index: 100 !important; min-width: 50px !important; height: 50px !important; display: flex !important; justify-content: center !important; align-items: center !important; text-decoration: none !important; opacity: 1 !important; pointer-events: auto !important; margin: 0 !important; padding: 0 !important; transform: none !important; background: none !important; border: none !important;">
                                 <span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>
                             </a>
                             
-                            <a href="#" class="fs-3d-btn ui-btn" style="position: absolute !important; bottom: 30px !important; top: auto !important; ${horizPos} z-index: 100 !important; width: 50px !important; height: 50px !important; display: flex !important; justify-content: center !important; align-items: center !important; text-decoration: none !important; opacity: 1 !important; pointer-events: auto !important; margin: 0 !important; padding: 0 !important; transform: none !important; background: none !important; border: none !important;">
+                            <a href="#" class="fs-3d-btn ui-btn" style="position: absolute !important; bottom: 4% !important; top: auto !important; ${horizPos} z-index: 100 !important; min-width: 50px !important; height: 50px !important; display: flex !important; justify-content: center !important; align-items: center !important; text-decoration: none !important; opacity: 1 !important; pointer-events: auto !important; margin: 0 !important; padding: 0 !important; transform: none !important; background: none !important; border: none !important;">
                                 [&nbsp;&nbsp;&nbsp;]
                             </a>
                             
                             <model-viewer
                                 src="${currentBook}/${modelFile}"
                                 camera-controls
-                                style="width: 100%; height: 100%; background-color: transparent;"
+                                style="width: 100%; height: 100%; background-color: #ffffff !important; color-scheme: light !important; outline: none;"
                             ></model-viewer>
                         `;
 
@@ -510,11 +512,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
                             
                             if (isFullscreen) {
-                                // Nur Vollbild verlassen
                                 if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
                                 else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(()=>{});
                             } else {
-                                // 3D Modell schließen
                                 triggerDiv.innerHTML = triggerDiv.dataset.originalHtml;
                                 triggerDiv.classList.remove('model-active');
                                 triggerDiv.style.cursor = 'pointer';
