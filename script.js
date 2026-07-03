@@ -11,7 +11,7 @@ const CONFIG = {
         'book_4'
     ],
 
-    // 🧊 NEU: DEINE 3D MODELLE
+    // 🧊 DEINE 3D MODELLE
     // Hier sagst du dem System: "In book_1 lade auf Seite 5 die Datei 5.glb"
     threedee: {
         'book_1': {
@@ -33,7 +33,6 @@ const CONFIG = {
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
             loading: "wird geladen . . .",
             notAvailable: "projekt noch nicht in dieser sprache verfügbar",
-            load3d: "3d modell laden", // <-- NEUER 3D BUTTON
             
             seoDesc: "Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch. Entdecken Sie meine Arbeiten, Entwürfe und Konzepte.", 
             seoH1: "Architektur Portfolio von Daniel Rösch", 
@@ -49,7 +48,6 @@ const CONFIG = {
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
             loading: "loading . . .", 
             notAvailable: "project not yet available in this language",
-            load3d: "load 3d model", // <-- NEUER 3D BUTTON
             
             seoDesc: "Digital architecture projects and design portfolio of Daniel Rösch. Explore my work and concepts.", 
             seoH1: "Architecture Portfolio by Daniel Rösch", 
@@ -65,7 +63,6 @@ const CONFIG = {
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
             loading: "cargando . . .", 
             notAvailable: "proyecto aún no disponible en este idioma",
-            load3d: "cargar modelo 3d", // <-- NEUER 3D BUTTON
             
             seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabajo y conceptos.", 
             seoH1: "Portafolio de Arquitectura de Daniel Rösch", 
@@ -81,7 +78,6 @@ const CONFIG = {
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
             loading: "carregando . . .", 
             notAvailable: "projeto ainda não disponível neste idioma",
-            load3d: "carregar modelo 3d", // <-- NEUER 3D BUTTON
             
             seoDesc: "Projetos de arquitetura digital e portfólio de design de Daniel Rösch. Explore meu trabalho e conceitos.", 
             seoH1: "Portfólio de Arquitetura de Daniel Rösch", 
@@ -465,45 +461,63 @@ document.addEventListener('DOMContentLoaded', () => {
     function buildBook(imageUrls, folder, width, height, initialPage = 0) {
         const bookContainer = document.getElementById('book');
         const niceBookName = currentBook.replace(/[-_]/g, ' ');
-        const t = CONFIG.translations[currentLang] || CONFIG.translations['de'];
 
         imageUrls.forEach((file) => {
             const pageDiv = document.createElement('div');
             pageDiv.className = 'page';
             
-            // NEU: Die 3D-Prüfung! (Sucht nach der Nummer der Seite im Dateinamen)
             const pageNum = parseInt(file);
             
+            // 🔥 NEUE, SAUBERE 3D-LOGIK:
             if (CONFIG.threedee && CONFIG.threedee[currentBook] && CONFIG.threedee[currentBook][pageNum]) {
-                // Hier kommt das 3D Modell rein!
                 const modelFile = CONFIG.threedee[currentBook][pageNum];
-                const posterPath = `${folder}${file}`;
                 
-                pageDiv.innerHTML = `
-                    <model-viewer 
-                        src="${currentBook}/${modelFile}" 
-                        poster="${posterPath}" 
-                        camera-controls 
-                        reveal="interaction" 
-                        interaction-prompt="none"
-                        style="width: 100%; height: 100%; background-color: #fff;"
-                    >
-                        <div slot="poster" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255,255,255,0.9); padding: 12px 24px; border-radius: 30px; font-weight: 600; font-size: clamp(10px, 2vh, 16px); color: #000; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer; text-transform: lowercase; z-index: 10;">
-                            ${t.load3d}
-                        </div>
-                    </model-viewer>
-                `;
+                // Wir bauen einen Container für die Seite
+                const triggerDiv = document.createElement('div');
+                triggerDiv.className = 'threedee-trigger';
+                triggerDiv.style.cssText = 'width: 100%; height: 100%; cursor: pointer; display: block;';
+                
+                // Zuerst laden wir GANZ NORMAL DEIN BILD (5.webp)
+                triggerDiv.innerHTML = `<img src="${folder}${file}" alt="Daniel Rösch 3D Vorschau" style="width: 100%; height: 100%; object-fit: cover;">`;
 
-                // Wichtig: Blättern verbieten, solange man auf dem 3D Modell wischt!
-                setTimeout(() => {
-                    const mv = pageDiv.querySelector('model-viewer');
-                    if (mv) {
-                        const stopProp = (e) => e.stopPropagation();
-                        ['touchstart', 'touchmove', 'mousedown', 'mousemove', 'pointerdown', 'pointermove'].forEach(evt => {
-                            mv.addEventListener(evt, stopProp, { passive: true });
-                        });
+                // Wir blockieren die unsichtbare "Wisch-Folie" vom Buch beim allerersten Klick
+                const blockFlip = (e) => {
+                    if (!triggerDiv.classList.contains('model-active')) {
+                        e.stopPropagation();
                     }
-                }, 100);
+                };
+                triggerDiv.addEventListener('mousedown', blockFlip);
+                triggerDiv.addEventListener('touchstart', blockFlip, { passive: true });
+
+                // Wenn man auf das Bild klickt, wird es durch das 3D-Modell ausgetauscht!
+                triggerDiv.addEventListener('click', (e) => {
+                    if (!triggerDiv.classList.contains('model-active')) {
+                        triggerDiv.classList.add('model-active');
+                        triggerDiv.style.cursor = 'default';
+
+                        // Bild verschwindet, 3D Modell startet
+                        triggerDiv.innerHTML = `
+                            <model-viewer
+                                src="${currentBook}/${modelFile}"
+                                camera-controls
+                                style="width: 100%; height: 100%; background-color: transparent;"
+                            ></model-viewer>
+                        `;
+
+                        // Wichtig: Blättern verbieten, solange man auf dem 3D Modell wischt!
+                        setTimeout(() => {
+                            const mv = triggerDiv.querySelector('model-viewer');
+                            if (mv) {
+                                const stopProp = (evt) => evt.stopPropagation();
+                                ['touchstart', 'touchmove', 'mousedown', 'mousemove', 'pointerdown', 'pointerup'].forEach(evt => {
+                                    mv.addEventListener(evt, stopProp, { passive: true });
+                                });
+                            }
+                        }, 100);
+                    }
+                });
+
+                pageDiv.appendChild(triggerDiv);
 
             } else {
                 // Ganz normales Bild für alle anderen Seiten
