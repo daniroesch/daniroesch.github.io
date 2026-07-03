@@ -5,7 +5,6 @@
 const CONFIG = {
     // 📁 DEINE PROJEKTE (BÜCHER)
     books: [
-        'Portfolio-MA',
         'book_1', 
         'book_2',
         'book_3',
@@ -231,7 +230,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔥 DIE PERFEKTE LÖSUNG GEGEN FONT-BOOSTING UND VERSCHIEBUNGEN
     let lockedW = window.innerWidth;
     let lockedH = window.innerHeight;
     const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
@@ -240,24 +238,21 @@ document.addEventListener('DOMContentLoaded', () => {
         lockedW = window.innerWidth;
         lockedH = window.innerHeight;
 
-        // 1. Verhindert das automatische, riesige Skalieren von Text (Font Boosting) auf Handys
         document.documentElement.style.webkitTextSizeAdjust = '100%';
         document.body.style.webkitTextSizeAdjust = '100%';
         document.documentElement.style.textSizeAdjust = '100%';
         document.body.style.textSizeAdjust = '100%';
 
-        // 2. Wir frieren die Maße ein, damit die Adressleiste nicht stört
         document.body.style.width = lockedW + 'px';
         document.body.style.height = lockedH + 'px';
         document.body.style.overflow = 'hidden';
         document.body.style.overscrollBehavior = 'none';
 
-        // 3. WICHTIG: position: absolute wurde hier GESTRICHEN! Dein CSS zentriert wieder perfekt.
         if (bookView) {
             bookView.style.width = lockedW + 'px';
             bookView.style.height = lockedH + 'px';
             bookView.style.overflow = 'hidden';
-            bookView.style.position = ''; // Stellt sicher, dass CSS Flexbox greift
+            bookView.style.position = ''; 
         }
 
         const bookAspectRatio = (currentImgW * 2) / currentImgH;
@@ -287,7 +282,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentW = window.innerWidth;
         
         if (isTouchDevice) {
-            // Ignoriert Wisch-Zucken, reagiert nur auf echte Drehungen (>50px)
             if (Math.abs(currentW - lockedW) < 50) return; 
         } else {
             if (currentW === lockedW) return;
@@ -469,15 +463,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 const triggerDiv = document.createElement('div');
                 triggerDiv.className = 'threedee-trigger';
                 
-                triggerDiv.style.cssText = 'width: 100%; height: 100%; cursor: pointer; display: block; position: relative; background-color: #ffffff !important; color-scheme: light !important;';
+                // Kein genereller Pointer mehr. Der Klickbereich wird durch die innere Hitbox bestimmt.
+                triggerDiv.style.cssText = 'width: 100%; height: 100%; display: block; position: relative; background-color: #ffffff !important; color-scheme: light !important;';
                 
-                const originalHtml = `<img src="${folder}${file}" alt="Daniel Rösch 3D Vorschau" style="width: 100%; height: 100%; object-fit: cover;">`;
+                // 🔥 NEU: Die unsichtbare "Hitbox" in der Mitte (Sperrt 20% Rand zum Blättern aus)
+                const originalHtml = `
+                    <img src="${folder}${file}" alt="Daniel Rösch 3D Vorschau" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div class="activation-hitbox" style="position: absolute; top: 10%; left: 20%; width: 60%; height: 80%; z-index: 10; cursor: pointer;"></div>
+                `;
                 triggerDiv.innerHTML = originalHtml;
                 triggerDiv.dataset.originalHtml = originalHtml; 
 
                 const blockFlip = (e) => {
+                    // Blockiert das Buch-Umblättern NUR, wenn man auf die unsichtbare Hitbox klickt!
                     if (!triggerDiv.classList.contains('model-active')) {
-                        e.stopPropagation();
+                        if (e.target.classList.contains('activation-hitbox')) {
+                            e.stopPropagation();
+                        }
                     }
                 };
                 triggerDiv.addEventListener('mousedown', blockFlip);
@@ -485,78 +487,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 triggerDiv.addEventListener('click', (e) => {
                     if (!triggerDiv.classList.contains('model-active')) {
-                        triggerDiv.classList.add('model-active');
-                        triggerDiv.style.cursor = 'default';
+                        // Das 3D Modell startet NUR, wenn der Klick auf der Hitbox gelandet ist
+                        if (e.target.classList.contains('activation-hitbox')) {
+                            triggerDiv.classList.add('model-active');
 
-                        triggerDiv.innerHTML = `
-                            <a href="#" class="close-3d-btn ui-btn" style="position: absolute !important; top: 4% !important; bottom: auto !important; ${horizPos} z-index: 100 !important; min-width: 50px !important; height: 50px !important; display: flex !important; justify-content: center !important; align-items: center !important; text-decoration: none !important; opacity: 1 !important; pointer-events: auto !important; margin: 0 !important; padding: 0 !important; transform: none !important; background: none !important; border: none !important;">
-                                <span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>
-                            </a>
-                            
-                            <a href="#" class="fs-3d-btn ui-btn" style="position: absolute !important; bottom: 4% !important; top: auto !important; ${horizPos} z-index: 100 !important; min-width: 50px !important; height: 50px !important; display: flex !important; justify-content: center !important; align-items: center !important; text-decoration: none !important; opacity: 1 !important; pointer-events: auto !important; margin: 0 !important; padding: 0 !important; transform: none !important; background: none !important; border: none !important;">
-                                [&nbsp;&nbsp;&nbsp;]
-                            </a>
-                            
-                            <model-viewer
-                                src="${currentBook}/${modelFile}"
-                                camera-controls
-                                style="width: 100%; height: 100%; background-color: #ffffff !important; color-scheme: light !important; outline: none;"
-                            ></model-viewer>
-                        `;
+                            triggerDiv.innerHTML = `
+                                <a href="#" class="close-3d-btn ui-btn" style="position: absolute !important; top: 4% !important; bottom: auto !important; ${horizPos} z-index: 100 !important; min-width: 50px !important; height: 50px !important; display: flex !important; justify-content: center !important; align-items: center !important; text-decoration: none !important; opacity: 1 !important; pointer-events: auto !important; margin: 0 !important; padding: 0 !important; transform: none !important; background: none !important; border: none !important;">
+                                    <span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>
+                                </a>
+                                
+                                <a href="#" class="fs-3d-btn ui-btn" style="position: absolute !important; bottom: 4% !important; top: auto !important; ${horizPos} z-index: 100 !important; min-width: 50px !important; height: 50px !important; display: flex !important; justify-content: center !important; align-items: center !important; text-decoration: none !important; opacity: 1 !important; pointer-events: auto !important; margin: 0 !important; padding: 0 !important; transform: none !important; background: none !important; border: none !important;">
+                                    [&nbsp;&nbsp;&nbsp;]
+                                </a>
+                                
+                                <model-viewer
+                                    src="${currentBook}/${modelFile}"
+                                    camera-controls
+                                    style="width: 100%; height: 100%; background-color: #ffffff !important; color-scheme: light !important; outline: none;"
+                                ></model-viewer>
+                            `;
 
-                        const closeBtn = triggerDiv.querySelector('.close-3d-btn');
-                        const fsBtn = triggerDiv.querySelector('.fs-3d-btn');
+                            const closeBtn = triggerDiv.querySelector('.close-3d-btn');
+                            const fsBtn = triggerDiv.querySelector('.fs-3d-btn');
 
-                        const killEvent = (evt) => {
-                            evt.preventDefault();
-                            evt.stopPropagation();
-                        };
+                            const killEvent = (evt) => {
+                                evt.preventDefault();
+                                evt.stopPropagation();
+                            };
 
-                        const attachEventBlockers = (btn) => {
-                            ['mousedown', 'touchstart', 'pointerdown', 'mousemove', 'touchmove', 'pointermove', 'mouseup', 'touchend', 'pointerup', 'click'].forEach(evtType => {
-                                btn.addEventListener(evtType, (evt) => {
-                                    evt.stopPropagation(); 
-                                }, { passive: false });
-                            });
-                        };
-
-                        attachEventBlockers(closeBtn);
-                        attachEventBlockers(fsBtn);
-
-                        closeBtn.addEventListener('click', (evt) => {
-                            killEvent(evt);
-                            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
-                            
-                            if (isFullscreen) {
-                                if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
-                                else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(()=>{});
-                            } else {
-                                triggerDiv.innerHTML = triggerDiv.dataset.originalHtml;
-                                triggerDiv.classList.remove('model-active');
-                                triggerDiv.style.cursor = 'pointer';
-                            }
-                        });
-
-                        fsBtn.addEventListener('click', (evt) => {
-                            killEvent(evt);
-                            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                                if (triggerDiv.requestFullscreen) triggerDiv.requestFullscreen().catch(()=>{});
-                                else if (triggerDiv.webkitRequestFullscreen) triggerDiv.webkitRequestFullscreen().catch(()=>{});
-                            } else {
-                                if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
-                                else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(()=>{});
-                            }
-                        });
-
-                        setTimeout(() => {
-                            const mv = triggerDiv.querySelector('model-viewer');
-                            if (mv) {
-                                const stopProp = (evt) => evt.stopPropagation();
-                                ['touchstart', 'touchmove', 'mousedown', 'mousemove', 'pointerdown', 'pointerup'].forEach(evt => {
-                                    mv.addEventListener(evt, stopProp, { passive: true });
+                            const attachEventBlockers = (btn) => {
+                                ['mousedown', 'touchstart', 'pointerdown', 'mousemove', 'touchmove', 'pointermove', 'mouseup', 'touchend', 'pointerup', 'click'].forEach(evtType => {
+                                    btn.addEventListener(evtType, (evt) => {
+                                        evt.stopPropagation(); 
+                                    }, { passive: false });
                                 });
-                            }
-                        }, 100);
+                            };
+
+                            attachEventBlockers(closeBtn);
+                            attachEventBlockers(fsBtn);
+
+                            closeBtn.addEventListener('click', (evt) => {
+                                killEvent(evt);
+                                const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+                                
+                                if (isFullscreen) {
+                                    if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+                                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(()=>{});
+                                } else {
+                                    triggerDiv.innerHTML = triggerDiv.dataset.originalHtml;
+                                    triggerDiv.classList.remove('model-active');
+                                }
+                            });
+
+                            fsBtn.addEventListener('click', (evt) => {
+                                killEvent(evt);
+                                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                                    if (triggerDiv.requestFullscreen) triggerDiv.requestFullscreen().catch(()=>{});
+                                    else if (triggerDiv.webkitRequestFullscreen) triggerDiv.webkitRequestFullscreen().catch(()=>{});
+                                } else {
+                                    if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+                                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(()=>{});
+                                }
+                            });
+
+                            setTimeout(() => {
+                                const mv = triggerDiv.querySelector('model-viewer');
+                                if (mv) {
+                                    const stopProp = (evt) => evt.stopPropagation();
+                                    ['touchstart', 'touchmove', 'mousedown', 'mousemove', 'pointerdown', 'pointerup'].forEach(evt => {
+                                        mv.addEventListener(evt, stopProp, { passive: true });
+                                    });
+                                }
+                            }, 100);
+                        }
                     }
                 });
 
@@ -642,7 +645,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(el.dataset.originalHtml) {
                     el.innerHTML = el.dataset.originalHtml;
                     el.classList.remove('model-active');
-                    el.style.cursor = 'pointer';
                 }
             });
 
@@ -738,7 +740,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Einmaliges Initialisieren am Ende zum Zementieren der Werte
         setTimeout(() => {
             updateBookSize();
             if (pageFlip) pageFlip.update();
