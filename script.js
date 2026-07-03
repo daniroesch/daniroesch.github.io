@@ -441,23 +441,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (CONFIG.threedee && CONFIG.threedee[currentBook] && CONFIG.threedee[currentBook][pageNum]) {
                 const modelFile = CONFIG.threedee[currentBook][pageNum];
                 
-                // 🔥 Logik zur Erkennung, ob es die LINKE oder RECHTE Seite ist
-                // Ungerade Zahlen (1, 3, 5) sind im Buch IMMER linke Seiten.
+                // 🔥 LOGIK: Beide Buttons sind immer am Buchrücken (der Mitte des Buches)
                 const isLeftPage = (pageNum % 2 !== 0);
-                
-                // Wenn LINKE Seite: Setze Buttons nach RECHTS (zum Buchrücken)
-                // Wenn RECHTE Seite: Setze Buttons nach LINKS (zum Buchrücken)
-                const horizPos = isLeftPage ? 'right: 20px;' : 'left: 20px;';
+                const horizPos = isLeftPage ? 'right: 30px;' : 'left: 30px;';
                 
                 const triggerDiv = document.createElement('div');
                 triggerDiv.className = 'threedee-trigger';
-                triggerDiv.style.cssText = 'width: 100%; height: 100%; cursor: pointer; display: block; position: relative; background-color: #fff;';
+                triggerDiv.style.cssText = 'width: 100%; height: 100%; cursor: pointer; display: block; position: relative;';
                 
                 const originalHtml = `<img src="${folder}${file}" alt="Daniel Rösch 3D Vorschau" style="width: 100%; height: 100%; object-fit: cover;">`;
                 triggerDiv.innerHTML = originalHtml;
                 triggerDiv.dataset.originalHtml = originalHtml; 
 
-                // Event-Barriere für den Klick zum Öffnen
                 const blockFlip = (e) => {
                     if (!triggerDiv.classList.contains('model-active')) {
                         e.stopPropagation();
@@ -471,27 +466,27 @@ document.addEventListener('DOMContentLoaded', () => {
                         triggerDiv.classList.add('model-active');
                         triggerDiv.style.cursor = 'default';
 
-                        // 🔥 NEU: Exaktes Design der UI Buttons & das Vollbild-Klammern-Symbol
+                        // 🔥 NEU: Exakte Klone der Haupt-Buttons (inkl. gleicher Klasse ui-btn) 
+                        // -> Gleiche Schrift, gleiche Größe, zentriert untereinander!
                         triggerDiv.innerHTML = `
-                            <div class="close-3d-btn" style="position: absolute; top: 20px; ${horizPos} z-index: 100; cursor: pointer; font-family: monospace, sans-serif; font-size: 1.1rem; color: #000; display: flex; justify-content: center; align-items: center; padding: 10px;">
+                            <a href="#" class="close-3d-btn ui-btn" style="position: absolute; top: 30px; ${horizPos} z-index: 100; width: 50px; text-align: center; margin: 0; padding: 0; text-decoration: none; display: block; transform: none;">
                                 <span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>
-                            </div>
+                            </a>
                             
-                            <div class="fs-3d-btn" style="position: absolute; bottom: 20px; ${horizPos} z-index: 100; cursor: pointer; font-family: monospace, sans-serif; font-size: 1.1rem; color: #000; display: flex; justify-content: center; align-items: center; padding: 10px;">
+                            <a href="#" class="fs-3d-btn ui-btn" style="position: absolute; bottom: 30px; ${horizPos} z-index: 100; width: 50px; text-align: center; margin: 0; padding: 0; text-decoration: none; display: block; transform: none;">
                                 [&nbsp;&nbsp;&nbsp;]
-                            </div>
+                            </a>
                             
                             <model-viewer
                                 src="${currentBook}/${modelFile}"
                                 camera-controls
-                                style="width: 100%; height: 100%; background-color: #fff;"
+                                style="width: 100%; height: 100%; background-color: transparent;"
                             ></model-viewer>
                         `;
 
                         const closeBtn = triggerDiv.querySelector('.close-3d-btn');
                         const fsBtn = triggerDiv.querySelector('.fs-3d-btn');
 
-                        // 🔥 NEU: Der harte Schild gegen Event-Bubbling (Verhindert das Umblättern beim X)
                         const killEvent = (evt) => {
                             evt.preventDefault();
                             evt.stopPropagation();
@@ -508,19 +503,24 @@ document.addEventListener('DOMContentLoaded', () => {
                         attachEventBlockers(closeBtn);
                         attachEventBlockers(fsBtn);
 
-                        // Schließen-Logik (mit Vollbild-Exit, falls nötig)
+                        // 🔥 NEU: X-Button unterscheidet zwischen Vollbild und Normal-Ansicht
                         closeBtn.addEventListener('click', (evt) => {
                             killEvent(evt);
-                            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+                            
+                            if (isFullscreen) {
+                                // Nur Vollbild verlassen, Modell bleibt aktiv!
                                 if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
                                 else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(()=>{});
+                            } else {
+                                // Wenn nicht im Vollbild: 3D Modell komplett schließen
+                                triggerDiv.innerHTML = triggerDiv.dataset.originalHtml;
+                                triggerDiv.classList.remove('model-active');
+                                triggerDiv.style.cursor = 'pointer';
                             }
-                            triggerDiv.innerHTML = triggerDiv.dataset.originalHtml;
-                            triggerDiv.classList.remove('model-active');
-                            triggerDiv.style.cursor = 'pointer';
                         });
 
-                        // Vollbild-Logik für den 3D Container
+                        // Klammern-Button (Vollbild aktivieren/deaktivieren)
                         fsBtn.addEventListener('click', (evt) => {
                             killEvent(evt);
                             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
@@ -622,6 +622,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isInternalHashUpdate = true;
             window.location.hash = `/${currentBook}/${currentLang}/${targetPage + 1}`;
 
+            // Schließe alle offenen 3D-Modelle automatisch beim Umblättern
             document.querySelectorAll('.threedee-trigger.model-active').forEach(el => {
                 if(el.dataset.originalHtml) {
                     el.innerHTML = el.dataset.originalHtml;
