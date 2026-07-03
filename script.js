@@ -5,6 +5,7 @@
 const CONFIG = {
     // 📁 DEINE PROJEKTE (BÜCHER)
     books: [
+        'Portolio-MA',
         'book_1', 
         'book_2',
         'book_3',
