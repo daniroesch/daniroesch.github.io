@@ -60,22 +60,24 @@
                 </div>
             </nav>
 
-            <nav id="end-of-book-menu">
-                <div class="menu-wrapper">
-                    <div class="menu-row">
-                        <span class="bracket">[</span>
-                        <span class="menu-links"><a href="#" id="back-to-start-btn">zurück zum anfang</a></span>
-                        <span class="bracket">]</span>
-                    </div>
-                    <div class="menu-row">
-                        <span class="bracket">[</span>
-                        <span class="menu-links"><a href="#" class="all-books-trigger">alle projekte</a></span>
-                        <span class="bracket">]</span>
-                    </div>
-                </div>
-            </nav>
+           <div id="end-of-book-menu">
+    <div class="menu-wrapper">
+        <!-- 1. Zurück zum Anfang -->
+        <div class="menu-row">
+            <span class="bracket">[</span><span class="menu-links"><a href="#" id="back-to-start-btn">zurück zum anfang</a></span><span class="bracket">]</span>
+        </div>
+        
+        <!-- NEU: 2. Nächstes Projekt (in der Mitte) -->
+        <div class="menu-row">
+            <span class="bracket">[</span><span class="menu-links"><a href="#" id="next-project-btn">nächstes projekt</a></span><span class="bracket">]</span>
         </div>
 
+        <!-- 3. Alle Projekte (Übersicht) -->
+        <div class="menu-row">
+            <span class="bracket">[</span><span class="menu-links"><a href="#/grid" class="all-books-trigger">alle projekte</a></span><span class="bracket">]</span>
+        </div>
+    </div>
+</div>
         <!-- Lade-Bildschirm (Während die Bilder geladen werden) -->
         <div id="loading">
             <!-- NEU: menu-wrapper sorgt hier für exakt bündige Klammern! -->
