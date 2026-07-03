@@ -55,7 +55,7 @@ const CONFIG = {
         },
         'es': { 
             titles: ["mis proyectos", "echa un vistazo", "portafolio de arquitectura", "daniroesch.de"], 
-            allBooks: "todos os projetos", 
+            allBooks: "todos los proyectos", 
             backToStart: "volver al inicio", 
             nextProject: "siguiente proyecto", 
             close: "x", 
@@ -63,7 +63,7 @@ const CONFIG = {
             loading: "cargando . . .", 
             notAvailable: "proyecto aún no disponible en este idioma",
             
-            seoDesc: "Proyectos de arquitectura digital y portafolio de diseño von Daniel Rösch. Explora mi trabajo y conceptos.", 
+            seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabajo y conceptos.", 
             seoH1: "Portafolio de Arquitectura de Daniel Rösch", 
             seoIntro: "Bienvenido al portafolio digital de Daniel Rösch. Aquí puedes encontrar mis proyectos:", 
             seoContact: "Contáctame en arch.daniroesch@gmail.com para consultas."
@@ -253,18 +253,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let lastWinW = window.innerWidth;
 
-    // Erweitert: Rigider Nullpunkt-Reset für Scrollpositionen
+    // 🔥 DIE NEUE, STARKE REPARATUR: Der temporäre Viewport-Lock
     function forceRepaintAndCenter() {
+        // 1. Position zurücksetzen
         window.scrollTo(0, 0); 
         document.body.scrollTop = 0; document.body.scrollLeft = 0;
         document.documentElement.scrollTop = 0; document.documentElement.scrollLeft = 0;
+
+        // 2. Den Viewport kurz in Handschellen legen (verhindert den Handy-Auto-Zoom)
+        const viewport = document.querySelector('meta[name="viewport"]');
+        if (viewport) {
+            viewport.content = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no';
+            
+            // 3. Nach der Drehung das normale Zoomen wieder erlauben!
+            setTimeout(() => { 
+                viewport.content = 'width=device-width, initial-scale=1.0'; 
+            }, 600); // 600ms reicht für jede Handy-Drehanimation völlig aus
+        }
     }
 
     window.addEventListener('resize', () => {
         const currentW = window.innerWidth;
         if (currentW !== lastWinW) {
             lastWinW = currentW; 
-            forceRepaintAndCenter(); // Schutz gegen horizontales Verschieben
+            forceRepaintAndCenter(); 
             if(bookWrapper) bookWrapper.style.opacity = '0';
             updateBookSize();
             if (pageFlip) pageFlip.update();
@@ -274,17 +286,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('orientationchange', () => {
         if(bookWrapper) bookWrapper.style.opacity = '0';
-        forceRepaintAndCenter(); // Sofortiger Reset vor der Drehung
+        forceRepaintAndCenter(); 
         
         setTimeout(() => {
             lastWinW = window.innerWidth; 
             updateBookSize();
             if (pageFlip) pageFlip.update();
-            
-            forceRepaintAndCenter(); // Zweiter, finaler Reset NACH der Drehung!
-            
+            forceRepaintAndCenter(); 
             setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
-        }, 320); // Auf 320ms erhöht, um dem Handy genug Zeit zum Ausrichten zu geben
+        }, 300); 
     });
 
     function updateHeading() {
@@ -753,7 +763,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('close-legal').onclick = (e) => { 
         e.preventDefault(); 
         const page = pageFlip ? pageFlip.getCurrentPageIndex() + 1 : 1;
-        window.location.hash = `/${currentBook}/${currentLang}/1`; // Springt sicher zum Deckel bei Legal-Schließen
+        window.location.hash = `/${currentBook}/${currentLang}/1`; 
     };
     document.getElementById('back-to-book-btn').onclick = (e) => { 
         e.preventDefault(); 
