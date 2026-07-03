@@ -133,6 +133,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let zoomCooldown = false; let zoomTimeout;
     function protectZoom(e) {
+        // 🔥 NEU: Der VIP-Ausweis für das 3D-Modell.
+        // Wenn der Touch auf dem model-viewer landet, lassen wir ihn IMMER durch,
+        // damit du das Modell im gezoomten Zustand drehen kannst!
+        if (e.composedPath && e.composedPath().some(el => el.tagName && el.tagName.toUpperCase() === 'MODEL-VIEWER')) {
+            return; 
+        }
+
         const isMultiTouch = e.touches && e.touches.length > 1;
         if (isMultiTouch || isZoomed()) {
             zoomCooldown = true; clearTimeout(zoomTimeout); e.stopPropagation(); 
@@ -144,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Wächter ist weiterhin im "capture" Modus aktiv
     window.addEventListener('touchstart', protectZoom, { capture: true, passive: true });
     window.addEventListener('touchmove', protectZoom, { capture: true, passive: true });
     window.addEventListener('touchend', protectZoom, { capture: true, passive: true });
@@ -230,40 +238,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    let lockedW = window.innerWidth;
-    let lockedH = window.innerHeight;
-    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-
     function updateBookSize() {
-        lockedW = window.innerWidth;
-        lockedH = window.innerHeight;
+        const w = window.innerWidth; 
+        const h = window.innerHeight;
 
+        // 🔥 NEU: Verhindert sanft das "Font-Boosting" auf Android, ohne das Layout einzusperren!
         document.documentElement.style.webkitTextSizeAdjust = '100%';
         document.body.style.webkitTextSizeAdjust = '100%';
         document.documentElement.style.textSizeAdjust = '100%';
         document.body.style.textSizeAdjust = '100%';
 
-        document.body.style.width = lockedW + 'px';
-        document.body.style.height = lockedH + 'px';
-        document.body.style.overflow = 'hidden';
-        document.body.style.overscrollBehavior = 'none';
-
-        if (bookView) {
-            bookView.style.width = lockedW + 'px';
-            bookView.style.height = lockedH + 'px';
-            bookView.style.overflow = 'hidden';
-            bookView.style.position = ''; 
-        }
-
         const bookAspectRatio = (currentImgW * 2) / currentImgH;
-        const windowRatio = lockedW / lockedH;
+        const windowRatio = w / h;
         
         let finalWidth, finalHeight;
         if (bookAspectRatio > windowRatio) {
-            finalWidth = lockedW; finalHeight = lockedW / bookAspectRatio;
+            finalWidth = w; finalHeight = w / bookAspectRatio;
             document.body.classList.add('fit-width'); document.body.classList.remove('fit-height');
         } else {
-            finalHeight = lockedH; finalWidth = lockedH * bookAspectRatio;
+            finalHeight = h; finalWidth = h * bookAspectRatio;
             document.body.classList.add('fit-height'); document.body.classList.remove('fit-width');
         }
         
@@ -277,36 +270,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    let resizeTimer;
+    let lastWinW = window.innerWidth;
+
+    // 🔥 ZURÜCKGESETZT: Das "temporäre Korsett" für sauberes Handy-Drehen
+    function applyOrientationLock() {
+        window.scrollTo(0, 0); 
+        document.body.scrollTop = 0; document.body.scrollLeft = 0;
+        document.documentElement.scrollTop = 0; document.documentElement.scrollLeft = 0;
+
+        const viewport = document.querySelector('meta[name="viewport"]');
+        if (viewport) {
+            viewport.content = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no';
+            
+            setTimeout(() => { 
+                viewport.content = 'width=device-width, initial-scale=1.0'; 
+            }, 600); 
+        }
+    }
+
+    // 🔥 ZURÜCKGESETZT: Der Toleranz-Filter (ignoriert kleines Wisch-Zucken der Adressleiste)
     window.addEventListener('resize', () => {
         const currentW = window.innerWidth;
-        
-        if (isTouchDevice) {
-            if (Math.abs(currentW - lockedW) < 50) return; 
-        } else {
-            if (currentW === lockedW) return;
-        }
-
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
+        if (Math.abs(currentW - lastWinW) > 20) {
+            lastWinW = currentW; 
             window.scrollTo(0, 0); 
             if(bookWrapper) bookWrapper.style.opacity = '0';
             updateBookSize();
             if (pageFlip) pageFlip.update();
             setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
-        }, 300);
+        }
     });
 
     window.addEventListener('orientationchange', () => {
-        clearTimeout(resizeTimer);
         if(bookWrapper) bookWrapper.style.opacity = '0';
+        applyOrientationLock(); 
         
         setTimeout(() => {
-            window.scrollTo(0, 0); 
+            lastWinW = window.innerWidth; 
             updateBookSize();
             if (pageFlip) pageFlip.update();
+            applyOrientationLock(); 
             setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
-        }, 400); 
+        }, 300); 
     });
 
     function updateHeading() {
@@ -463,10 +468,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const triggerDiv = document.createElement('div');
                 triggerDiv.className = 'threedee-trigger';
                 
-                // Kein genereller Pointer mehr. Der Klickbereich wird durch die innere Hitbox bestimmt.
                 triggerDiv.style.cssText = 'width: 100%; height: 100%; display: block; position: relative; background-color: #ffffff !important; color-scheme: light !important;';
                 
-                // 🔥 NEU: Die unsichtbare "Hitbox" in der Mitte (Sperrt 20% Rand zum Blättern aus)
+                // Hitbox in der Mitte (20% Rand links und rechts bleiben frei zum Blättern)
                 const originalHtml = `
                     <img src="${folder}${file}" alt="Daniel Rösch 3D Vorschau" style="width: 100%; height: 100%; object-fit: cover;">
                     <div class="activation-hitbox" style="position: absolute; top: 10%; left: 20%; width: 60%; height: 80%; z-index: 10; cursor: pointer;"></div>
@@ -475,7 +479,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 triggerDiv.dataset.originalHtml = originalHtml; 
 
                 const blockFlip = (e) => {
-                    // Blockiert das Buch-Umblättern NUR, wenn man auf die unsichtbare Hitbox klickt!
                     if (!triggerDiv.classList.contains('model-active')) {
                         if (e.target.classList.contains('activation-hitbox')) {
                             e.stopPropagation();
@@ -487,7 +490,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 triggerDiv.addEventListener('click', (e) => {
                     if (!triggerDiv.classList.contains('model-active')) {
-                        // Das 3D Modell startet NUR, wenn der Klick auf der Hitbox gelandet ist
                         if (e.target.classList.contains('activation-hitbox')) {
                             triggerDiv.classList.add('model-active');
 
