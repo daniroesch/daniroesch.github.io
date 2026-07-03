@@ -10,6 +10,145 @@
     <meta name="description" content="Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch. Entdecken Sie meine Arbeiten, Entwürfe und Konzepte.">
     <meta name="author" content="Daniel Rösch">
     
+    <!-- 🔥 NEU: Favicon (Browser-Tab Logo) -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
+    
+    <!-- Open Graph / Social Media Preview -->
+    <meta property="og:title" content="Daniel Rösch | Architektur Portfolio">
+    <meta property="og:description" content="Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch.">
+    <meta property="og:image" content="https://daniroesch.de/hero/social-preview.jpg">
+    <meta property="og:url" content="https://daniroesch.de">
+    
+    <!-- CSS & PageFlip Plugin -->
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
+    
+    <!-- Googles 3D Model Viewer für das Buch -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+</head>
+<body>
+    
+    <!-- ======================================================================= -->
+    <!-- 1. DIE BUCH-ANSICHT (HAUPTSCREEN)                                       -->
+    <!-- ======================================================================= -->
+    <div id="book-view">
+        
+        <!-- Fliegende UI Buttons (Home & Vollbild) -->
+        <div id="ui-layer">
+            <a href="#" id="home-btn" class="ui-btn"></a>
+            <a href="#" id="fullscreen-btn" class="ui-btn">[&nbsp;&nbsp;&nbsp;]</a>
+        </div>
+
+        <!-- Das 3D Buch -->
+        <div id="flip-book-container" class="flip-book-container">
+            <div id="book"></div>
+        </div>
+        
+        <!-- Der Lade-Screen -->
+        <div id="loading" style="display: none;"></div>
+
+        <!-- Layer für die Menüs (Start & Ende) -->
+        <div id="menu-positioner">
+            
+            <!-- START-MENÜ (Auf dem Buchdeckel) -->
+            <div id="start-menu" class="static-menu">
+                <div class="menu-wrapper">
+                    <h1 id="main-heading">meine projekte</h1>
+                    
+                    <!-- Sprachen -->
+                    <div class="menu-row">
+                        <span class="bracket">[</span>
+                        <span class="menu-links">
+                            <a href="#" data-lang="de">de</a> |
+                            <a href="#" data-lang="en">en</a> |
+                            <a href="#" data-lang="es">es</a> |
+                            <a href="#" data-lang="pt">pt</a>
+                        </span>
+                        <span class="bracket">]</span>
+                    </div>
+                    
+                    <!-- Alle Projekte (Grid-Link) -->
+                    <div class="menu-row">
+                        <span class="bracket">[</span>
+                        <span class="menu-links">
+                            <a href="#/grid" class="all-books-trigger">alle projekte</a>
+                        </span>
+                        <span class="bracket">]</span>
+                    </div>
+                    
+                    <!-- Legal / Kontakt -->
+                    <div class="legal-links">
+                        <a href="#" id="link-email"></a>
+                        <a href="#/legal" id="link-legal">impressum & datenschutz</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- END-MENÜ (Auf der letzten Seite) -->
+            <div id="end-of-book-menu">
+                <div class="menu-wrapper">
+                    <!-- 1. Zurück zum Anfang -->
+                    <div class="menu-row">
+                        <span class="bracket">[</span><span class="menu-links"><a href="#" id="back-to-start-btn">zurück zum anfang</a></span><span class="bracket">]</span>
+                    </div>
+                    
+                    <!-- 2. Nächstes Projekt (in der Mitte) -->
+                    <div class="menu-row">
+                        <span class="bracket">[</span><span class="menu-links"><a href="#" id="next-project-btn">nächstes projekt</a></span><span class="bracket">]</span>
+                    </div>
+
+                    <!-- 3. Alle Projekte Übersicht -->
+                    <div class="menu-row">
+                        <span class="bracket">[</span><span class="menu-links"><a href="#/grid" class="all-books-trigger">alle projekte</a></span><span class="bracket">]</span>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- 2. DIE GRID-ANSICHT (ALLE PROJEKTE ÜBERSICHT)                           -->
+    <!-- ======================================================================= -->
+    <div id="grid-view" style="display: none;">
+        <div class="grid-header">
+            <h2 id="grid-heading">alle projekte</h2>
+            <a href="#" id="back-to-book-btn">x</a>
+        </div>
+        <div class="grid-container">
+            <!-- Wird von JavaScript befüllt -->
+        </div>
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- 3. DIE IMPRESSUM / DATENSCHUTZ - ANSICHT                                -->
+    <!-- ======================================================================= -->
+    <div id="legal-view" style="display: none;">
+        <div class="grid-header">
+            <h2>impressum & datenschutz</h2>
+            <a href="#" id="close-legal">x</a>
+        </div>
+        <div class="legal-content">
+            <img src="imp.webp" alt="Impressum und Datenschutz von Daniel Rösch" class="legal-image">
+        </div>
+    </div>
+
+    <!-- Dein Custom JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html><!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    
+    <!-- Wichtig: Die Zoom-Sperre bleibt draußen, damit man zoomen kann -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Daniel Rösch | Architektur Portfolio</title>
+    <meta name="description" content="Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch. Entdecken Sie meine Arbeiten, Entwürfe und Konzepte.">
+    <meta name="author" content="Daniel Rösch">
+    
     <!-- Open Graph / Social Media Preview -->
     <meta property="og:title" content="Daniel Rösch | Architektur Portfolio">
     <meta property="og:description" content="Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch.">
