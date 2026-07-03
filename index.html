@@ -2,46 +2,58 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     
-    <!-- ========================================================================================== -->
-    <!-- 🛑 1. DEIN HTML-KONTROLLZENTRUM (SOCIAL MEDIA VORSCHAU & GRUND-SEO) 🛑                     -->
-    <!-- ========================================================================================== -->
-    <title>Daniel Rösch | Architektur Portfolio & Projekte</title>
-    <meta name="description" content="Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch. Entdecken Sie meine Arbeiten, Entwürfe und Konzepte in einem interaktiven Format.">
-    <link rel="icon" type="image/png" href="hero/favicon.png">
-
-    <!-- Open Graph (og:) Daten für WhatsApp, LinkedIn & Co. -->
-    <meta property="og:title" content="Daniel Rösch | Architecture Portfolio">
-    <meta property="og:description" content="Digital architecture projects and design portfolio by Daniel Rösch. Discover my interactive project presentations.">
-    <meta property="og:image" content="https://daniroesch.github.io/hero/social-preview.jpg">
-    <meta property="og:url" content="https://daniroesch.github.io">
-    <meta property="og:type" content="website">
-
+    <!-- Wichtig für das Blockieren des mobilen Adressleisten-Zuckens -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>Daniel Rösch | Architektur Portfolio</title>
+    <meta name="description" content="Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch. Entdecken Sie meine Arbeiten, Entwürfe und Konzepte.">
+    <meta name="author" content="Daniel Rösch">
+    
+    <!-- Open Graph / Social Media Preview (bereits auf neue Domain angepasst) -->
+    <meta property="og:title" content="Daniel Rösch | Architektur Portfolio">
+    <meta property="og:description" content="Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch.">
+    <meta property="og:image" content="https://daniroesch.de/hero/social-preview.jpg">
+    <meta property="og:url" content="https://daniroesch.de">
+    
+    <!-- CSS & PageFlip Plugin -->
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
 </head>
 <body>
-
-    <!-- ========================================================================================== -->
-    <!-- ⚙️ 2. SYSTEM-STRUKTUR (MASCHINENRAUM) ⚙️                                                  -->
-    <!-- ========================================================================================== -->
-
-    <main id="book-view">
+    
+    <!-- ======================================================================= -->
+    <!-- 1. DIE BUCH-ANSICHT (HAUPTSCREEN)                                       -->
+    <!-- ======================================================================= -->
+    <div id="book-view">
+        
+        <!-- Fliegende UI Buttons (Home & Vollbild) -->
         <div id="ui-layer">
-            <a href="#" id="home-btn" class="ui-btn"><span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span></a>
-            <a href="#" id="fullscreen-btn" class="ui-btn">[&nbsp;&nbsp;&nbsp;]</a>
+            <a href="#" id="home-btn" class="ui-btn"></a>
+            <a href="#" id="fullscreen-btn" class="ui-btn">[ ]</a>
         </div>
 
+        <!-- Das 3D Buch -->
+        <div id="flip-book-container" class="flip-book-container">
+            <div id="book"></div>
+        </div>
+        
+        <!-- Der Lade-Screen -->
+        <div id="loading" style="display: none;"></div>
+
+        <!-- Layer für die Menüs (Start & Ende) -->
         <div id="menu-positioner">
-            <nav class="static-menu" id="start-menu">
+            
+            <!-- START-MENÜ (Auf dem Buchdeckel) -->
+            <div id="start-menu" class="static-menu">
                 <div class="menu-wrapper">
-                    <h1 id="main-heading" class="cycle-title">meine projekte</h1>
+                    <h1 id="main-heading">meine projekte</h1>
                     <div class="menu-row">
                         <span class="bracket">[</span>
                         <span class="menu-links">
-                            <a href="#" data-lang="de" class="active">de</a> | 
-                            <a href="#" data-lang="en">en</a> | 
-                            <a href="#" data-lang="es">es</a> | 
+                            <a href="#" data-lang="de">de</a> .
+                            <a href="#" data-lang="en">en</a> .
+                            <a href="#" data-lang="es">es</a> .
                             <a href="#" data-lang="pt">pt</a>
                         </span>
                         <span class="bracket">]</span>
@@ -49,69 +61,68 @@
                     <div class="menu-row">
                         <span class="bracket">[</span>
                         <span class="menu-links">
-                            <a href="#" class="all-books-trigger">alle projekte</a>
+                            <a href="#/grid" class="all-books-trigger">alle projekte</a>
                         </span>
                         <span class="bracket">]</span>
                     </div>
                     <div class="legal-links">
-                        <a href="#" id="link-email">wird per JS geladen</a>
-                        <a href="#" id="link-legal">impressum & datenschutz</a>
+                        <a href="#/legal" id="link-legal">impressum</a>
+                        <a href="#" id="link-email"></a>
                     </div>
                 </div>
-            </nav>
+            </div>
+            
+            <!-- END-MENÜ (Auf der letzten Seite) -->
+            <div id="end-of-book-menu">
+                <div class="menu-wrapper">
+                    <!-- 1. Zurück zum Anfang -->
+                    <div class="menu-row">
+                        <span class="bracket">[</span><span class="menu-links"><a href="#" id="back-to-start-btn">zurück zum anfang</a></span><span class="bracket">]</span>
+                    </div>
+                    
+                    <!-- 2. Nächstes Projekt -->
+                    <div class="menu-row">
+                        <span class="bracket">[</span><span class="menu-links"><a href="#" id="next-project-btn">nächstes projekt</a></span><span class="bracket">]</span>
+                    </div>
 
-           <div id="end-of-book-menu">
-    <div class="menu-wrapper">
-        <!-- 1. Zurück zum Anfang -->
-        <div class="menu-row">
-            <span class="bracket">[</span><span class="menu-links"><a href="#" id="back-to-start-btn">zurück zum anfang</a></span><span class="bracket">]</span>
-        </div>
-        
-        <!-- NEU: 2. Nächstes Projekt (in der Mitte) -->
-        <div class="menu-row">
-            <span class="bracket">[</span><span class="menu-links"><a href="#" id="next-project-btn">nächstes projekt</a></span><span class="bracket">]</span>
-        </div>
-
-        <!-- 3. Alle Projekte (Übersicht) -->
-        <div class="menu-row">
-            <span class="bracket">[</span><span class="menu-links"><a href="#/grid" class="all-books-trigger">alle projekte</a></span><span class="bracket">]</span>
-        </div>
-    </div>
-</div>
-        <!-- Lade-Bildschirm (Während die Bilder geladen werden) -->
-        <div id="loading">
-            <!-- NEU: menu-wrapper sorgt hier für exakt bündige Klammern! -->
-            <div class="menu-wrapper">
-                <div class="menu-row">
-                    <span class="bracket">[</span>
-                    <span class="menu-links" id="loading-text">projekt wird geladen...</span>
-                    <span class="bracket">]</span>
+                    <!-- 3. Alle Projekte Übersicht -->
+                    <div class="menu-row">
+                        <span class="bracket">[</span><span class="menu-links"><a href="#/grid" class="all-books-trigger">alle projekte</a></span><span class="bracket">]</span>
+                    </div>
                 </div>
             </div>
+            
         </div>
-        
-        <div class="flip-book-container" id="flip-book-container"></div>
-    </main>
+    </div>
 
-    <section id="grid-view" style="display: none;">
-        <header class="grid-header">
+    <!-- ======================================================================= -->
+    <!-- 2. DIE GRID-ANSICHT (ALLE PROJEKTE ÜBERSICHT)                           -->
+    <!-- ======================================================================= -->
+    <div id="grid-view" style="display: none;">
+        <div class="grid-header">
             <h2 id="grid-heading">alle projekte</h2>
             <a href="#" id="back-to-book-btn">x</a>
-        </header>
-        <div class="grid-container"></div>
-    </section>
-
-    <section id="legal-view" style="display: none;">
-        <header class="grid-header">
-            <h2 id="legal-heading">impressum & datenschutz</h2>
-            <a href="#" id="close-legal">x</a>
-        </header>
-        <div class="legal-content">
-            <img src="hero/imp.webp" alt="impressum & datenschutz" class="legal-image">
         </div>
-    </section>
+        <div class="grid-container">
+            <!-- Wird von JavaScript befüllt -->
+        </div>
+    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.min.js"></script>
+    <!-- ======================================================================= -->
+    <!-- 3. DIE IMPRESSUM / CV - ANSICHT                                         -->
+    <!-- ======================================================================= -->
+    <div id="legal-view" style="display: none;">
+        <div class="grid-header">
+            <h2>impressum / cv</h2>
+            <a href="#" id="close-legal">x</a>
+        </div>
+        <div class="legal-content">
+            <!-- Das Bild für dein Impressum (Dateiname muss legal.jpg sein) -->
+            <img src="hero/legal.jpg" alt="Impressum und Lebenslauf von Daniel Rösch" class="legal-image">
+        </div>
+    </div>
+
+    <!-- Dein Custom JavaScript -->
     <script src="script.js"></script>
 </body>
 </html>
