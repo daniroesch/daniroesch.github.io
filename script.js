@@ -98,6 +98,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.style.textSizeAdjust = '100%';
     document.body.style.textSizeAdjust = '100%';
 
+    // 🔥 NEU: Der Schutzschild, der das Buch einfriert, solange ein 3D Modell offen ist!
+    let is3DModelActive = false;
+
     const emailLinkElem = document.getElementById('link-email');
     if (emailLinkElem) {
         emailLinkElem.href = `mailto:${CONFIG.email}`;
@@ -282,29 +285,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔥 HIER WAR DER FEHLER: Die fehlende Variable lastWinH ist jetzt sicher definiert!
+    // 🔥 DIE GEREINIGTE RESIZE LOGIK (NUR BREITE!)
     let lastWinW = window.innerWidth;
-    let lastWinH = window.innerHeight;
     let resizeTimer;
     const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
     window.addEventListener('resize', () => {
+        // 🔥 WENN EIN 3D MODELL OFFEN IST: Buch-Aktualisierung KOMPLETT ignorieren! 
+        // Dies verhindert, dass der Vollbild-Modus das 3D-Modell zerstört.
+        if (is3DModelActive) return;
+
         const currentW = window.innerWidth;
-        const currentH = window.innerHeight;
         
         if (isTouchDevice) {
-            // Ignoriert Wackeln kleiner als 60 Pixel (verhindert das Tablet-Flackern durch die Adressleiste)
-            if (Math.abs(currentW - lastWinW) < 60 && Math.abs(currentH - lastWinH) < 60) {
+            // 🔥 WICHTIG: Ignoriert reine Höhen-Änderungen (Adressleiste) völlig! 
+            // Reagiert nur, wenn sich die Breite stark ändert (Drehung).
+            if (Math.abs(currentW - lastWinW) < 50) {
                 return; 
             }
         } else {
+            // Auf dem PC reagieren wir ebenfalls nur auf Breitenänderungen
             if (currentW === lastWinW) return;
         }
 
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
             lastWinW = window.innerWidth; 
-            lastWinH = window.innerHeight; 
             
             window.scrollTo(0, 0); 
             if(bookWrapper) bookWrapper.style.opacity = '0';
@@ -315,13 +321,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('orientationchange', () => {
+        if (is3DModelActive) return; // Wenn 3D offen ist, das Buch dahinter ruhen lassen
+
         clearTimeout(resizeTimer);
         if(bookWrapper) bookWrapper.style.opacity = '0';
         applyOrientationLock(); 
         
         setTimeout(() => {
             lastWinW = window.innerWidth; 
-            lastWinH = window.innerHeight; 
             updateBookSize();
             if (pageFlip) pageFlip.update();
             applyOrientationLock(); 
@@ -507,6 +514,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!triggerDiv.classList.contains('model-active')) {
                         if (e.target.classList.contains('activation-hitbox')) {
                             triggerDiv.classList.add('model-active');
+                            
+                            // 🔥 Flag setzen: Das 3D Modell ist jetzt aktiv!
+                            is3DModelActive = true; 
 
                             triggerDiv.innerHTML = `
                                 <a href="#" class="close-3d-btn ui-btn" style="position: absolute !important; top: 4% !important; bottom: auto !important; ${horizPos} z-index: 100 !important; min-width: 50px !important; height: 50px !important; display: flex !important; justify-content: center !important; align-items: center !important; text-decoration: none !important; opacity: 1 !important; pointer-events: auto !important; margin: 0 !important; padding: 0 !important; transform: none !important; background: none !important; border: none !important;">
@@ -553,6 +563,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 } else {
                                     triggerDiv.innerHTML = triggerDiv.dataset.originalHtml;
                                     triggerDiv.classList.remove('model-active');
+                                    
+                                    // 🔥 Flag entfernen und Buch neu synchronisieren
+                                    is3DModelActive = false;
+                                    window.dispatchEvent(new Event('resize')); 
                                 }
                             });
 
@@ -664,6 +678,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     el.classList.remove('model-active');
                 }
             });
+            // 🔥 Wenn umgeblättert wird, setzen wir das 3D Flag sicherheitshalber auch auf false
+            is3DModelActive = false;
 
             if (targetPage === 0 || targetPage >= totalPages - 2) {
                 if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
