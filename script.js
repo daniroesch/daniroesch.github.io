@@ -98,7 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
         emailLinkElem.innerText = CONFIG.email;
     }
 
-    // Höhere Toleranz (1.1), damit ein kurzes Wisch-Zucken nicht direkt blockiert
     function isZoomed() {
         return window.visualViewport && window.visualViewport.scale > 1.1;
     }
@@ -231,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔥 DIE NEUE "ABSOLUTE PIXEL SPERRE"
+    // 🔥 DIE PERFEKTE LÖSUNG GEGEN FONT-BOOSTING UND VERSCHIEBUNGEN
     let lockedW = window.innerWidth;
     let lockedH = window.innerHeight;
     const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
@@ -240,20 +239,24 @@ document.addEventListener('DOMContentLoaded', () => {
         lockedW = window.innerWidth;
         lockedH = window.innerHeight;
 
-        // Wir betonieren den Körper der Website exakt auf die Pixel des Displays.
-        // Das verhindert Skalierung durch die Adressleiste, erlaubt aber Pinch-to-Zoom!
+        // 1. Verhindert das automatische, riesige Skalieren von Text (Font Boosting) auf Handys
+        document.documentElement.style.webkitTextSizeAdjust = '100%';
+        document.body.style.webkitTextSizeAdjust = '100%';
+        document.documentElement.style.textSizeAdjust = '100%';
+        document.body.style.textSizeAdjust = '100%';
+
+        // 2. Wir frieren die Maße ein, damit die Adressleiste nicht stört
         document.body.style.width = lockedW + 'px';
         document.body.style.height = lockedH + 'px';
         document.body.style.overflow = 'hidden';
-        document.body.style.overscrollBehavior = 'none'; // Stoppt Wisch-Aktualisierungen auf dem Handy
+        document.body.style.overscrollBehavior = 'none';
 
+        // 3. WICHTIG: position: absolute wurde hier GESTRICHEN! Dein CSS zentriert wieder perfekt.
         if (bookView) {
             bookView.style.width = lockedW + 'px';
             bookView.style.height = lockedH + 'px';
-            bookView.style.position = 'absolute';
-            bookView.style.top = '0';
-            bookView.style.left = '0';
             bookView.style.overflow = 'hidden';
+            bookView.style.position = ''; // Stellt sicher, dass CSS Flexbox greift
         }
 
         const bookAspectRatio = (currentImgW * 2) / currentImgH;
@@ -262,9 +265,14 @@ document.addEventListener('DOMContentLoaded', () => {
         let finalWidth, finalHeight;
         if (bookAspectRatio > windowRatio) {
             finalWidth = lockedW; finalHeight = lockedW / bookAspectRatio;
+            document.body.classList.add('fit-width'); document.body.classList.remove('fit-height');
         } else {
             finalHeight = lockedH; finalWidth = lockedH * bookAspectRatio;
+            document.body.classList.add('fit-height'); document.body.classList.remove('fit-width');
         }
+        
+        document.body.style.setProperty('--real-book-width', finalWidth + 'px');
+        document.body.style.setProperty('--real-book-height', finalHeight + 'px');
         
         const bookContainer = document.getElementById('book');
         if (bookContainer) {
@@ -273,20 +281,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔥 DER TABLET-ENTPRELLER (Debouncing)
     let resizeTimer;
     window.addEventListener('resize', () => {
         const currentW = window.innerWidth;
         
         if (isTouchDevice) {
-            // Auf Handys/Tablets interessieren uns nur echte Drehungen (> 50px Unterschied)
+            // Ignoriert Wisch-Zucken, reagiert nur auf echte Drehungen (>50px)
             if (Math.abs(currentW - lockedW) < 50) return; 
         } else {
-            // Auf dem PC ignorieren wir reine Höhenänderungen
             if (currentW === lockedW) return;
         }
 
-        // Wir warten 300ms. Das blockiert das wilde Resize-Dauerfeuer des Tablets beim Laden!
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
             window.scrollTo(0, 0); 
@@ -517,7 +522,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         attachEventBlockers(closeBtn);
                         attachEventBlockers(fsBtn);
 
-                        // X-Button: Schließt Vollbild ODER Modell
                         closeBtn.addEventListener('click', (evt) => {
                             killEvent(evt);
                             const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
@@ -532,7 +536,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         });
 
-                        // Vollbild aktivieren/deaktivieren
                         fsBtn.addEventListener('click', (evt) => {
                             killEvent(evt);
                             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
@@ -634,7 +637,6 @@ document.addEventListener('DOMContentLoaded', () => {
             isInternalHashUpdate = true;
             window.location.hash = `/${currentBook}/${currentLang}/${targetPage + 1}`;
 
-            // Schließe alle offenen 3D-Modelle automatisch beim Umblättern
             document.querySelectorAll('.threedee-trigger.model-active').forEach(el => {
                 if(el.dataset.originalHtml) {
                     el.innerHTML = el.dataset.originalHtml;
