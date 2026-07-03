@@ -5,7 +5,6 @@
 const CONFIG = {
     // 📁 DEINE PROJEKTE (BÜCHER)
     books: [
-        'Portfolio-MA',
         'book_1', 
         'book_2',
         'book_3',
@@ -56,7 +55,7 @@ const CONFIG = {
         },
         'es': { 
             titles: ["mis proyectos", "echa un vistazo", "portafolio de arquitectura", "daniroesch.de"], 
-            allBooks: "todos los proyectos", 
+            allBooks: "todos os projetos", 
             backToStart: "volver al inicio", 
             nextProject: "siguiente proyecto", 
             close: "x", 
@@ -64,7 +63,7 @@ const CONFIG = {
             loading: "cargando . . .", 
             notAvailable: "proyecto aún no disponible en este idioma",
             
-            seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabajo y conceptos.", 
+            seoDesc: "Proyectos de arquitectura digital y portafolio de diseño von Daniel Rösch. Explora mi trabajo y conceptos.", 
             seoH1: "Portafolio de Arquitectura de Daniel Rösch", 
             seoIntro: "Bienvenido al portafolio digital de Daniel Rösch. Aquí puedes encontrar mis proyectos:", 
             seoContact: "Contáctame en arch.daniroesch@gmail.com para consultas."
@@ -254,21 +253,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let lastWinW = window.innerWidth;
 
+    // Erweitert: Rigider Nullpunkt-Reset für Scrollpositionen
     function forceRepaintAndCenter() {
-        window.scrollTo(0, 0); document.body.scrollTop = 0; document.body.scrollLeft = 0;
-        const viewport = document.querySelector('meta[name="viewport"]');
-        if (viewport) {
-            const originalContent = viewport.content;
-            viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0';
-            setTimeout(() => { viewport.content = originalContent; }, 300);
-        }
+        window.scrollTo(0, 0); 
+        document.body.scrollTop = 0; document.body.scrollLeft = 0;
+        document.documentElement.scrollTop = 0; document.documentElement.scrollLeft = 0;
     }
 
     window.addEventListener('resize', () => {
         const currentW = window.innerWidth;
         if (currentW !== lastWinW) {
             lastWinW = currentW; 
-            window.scrollTo(0, 0); 
+            forceRepaintAndCenter(); // Schutz gegen horizontales Verschieben
             if(bookWrapper) bookWrapper.style.opacity = '0';
             updateBookSize();
             if (pageFlip) pageFlip.update();
@@ -278,12 +274,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('orientationchange', () => {
         if(bookWrapper) bookWrapper.style.opacity = '0';
-        forceRepaintAndCenter(); 
+        forceRepaintAndCenter(); // Sofortiger Reset vor der Drehung
+        
         setTimeout(() => {
-            lastWinW = window.innerWidth; updateBookSize();
+            lastWinW = window.innerWidth; 
+            updateBookSize();
             if (pageFlip) pageFlip.update();
+            
+            forceRepaintAndCenter(); // Zweiter, finaler Reset NACH der Drehung!
+            
             setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
-        }, 250); 
+        }, 320); // Auf 320ms erhöht, um dem Handy genug Zeit zum Ausrichten zu geben
     });
 
     function updateHeading() {
@@ -438,7 +439,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 triggerDiv.className = 'threedee-trigger';
                 triggerDiv.style.cssText = 'width: 100%; height: 100%; cursor: pointer; display: block; position: relative;';
                 
-                // Wir speichern das Original-Bild ab, damit wir es später wiederherstellen können
                 const originalHtml = `<img src="${folder}${file}" alt="Daniel Rösch 3D Vorschau" style="width: 100%; height: 100%; object-fit: cover;">`;
                 triggerDiv.innerHTML = originalHtml;
                 triggerDiv.dataset.originalHtml = originalHtml; 
@@ -456,7 +456,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         triggerDiv.classList.add('model-active');
                         triggerDiv.style.cursor = 'default';
 
-                        // 🔥 NEU: Hier fügen wir das X zum Schließen und das Modell ein
                         triggerDiv.innerHTML = `
                             <div class="close-3d-btn" style="position: absolute; top: 15px; right: 15px; width: 36px; height: 36px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.15); font-family: sans-serif; font-size: 18px; color: #000; line-height: 1;">x</div>
                             
@@ -467,10 +466,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             ></model-viewer>
                         `;
 
-                        // 🔥 NEU: Die Logik für den X-Button
                         const closeBtn = triggerDiv.querySelector('.close-3d-btn');
                         closeBtn.addEventListener('click', (evt) => {
-                            evt.stopPropagation(); // Verhindert, dass der Klick direkt wieder das 3D Modell startet
+                            evt.stopPropagation(); 
                             triggerDiv.innerHTML = triggerDiv.dataset.originalHtml;
                             triggerDiv.classList.remove('model-active');
                             triggerDiv.style.cursor = 'pointer';
@@ -566,7 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isInternalHashUpdate = true;
             window.location.hash = `/${currentBook}/${currentLang}/${targetPage + 1}`;
 
-            // 🔥 NEU: Schließe alle offenen 3D-Modelle automatisch beim Umblättern
+            // Schließe alle offenen 3D-Modelle automatisch beim Umblättern
             document.querySelectorAll('.threedee-trigger.model-active').forEach(el => {
                 if(el.dataset.originalHtml) {
                     el.innerHTML = el.dataset.originalHtml;
@@ -755,7 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('close-legal').onclick = (e) => { 
         e.preventDefault(); 
         const page = pageFlip ? pageFlip.getCurrentPageIndex() + 1 : 1;
-        window.location.hash = `/${currentBook}/${currentLang}/${page}`; 
+        window.location.hash = `/${currentBook}/${currentLang}/1`; // Springt sicher zum Deckel bei Legal-Schließen
     };
     document.getElementById('back-to-book-btn').onclick = (e) => { 
         e.preventDefault(); 
