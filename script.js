@@ -5,7 +5,7 @@
 const CONFIG = {
     // 📁 DEINE PROJEKTE (BÜCHER) -> ⚠️ HIER DEINE ECHTEN ORDNERNAMEN EINTRAGEN! ⚠️
     books: [
-        'book_1', // <- Ändern zu deinem echten ersten Projekt
+        'book_1', 
         'book_2',
         'book_3',
         'book_4'
@@ -13,7 +13,7 @@ const CONFIG = {
 
     // 🧊 DEINE 3D MODELLE
     threedee: {
-        'book_1': { // <- Auch hier den echten Namen eintragen!
+        'book_1': { 
             5: '5.glb'
         }
     },
@@ -69,7 +69,7 @@ const CONFIG = {
             seoContact: "Contáctame en arch.daniroesch@gmail.com para consultas."
         },
         'pt': { 
-            titles: ["meus projetos", "dê uma olhada", "portfólio de arquitetura", "daniroesch.de"], 
+            titles: ["meus projetos", "dê uma look", "portfólio de arquitetura", "daniroesch.de"], 
             allBooks: "todos os projetos", 
             backToStart: "voltar ao início", 
             nextProject: "próximo projeto", 
@@ -285,42 +285,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 🔥 DIE URSPRÜNGLICHE, EXAKT FUNKTIONIERENDE RESIZE-LOGIK
+    // (Keine verwirrende Geräte-Erkennung, keine Timer. Einfach pures, ignorantes Verhalten unter 20px)
     let lastWinW = window.innerWidth;
-    let resizeTimer;
-    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
     window.addEventListener('resize', () => {
-        // Wenn 3D offen ist, Buch-Aktualisierung ignorieren (Vollbild-Schutz)
+        // Wenn 3D offen ist, Buch-Aktualisierung komplett ignorieren (Vollbild-Schutz)
         if (is3DModelActive) return;
 
         const currentW = window.innerWidth;
         
-        if (isTouchDevice) {
-            // Tablet-Schutz: Reagiert nur auf Breitenänderung > 50px
-            if (Math.abs(currentW - lastWinW) < 50) {
-                return; 
-            }
-        } else {
-            // Desktop-Schutz: Ignoriert Lesezeichenleiste (Höhenänderung)
-            if (currentW === lastWinW) return;
-        }
-
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-            lastWinW = window.innerWidth; 
-            
+        // Die perfekte Barriere: Egal wer oder was, Änderungen unter 20px (wie Scrollbars/Klicks)
+        // werden abgewiesen.
+        if (Math.abs(currentW - lastWinW) > 20) {
+            lastWinW = currentW; 
             window.scrollTo(0, 0); 
             if(bookWrapper) bookWrapper.style.opacity = '0';
             updateBookSize();
             if (pageFlip) pageFlip.update();
             setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
-        }, 150); // Entpreller (Debouncer) verhindert Dauerfeuer beim Tablet
+        }
     });
 
     window.addEventListener('orientationchange', () => {
-        if (is3DModelActive) return; // Wenn 3D offen ist, das Buch dahinter ruhen lassen
+        if (is3DModelActive) return;
 
-        clearTimeout(resizeTimer);
         if(bookWrapper) bookWrapper.style.opacity = '0';
         applyOrientationLock(); 
         
@@ -330,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pageFlip) pageFlip.update();
             applyOrientationLock(); 
             setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
-        }, 400); 
+        }, 300); 
     });
 
     function updateHeading() {
