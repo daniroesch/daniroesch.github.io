@@ -11,6 +11,14 @@ const CONFIG = {
         'book_4'
     ],
 
+    // 🧊 NEU: DEINE 3D MODELLE
+    // Hier sagst du dem System: "In book_1 lade auf Seite 5 die Datei 5.glb"
+    threedee: {
+        'book_1': {
+            5: '5.glb'
+        }
+    },
+
     // ✉️ DEINE KONTAKTDATEN
     email: 'arch.daniroesch@gmail.com',
 
@@ -23,8 +31,9 @@ const CONFIG = {
             nextProject: "nächstes projekt", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
-            loading: "wird geladen . . .", // <-- WIEDERHERGESTELLT MIT ABSTÄNDEN
+            loading: "wird geladen . . .",
             notAvailable: "projekt noch nicht in dieser sprache verfügbar",
+            load3d: "3d modell laden", // <-- NEUER 3D BUTTON
             
             seoDesc: "Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch. Entdecken Sie meine Arbeiten, Entwürfe und Konzepte.", 
             seoH1: "Architektur Portfolio von Daniel Rösch", 
@@ -38,8 +47,9 @@ const CONFIG = {
             nextProject: "next project", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
-            loading: "loading . . .", // <-- WIEDERHERGESTELLT MIT ABSTÄNDEN
+            loading: "loading . . .", 
             notAvailable: "project not yet available in this language",
+            load3d: "load 3d model", // <-- NEUER 3D BUTTON
             
             seoDesc: "Digital architecture projects and design portfolio of Daniel Rösch. Explore my work and concepts.", 
             seoH1: "Architecture Portfolio by Daniel Rösch", 
@@ -53,8 +63,9 @@ const CONFIG = {
             nextProject: "siguiente proyecto", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
-            loading: "cargando . . .", // <-- WIEDERHERGESTELLT MIT ABSTÄNDEN
+            loading: "cargando . . .", 
             notAvailable: "proyecto aún no disponible en este idioma",
+            load3d: "cargar modelo 3d", // <-- NEUER 3D BUTTON
             
             seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabajo y conceptos.", 
             seoH1: "Portafolio de Arquitectura de Daniel Rösch", 
@@ -68,8 +79,9 @@ const CONFIG = {
             nextProject: "próximo projeto", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
-            loading: "carregando . . .", // <-- WIEDERHERGESTELLT MIT ABSTÄNDEN
+            loading: "carregando . . .", 
             notAvailable: "projeto ainda não disponível neste idioma",
+            load3d: "carregar modelo 3d", // <-- NEUER 3D BUTTON
             
             seoDesc: "Projetos de arquitetura digital e portfólio de design de Daniel Rösch. Explore meu trabalho e conceitos.", 
             seoH1: "Portfólio de Arquitetura de Daniel Rösch", 
@@ -189,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
             "@type": "Person",
             "name": "Daniel Rösch",
             "jobTitle": "Architekt",
-            "url": "https://daniroesch.github.io",
+            "url": "https://daniroesch.de",
             "knowsAbout": ["Architektur", "Design", "Portfolio", "3D Visualisierung"]
         });
 
@@ -285,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const viewport = document.querySelector('meta[name="viewport"]');
         if (viewport) {
             const originalContent = viewport.content;
-            viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+            viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0';
             setTimeout(() => { viewport.content = originalContent; }, 300);
         }
     }
@@ -453,11 +465,51 @@ document.addEventListener('DOMContentLoaded', () => {
     function buildBook(imageUrls, folder, width, height, initialPage = 0) {
         const bookContainer = document.getElementById('book');
         const niceBookName = currentBook.replace(/[-_]/g, ' ');
+        const t = CONFIG.translations[currentLang] || CONFIG.translations['de'];
 
         imageUrls.forEach((file) => {
             const pageDiv = document.createElement('div');
             pageDiv.className = 'page';
-            pageDiv.innerHTML = `<img src="${folder}${file}" alt="Daniel Rösch Architektur Portfolio - ${niceBookName}">`;
+            
+            // NEU: Die 3D-Prüfung! (Sucht nach der Nummer der Seite im Dateinamen)
+            const pageNum = parseInt(file);
+            
+            if (CONFIG.threedee && CONFIG.threedee[currentBook] && CONFIG.threedee[currentBook][pageNum]) {
+                // Hier kommt das 3D Modell rein!
+                const modelFile = CONFIG.threedee[currentBook][pageNum];
+                const posterPath = `${folder}${file}`;
+                
+                pageDiv.innerHTML = `
+                    <model-viewer 
+                        src="${currentBook}/${modelFile}" 
+                        poster="${posterPath}" 
+                        camera-controls 
+                        reveal="interaction" 
+                        interaction-prompt="none"
+                        style="width: 100%; height: 100%; background-color: #fff;"
+                    >
+                        <div slot="poster" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255,255,255,0.9); padding: 12px 24px; border-radius: 30px; font-weight: 600; font-size: clamp(10px, 2vh, 16px); color: #000; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer; text-transform: lowercase; z-index: 10;">
+                            ${t.load3d}
+                        </div>
+                    </model-viewer>
+                `;
+
+                // Wichtig: Blättern verbieten, solange man auf dem 3D Modell wischt!
+                setTimeout(() => {
+                    const mv = pageDiv.querySelector('model-viewer');
+                    if (mv) {
+                        const stopProp = (e) => e.stopPropagation();
+                        ['touchstart', 'touchmove', 'mousedown', 'mousemove', 'pointerdown', 'pointermove'].forEach(evt => {
+                            mv.addEventListener(evt, stopProp, { passive: true });
+                        });
+                    }
+                }, 100);
+
+            } else {
+                // Ganz normales Bild für alle anderen Seiten
+                pageDiv.innerHTML = `<img src="${folder}${file}" alt="Daniel Rösch Architektur Portfolio - ${niceBookName}">`;
+            }
+            
             bookContainer.appendChild(pageDiv);
         });
 
@@ -676,24 +728,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.closest('#back-to-start-btn') || e.target.closest('#home-btn')) {
             e.preventDefault();
             if (pageFlip && !isZoomed()) pageFlip.flip(0);
-        
-        // ====================================================================
-        // 🔥 NEU: Die Logik für den "Nächstes Projekt" Button
-        // ====================================================================
         } else if (e.target.closest('#next-project-btn')) {
             e.preventDefault();
-            
-            // Finde heraus, an welcher Stelle der Liste wir gerade sind
             let currentIndex = CONFIG.books.indexOf(currentBook);
-            
-            // Berechne das nächste Buch. "% CONFIG.books.length" sorgt dafür, 
-            // dass es am Ende der Liste automatisch wieder beim 1. Buch anfängt!
             let nextIndex = (currentIndex + 1) % CONFIG.books.length;
             let nextBook = CONFIG.books[nextIndex];
-            
-            // Befehle dem Browser, das nächste Buch zu laden
             window.location.hash = `/${nextBook}/${currentLang}/1`;
-
         } else if (e.target.closest('.all-books-trigger')) {
             e.preventDefault();
             window.location.hash = `/grid`;
