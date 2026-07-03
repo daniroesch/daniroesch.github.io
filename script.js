@@ -12,7 +12,6 @@ const CONFIG = {
     ],
 
     // 🧊 DEINE 3D MODELLE
-    // Hier sagst du dem System: "In book_1 lade auf Seite 5 die Datei 5.glb"
     threedee: {
         'book_1': {
             5: '5.glb'
@@ -93,14 +92,12 @@ const CONFIG = {
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- A. E-MAIL SETUP ---
     const emailLinkElem = document.getElementById('link-email');
     if (emailLinkElem) {
         emailLinkElem.href = `mailto:${CONFIG.email}`;
         emailLinkElem.innerText = CONFIG.email;
     }
 
-    // --- B. ZOOM & TOUCH WÄCHTER (Mobile Optimierung) ---
     function isZoomed() {
         return window.visualViewport && window.visualViewport.scale > 1.01;
     }
@@ -150,7 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('pointerdown', protectZoom, { capture: true, passive: true });
     window.addEventListener('pointerup', protectZoom, { capture: true, passive: true });
 
-    // --- C. GLOBALE SYSTEM-VARIABLEN ---
     const bookView = document.getElementById('book-view');
     const bookWrapper = document.getElementById('flip-book-container');
     const loadingScreen = document.getElementById('loading');
@@ -177,43 +173,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeGridId = 0; 
     let pendingTargetPage = -1; 
 
-    // --- D. SEO AUTOMATISIERUNG ---
     function updateSEO(lang) {
         const t = CONFIG.translations[lang] || CONFIG.translations['de'];
-        
         document.title = "Daniel Rösch | " + t.titles[2]; 
         let metaDesc = document.querySelector('meta[name="description"]');
         if (metaDesc) metaDesc.content = t.seoDesc;
-
-        let jsonLdScript = document.getElementById('seo-json-ld');
-        if (!jsonLdScript) {
-            jsonLdScript = document.createElement('script');
-            jsonLdScript.id = 'seo-json-ld';
-            jsonLdScript.type = 'application/ld+json';
-            document.head.appendChild(jsonLdScript);
-        }
-        jsonLdScript.textContent = JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Person",
-            "name": "Daniel Rösch",
-            "jobTitle": "Architekt",
-            "url": "https://daniroesch.de",
-            "knowsAbout": ["Architektur", "Design", "Portfolio", "3D Visualisierung"]
-        });
-
-        let srOnlyDiv = document.getElementById('seo-hidden-text');
-        if (!srOnlyDiv) {
-            srOnlyDiv = document.createElement('div');
-            srOnlyDiv.id = 'seo-hidden-text';
-            srOnlyDiv.className = 'sr-only'; 
-            document.body.insertBefore(srOnlyDiv, document.body.firstChild);
-        }
-        
-        let projectListHTML = CONFIG.books.map(book => `<li>${book.replace(/[-_]/g, ' ')}</li>`).join('');
-        srOnlyDiv.innerHTML = `<h1>${t.seoH1}</h1><p>${t.seoIntro}</p><ul>${projectListHTML}</ul><p>${t.seoContact}</p>`;
     }
 
-    // --- E. URL & ROUTING ---
     function getHashParams() {
         const hash = window.location.hash.replace(/^#\/?/, ''); 
         const parts = hash.split('/');
@@ -261,7 +227,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- F. FENSTER-BERECHNUNG & AUSRICHTUNG ---
     function updateBookSize() {
         const w = window.innerWidth; const h = window.innerHeight;
         const bookAspectRatio = (currentImgW * 2) / currentImgH;
@@ -330,7 +295,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateHeading();
     }
 
-    // --- G. BILDER LADEN & GRID AUFBAUEN ---
     async function loadCoverImage(url) {
         return new Promise((resolve) => {
             const img = new Image();
@@ -365,7 +329,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const gridResults = await Promise.all(gridPromises);
         if (myGridId !== activeGridId) return;
 
-        gridContainer.innerHTML = ''; 
         for (const book of gridResults) {
             if (book.exists) {
                 const tile = document.createElement('div');
@@ -378,7 +341,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- H. BUCH AUFBAUEN & BLÄTTER-LOGIK ---
     async function loadBook(bookName, lang, initialPage = 0) {
         const myLoadId = ++activeLoadId;
         currentBook = bookName; currentLang = lang;
@@ -468,19 +430,18 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const pageNum = parseInt(file);
             
-            // 🔥 NEUE, SAUBERE 3D-LOGIK:
             if (CONFIG.threedee && CONFIG.threedee[currentBook] && CONFIG.threedee[currentBook][pageNum]) {
                 const modelFile = CONFIG.threedee[currentBook][pageNum];
                 
-                // Wir bauen einen Container für die Seite
                 const triggerDiv = document.createElement('div');
                 triggerDiv.className = 'threedee-trigger';
-                triggerDiv.style.cssText = 'width: 100%; height: 100%; cursor: pointer; display: block;';
+                triggerDiv.style.cssText = 'width: 100%; height: 100%; cursor: pointer; display: block; position: relative;';
                 
-                // Zuerst laden wir GANZ NORMAL DEIN BILD (5.webp)
-                triggerDiv.innerHTML = `<img src="${folder}${file}" alt="Daniel Rösch 3D Vorschau" style="width: 100%; height: 100%; object-fit: cover;">`;
+                // Wir speichern das Original-Bild ab, damit wir es später wiederherstellen können
+                const originalHtml = `<img src="${folder}${file}" alt="Daniel Rösch 3D Vorschau" style="width: 100%; height: 100%; object-fit: cover;">`;
+                triggerDiv.innerHTML = originalHtml;
+                triggerDiv.dataset.originalHtml = originalHtml; 
 
-                // Wir blockieren die unsichtbare "Wisch-Folie" vom Buch beim allerersten Klick
                 const blockFlip = (e) => {
                     if (!triggerDiv.classList.contains('model-active')) {
                         e.stopPropagation();
@@ -489,14 +450,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 triggerDiv.addEventListener('mousedown', blockFlip);
                 triggerDiv.addEventListener('touchstart', blockFlip, { passive: true });
 
-                // Wenn man auf das Bild klickt, wird es durch das 3D-Modell ausgetauscht!
                 triggerDiv.addEventListener('click', (e) => {
                     if (!triggerDiv.classList.contains('model-active')) {
                         triggerDiv.classList.add('model-active');
                         triggerDiv.style.cursor = 'default';
 
-                        // Bild verschwindet, 3D Modell startet
+                        // 🔥 NEU: Hier fügen wir das X zum Schließen und das Modell ein
                         triggerDiv.innerHTML = `
+                            <div class="close-3d-btn" style="position: absolute; top: 15px; right: 15px; width: 36px; height: 36px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.15); font-family: sans-serif; font-size: 18px; color: #000; line-height: 1;">x</div>
+                            
                             <model-viewer
                                 src="${currentBook}/${modelFile}"
                                 camera-controls
@@ -504,7 +466,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             ></model-viewer>
                         `;
 
-                        // Wichtig: Blättern verbieten, solange man auf dem 3D Modell wischt!
+                        // 🔥 NEU: Die Logik für den X-Button
+                        const closeBtn = triggerDiv.querySelector('.close-3d-btn');
+                        closeBtn.addEventListener('click', (evt) => {
+                            evt.stopPropagation(); // Verhindert, dass der Klick direkt wieder das 3D Modell startet
+                            triggerDiv.innerHTML = triggerDiv.dataset.originalHtml;
+                            triggerDiv.classList.remove('model-active');
+                            triggerDiv.style.cursor = 'pointer';
+                        });
+
                         setTimeout(() => {
                             const mv = triggerDiv.querySelector('model-viewer');
                             if (mv) {
@@ -520,7 +490,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 pageDiv.appendChild(triggerDiv);
 
             } else {
-                // Ganz normales Bild für alle anderen Seiten
                 pageDiv.innerHTML = `<img src="${folder}${file}" alt="Daniel Rösch Architektur Portfolio - ${niceBookName}">`;
             }
             
@@ -595,6 +564,15 @@ document.addEventListener('DOMContentLoaded', () => {
             pendingTargetPage = targetPage;
             isInternalHashUpdate = true;
             window.location.hash = `/${currentBook}/${currentLang}/${targetPage + 1}`;
+
+            // 🔥 NEU: Schließe alle offenen 3D-Modelle automatisch beim Umblättern
+            document.querySelectorAll('.threedee-trigger.model-active').forEach(el => {
+                if(el.dataset.originalHtml) {
+                    el.innerHTML = el.dataset.originalHtml;
+                    el.classList.remove('model-active');
+                    el.style.cursor = 'pointer';
+                }
+            });
 
             if (targetPage === 0 || targetPage >= totalPages - 2) {
                 if(homeBtn) { homeBtn.style.opacity = '0'; homeBtn.style.pointerEvents = 'none'; }
@@ -706,7 +684,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 150);
     }
 
-    // --- I. KLICK- UND TASTEN-EVENTS ---
     mainHeading.addEventListener('click', cycleTitle);
 
     langLinks.forEach(link => {
