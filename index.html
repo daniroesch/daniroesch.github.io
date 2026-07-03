@@ -10,7 +10,7 @@
     <meta name="description" content="Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch. Entdecken Sie meine Arbeiten, Entwürfe und Konzepte.">
     <meta name="author" content="Daniel Rösch">
     
-    <!-- Open Graph / Social Media Preview (bereits auf neue Domain angepasst) -->
+    <!-- Open Graph / Social Media Preview -->
     <meta property="og:title" content="Daniel Rösch | Architektur Portfolio">
     <meta property="og:description" content="Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch.">
     <meta property="og:image" content="https://daniroesch.de/hero/social-preview.jpg">
@@ -30,7 +30,7 @@
         <!-- Fliegende UI Buttons (Home & Vollbild) -->
         <div id="ui-layer">
             <a href="#" id="home-btn" class="ui-btn"></a>
-            <a href="#" id="fullscreen-btn" class="ui-btn">[ ]</a>
+            <a href="#" id="fullscreen-btn" class="ui-btn">[&nbsp;&nbsp;&nbsp;]</a>
         </div>
 
         <!-- Das 3D Buch -->
@@ -48,16 +48,20 @@
             <div id="start-menu" class="static-menu">
                 <div class="menu-wrapper">
                     <h1 id="main-heading">meine projekte</h1>
+                    
+                    <!-- Sprachen -->
                     <div class="menu-row">
                         <span class="bracket">[</span>
                         <span class="menu-links">
-                            <a href="#" data-lang="de">de</a> .
-                            <a href="#" data-lang="en">en</a> .
-                            <a href="#" data-lang="es">es</a> .
+                            <a href="#" data-lang="de">de</a> |
+                            <a href="#" data-lang="en">en</a> |
+                            <a href="#" data-lang="es">es</a> |
                             <a href="#" data-lang="pt">pt</a>
                         </span>
                         <span class="bracket">]</span>
                     </div>
+                    
+                    <!-- Alle Projekte (Grid-Link) -->
                     <div class="menu-row">
                         <span class="bracket">[</span>
                         <span class="menu-links">
@@ -65,9 +69,11 @@
                         </span>
                         <span class="bracket">]</span>
                     </div>
+                    
+                    <!-- Legal / Kontakt -->
                     <div class="legal-links">
-                        <a href="#/legal" id="link-legal">impressum</a>
                         <a href="#" id="link-email"></a>
+                        <a href="#/legal" id="link-legal">impressum & datenschutz</a>
                     </div>
                 </div>
             </div>
@@ -80,7 +86,7 @@
                         <span class="bracket">[</span><span class="menu-links"><a href="#" id="back-to-start-btn">zurück zum anfang</a></span><span class="bracket">]</span>
                     </div>
                     
-                    <!-- 2. Nächstes Projekt -->
+                    <!-- 2. Nächstes Projekt (in der Mitte) -->
                     <div class="menu-row">
                         <span class="bracket">[</span><span class="menu-links"><a href="#" id="next-project-btn">nächstes projekt</a></span><span class="bracket">]</span>
                     </div>
@@ -109,16 +115,15 @@
     </div>
 
     <!-- ======================================================================= -->
-    <!-- 3. DIE IMPRESSUM / CV - ANSICHT                                         -->
+    <!-- 3. DIE IMPRESSUM / DATENSCHUTZ - ANSICHT                                -->
     <!-- ======================================================================= -->
     <div id="legal-view" style="display: none;">
         <div class="grid-header">
-            <h2>impressum / cv</h2>
+            <h2>impressum & datenschutz</h2>
             <a href="#" id="close-legal">x</a>
         </div>
         <div class="legal-content">
-            <!-- Das Bild für dein Impressum (Dateiname muss legal.jpg sein) -->
-            <img src="hero/legal.jpg" alt="Impressum und Lebenslauf von Daniel Rösch" class="legal-image">
+            <img src="hero/legal.jpg" alt="Impressum und Datenschutz von Daniel Rösch" class="legal-image">
         </div>
     </div>
 
