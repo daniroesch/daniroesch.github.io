@@ -98,16 +98,20 @@ document.addEventListener('DOMContentLoaded', () => {
         emailLinkElem.innerText = CONFIG.email;
     }
 
+    // Höhere Toleranz (1.1), damit ein kurzes Wisch-Zucken nicht direkt blockiert
     function isZoomed() {
-        return window.visualViewport && window.visualViewport.scale > 1.01;
+        return window.visualViewport && window.visualViewport.scale > 1.1;
     }
 
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
             const bookWrapper = document.getElementById('flip-book-container');
             if (bookWrapper) {
-                if (isZoomed()) bookWrapper.classList.add('zoomed-state');
-                else bookWrapper.classList.remove('zoomed-state');
+                if (isZoomed() && !bookWrapper.classList.contains('zoomed-state')) {
+                    bookWrapper.classList.add('zoomed-state');
+                } else if (!isZoomed() && bookWrapper.classList.contains('zoomed-state')) {
+                    bookWrapper.classList.remove('zoomed-state');
+                }
             }
         });
     }
@@ -227,22 +231,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 🔥 DIE NEUE "ABSOLUTE PIXEL SPERRE"
+    let lockedW = window.innerWidth;
+    let lockedH = window.innerHeight;
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
     function updateBookSize() {
-        const w = window.innerWidth; const h = window.innerHeight;
+        lockedW = window.innerWidth;
+        lockedH = window.innerHeight;
+
+        // Wir betonieren den Körper der Website exakt auf die Pixel des Displays.
+        // Das verhindert Skalierung durch die Adressleiste, erlaubt aber Pinch-to-Zoom!
+        document.body.style.width = lockedW + 'px';
+        document.body.style.height = lockedH + 'px';
+        document.body.style.overflow = 'hidden';
+        document.body.style.overscrollBehavior = 'none'; // Stoppt Wisch-Aktualisierungen auf dem Handy
+
+        if (bookView) {
+            bookView.style.width = lockedW + 'px';
+            bookView.style.height = lockedH + 'px';
+            bookView.style.position = 'absolute';
+            bookView.style.top = '0';
+            bookView.style.left = '0';
+            bookView.style.overflow = 'hidden';
+        }
+
         const bookAspectRatio = (currentImgW * 2) / currentImgH;
-        const windowRatio = w / h;
+        const windowRatio = lockedW / lockedH;
         
         let finalWidth, finalHeight;
         if (bookAspectRatio > windowRatio) {
-            finalWidth = w; finalHeight = w / bookAspectRatio;
-            document.body.classList.add('fit-width'); document.body.classList.remove('fit-height');
+            finalWidth = lockedW; finalHeight = lockedW / bookAspectRatio;
         } else {
-            finalHeight = h; finalWidth = h * bookAspectRatio;
-            document.body.classList.add('fit-height'); document.body.classList.remove('fit-width');
+            finalHeight = lockedH; finalWidth = lockedH * bookAspectRatio;
         }
-        
-        document.body.style.setProperty('--real-book-width', finalWidth + 'px');
-        document.body.style.setProperty('--real-book-height', finalHeight + 'px');
         
         const bookContainer = document.getElementById('book');
         if (bookContainer) {
@@ -251,46 +273,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    let lastWinW = window.innerWidth;
-
-    function applyOrientationLock() {
-        window.scrollTo(0, 0); 
-        document.body.scrollTop = 0; document.body.scrollLeft = 0;
-        document.documentElement.scrollTop = 0; document.documentElement.scrollLeft = 0;
-
-        const viewport = document.querySelector('meta[name="viewport"]');
-        if (viewport) {
-            viewport.content = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no';
-            
-            setTimeout(() => { 
-                viewport.content = 'width=device-width, initial-scale=1.0'; 
-            }, 600); 
-        }
-    }
-
+    // 🔥 DER TABLET-ENTPRELLER (Debouncing)
+    let resizeTimer;
     window.addEventListener('resize', () => {
         const currentW = window.innerWidth;
-        if (Math.abs(currentW - lastWinW) > 20) {
-            lastWinW = currentW; 
+        
+        if (isTouchDevice) {
+            // Auf Handys/Tablets interessieren uns nur echte Drehungen (> 50px Unterschied)
+            if (Math.abs(currentW - lockedW) < 50) return; 
+        } else {
+            // Auf dem PC ignorieren wir reine Höhenänderungen
+            if (currentW === lockedW) return;
+        }
+
+        // Wir warten 300ms. Das blockiert das wilde Resize-Dauerfeuer des Tablets beim Laden!
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
             window.scrollTo(0, 0); 
             if(bookWrapper) bookWrapper.style.opacity = '0';
             updateBookSize();
             if (pageFlip) pageFlip.update();
             setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
-        }
+        }, 300);
     });
 
     window.addEventListener('orientationchange', () => {
+        clearTimeout(resizeTimer);
         if(bookWrapper) bookWrapper.style.opacity = '0';
-        applyOrientationLock(); 
         
         setTimeout(() => {
-            lastWinW = window.innerWidth; 
+            window.scrollTo(0, 0); 
             updateBookSize();
             if (pageFlip) pageFlip.update();
-            applyOrientationLock(); 
             setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
-        }, 300); 
+        }, 400); 
     });
 
     function updateHeading() {
@@ -442,15 +458,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const modelFile = CONFIG.threedee[currentBook][pageNum];
                 
                 const isLeftPage = (pageNum % 2 !== 0);
-                
-                // 🔥 NEU: Prozentuale Abstände! 4% oben/unten, 5% am Rand
-                // Egal ob auf dem riesigen Laptop oder kleinen Handy, der visuelle Abstand bleibt perfekt erhalten.
                 const horizPos = isLeftPage ? 'right: 5% !important; left: auto !important;' : 'left: 5% !important; right: auto !important;';
                 
                 const triggerDiv = document.createElement('div');
                 triggerDiv.className = 'threedee-trigger';
                 
-                // 🔥 NEU: Hier zwingen wir das div und den Fullscreen auf ein strahlendes Weiß (Dark Mode immun)
                 triggerDiv.style.cssText = 'width: 100%; height: 100%; cursor: pointer; display: block; position: relative; background-color: #ffffff !important; color-scheme: light !important;';
                 
                 const originalHtml = `<img src="${folder}${file}" alt="Daniel Rösch 3D Vorschau" style="width: 100%; height: 100%; object-fit: cover;">`;
@@ -470,7 +482,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         triggerDiv.classList.add('model-active');
                         triggerDiv.style.cursor = 'default';
 
-                        // Einbau der Buttons mit den relativen Prozent-Abständen
                         triggerDiv.innerHTML = `
                             <a href="#" class="close-3d-btn ui-btn" style="position: absolute !important; top: 4% !important; bottom: auto !important; ${horizPos} z-index: 100 !important; min-width: 50px !important; height: 50px !important; display: flex !important; justify-content: center !important; align-items: center !important; text-decoration: none !important; opacity: 1 !important; pointer-events: auto !important; margin: 0 !important; padding: 0 !important; transform: none !important; background: none !important; border: none !important;">
                                 <span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>
@@ -724,6 +735,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Einmaliges Initialisieren am Ende zum Zementieren der Werte
         setTimeout(() => {
             updateBookSize();
             if (pageFlip) pageFlip.update();
