@@ -78,7 +78,7 @@ const CONFIG = {
             loading: "carregando . . .", 
             notAvailable: "projeto ainda não disponível neste idioma",
             
-            seoDesc: "Projetos de arquitetura digital e portfólio de design de Daniel Rösch. Explore meu trabalho e conceptos.", 
+            seoDesc: "Projetos de arquitetura digital e portfólio de design de Daniel Rösch. Explore meu trabalho e conceitos.", 
             seoH1: "Portfólio de Arquitetura de Daniel Rösch", 
             seoIntro: "Bem-vindo ao portfólio digital de Daniel Rösch. Aqui você pode encontrar meus projetos:", 
             seoContact: "Contate-me em arch.daniroesch@gmail.com para dúvidas."
@@ -244,13 +244,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔥 DIE UNIVERSELLE ANKER-LOGIK
-    // Wir speichern die Größe beim Laden und fixieren das Buch exakt auf diese Pixel.
+    // 🔥 DIE UNIVERSELLE ANKER-LOGIK (Verhindert das Tablet-Flackern)
     let lockedW = window.innerWidth;
     let lockedH = window.innerHeight;
 
     function updateBookSize() {
-        // Wir frieren die äußeren Boxen ein, um Verschiebungen durch Scrollbars zu blockieren
+        // Friert den Rahmen ein, damit Adressleisten das Buch nicht zerquetschen
         document.documentElement.style.overflow = 'hidden';
         document.body.style.overflow = 'hidden';
         
@@ -285,6 +284,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 🔥 DER MAGISCHE ROTATIONS-FIX ("Die 0,1 Sekunden Methode")
+    function performLayoutRecalculation() {
+        const viewport = document.querySelector('meta[name="viewport"]');
+
+        // 1. Zoom für den Bruchteil einer Sekunde hart blockieren.
+        // Das zwingt den Browser, alte, fehlerhafte Skalierungen sofort zu vergessen.
+        if (viewport) {
+            viewport.content = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no';
+        }
+
+        if (bookWrapper) bookWrapper.style.opacity = '0';
+
+        // 2. Kurz warten, bis der Browser die neuen Maße sauber erfasst hat
+        setTimeout(() => {
+            lockedW = window.innerWidth;
+            lockedH = window.innerHeight;
+            window.scrollTo(0, 0);
+
+            updateBookSize();
+            if (pageFlip) pageFlip.update();
+
+            // 3. Sichtbarkeit einschalten und Zoom sofort wieder freigeben!
+            setTimeout(() => {
+                if (bookWrapper) bookWrapper.style.opacity = '1';
+                if (viewport) {
+                    viewport.content = 'width=device-width, initial-scale=1.0';
+                }
+            }, 50);
+        }, 150);
+    }
+
     let resizeTimer;
 
     window.addEventListener('resize', () => {
@@ -293,23 +323,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const currentW = window.innerWidth;
         
-        // 🔥 DIE UNIVERSELLE REGEL: Wenn sich die Breite nicht ändert, mach GAR NICHTS!
-        // Ignoriert Adressleisten (Höhe) und kleine Klick-Zucken (Scrollbars) restlos auf allen Geräten.
-        if (currentW === lockedW) {
+        // 🔥 HIER IST DEINE TABLET-LÖSUNG: 
+        // Solange sich die Breite nicht signifikant (mehr als 10px) ändert, mach GAR NICHTS!
+        // Das ignoriert alle Höhenänderungen (Adressleisten) komplett.
+        if (Math.abs(currentW - lockedW) < 10) {
             return; 
         }
 
+        // Wenn wir hier ankommen, wurde wirklich gedreht oder das Fenster verkleinert
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
-            // Nur bei echter Breiten-Änderung werden die Anker-Werte neu gesetzt
-            lockedW = window.innerWidth; 
-            lockedH = window.innerHeight; 
-            
-            window.scrollTo(0, 0); 
-            if(bookWrapper) bookWrapper.style.opacity = '0';
-            updateBookSize();
-            if (pageFlip) pageFlip.update();
-            setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
+            performLayoutRecalculation();
         }, 200);
     });
 
@@ -317,16 +341,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (is3DModelActive) return;
 
         clearTimeout(resizeTimer);
-        if(bookWrapper) bookWrapper.style.opacity = '0';
-        
         setTimeout(() => {
-            lockedW = window.innerWidth; 
-            lockedH = window.innerHeight; 
-            window.scrollTo(0, 0); 
-            updateBookSize();
-            if (pageFlip) pageFlip.update();
-            setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
-        }, 400); 
+            performLayoutRecalculation();
+        }, 300);
     });
 
     function updateHeading() {
@@ -485,7 +502,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 triggerDiv.style.cssText = 'width: 100%; height: 100%; display: block; position: relative; background-color: #ffffff !important; color-scheme: light !important;';
                 
-                // Hitbox in der Mitte (20% Rand links und rechts bleiben frei zum Blättern)
                 const originalHtml = `
                     <img src="${folder}${file}" alt="Daniel Rösch 3D Vorschau" style="width: 100%; height: 100%; object-fit: cover;">
                     <div class="activation-hitbox" style="position: absolute; top: 10%; left: 20%; width: 60%; height: 80%; z-index: 10; cursor: pointer;"></div>
@@ -508,7 +524,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (e.target.classList.contains('activation-hitbox')) {
                             triggerDiv.classList.add('model-active');
                             
-                            // Flag setzen: Das 3D Modell ist jetzt aktiv!
                             is3DModelActive = true; 
 
                             triggerDiv.innerHTML = `
@@ -557,7 +572,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                     triggerDiv.innerHTML = triggerDiv.dataset.originalHtml;
                                     triggerDiv.classList.remove('model-active');
                                     
-                                    // Flag entfernen
                                     is3DModelActive = false;
                                 }
                             });
@@ -764,7 +778,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Initiale Fixierung der Maße
         setTimeout(() => {
             updateBookSize();
             if (pageFlip) pageFlip.update();
