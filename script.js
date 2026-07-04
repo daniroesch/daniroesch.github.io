@@ -69,7 +69,7 @@ const CONFIG = {
             seoContact: "Contáctame en arch.daniroesch@gmail.com para consultas."
         },
         'pt': { 
-            titles: ["meus projetos", "dê uma look", "portfólio de arquitetura", "daniroesch.de"], 
+            titles: ["meus projetos", "dê uma olhada", "portfólio de arquitetura", "daniroesch.de"], 
             allBooks: "todos os projetos", 
             backToStart: "voltar ao início", 
             nextProject: "próximo projeto", 
@@ -78,7 +78,7 @@ const CONFIG = {
             loading: "carregando . . .", 
             notAvailable: "projeto ainda não disponível neste idioma",
             
-            seoDesc: "Projetos de arquitetura digital e portfólio de design de Daniel Rösch. Explore meu trabalho e conceitos.", 
+            seoDesc: "Projetos de arquitetura digital e portfólio de design de Daniel Rösch. Explore meu trabalho e conceptos.", 
             seoH1: "Portfólio de Arquitetura de Daniel Rösch", 
             seoIntro: "Bem-vindo ao portfólio digital de Daniel Rösch. Aqui você pode encontrar meus projetos:", 
             seoContact: "Contate-me em arch.daniroesch@gmail.com para dúvidas."
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.style.textSizeAdjust = '100%';
     document.body.style.textSizeAdjust = '100%';
 
-    // Schutzschild, das das Buch einfriert, solange ein 3D Modell offen ist!
+    // Schutzschild: Friert das Buch ein, solange ein 3D Modell offen ist!
     let is3DModelActive = false;
 
     const emailLinkElem = document.getElementById('link-email');
@@ -244,19 +244,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 🔥 DIE UNIVERSELLE ANKER-LOGIK
+    // Wir speichern die Größe beim Laden und fixieren das Buch exakt auf diese Pixel.
+    let lockedW = window.innerWidth;
+    let lockedH = window.innerHeight;
+
     function updateBookSize() {
-        const w = window.innerWidth; 
-        const h = window.innerHeight;
+        // Wir frieren die äußeren Boxen ein, um Verschiebungen durch Scrollbars zu blockieren
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+        
+        document.body.style.width = lockedW + 'px';
+        document.body.style.height = lockedH + 'px';
+
+        if (bookView) {
+            bookView.style.width = lockedW + 'px';
+            bookView.style.height = lockedH + 'px';
+            bookView.style.overflow = 'hidden';
+        }
 
         const bookAspectRatio = (currentImgW * 2) / currentImgH;
-        const windowRatio = w / h;
+        const windowRatio = lockedW / lockedH;
         
         let finalWidth, finalHeight;
         if (bookAspectRatio > windowRatio) {
-            finalWidth = w; finalHeight = w / bookAspectRatio;
+            finalWidth = lockedW; finalHeight = lockedW / bookAspectRatio;
             document.body.classList.add('fit-width'); document.body.classList.remove('fit-height');
         } else {
-            finalHeight = h; finalWidth = h * bookAspectRatio;
+            finalHeight = lockedH; finalWidth = lockedH * bookAspectRatio;
             document.body.classList.add('fit-height'); document.body.classList.remove('fit-width');
         }
         
@@ -270,56 +285,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function applyOrientationLock() {
-        window.scrollTo(0, 0); 
-        document.body.scrollTop = 0; document.body.scrollLeft = 0;
-        document.documentElement.scrollTop = 0; document.documentElement.scrollLeft = 0;
-
-        const viewport = document.querySelector('meta[name="viewport"]');
-        if (viewport) {
-            viewport.content = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no';
-            
-            setTimeout(() => { 
-                viewport.content = 'width=device-width, initial-scale=1.0'; 
-            }, 600); 
-        }
-    }
-
-    // 🔥 DIE URSPRÜNGLICHE, EXAKT FUNKTIONIERENDE RESIZE-LOGIK
-    // (Keine verwirrende Geräte-Erkennung, keine Timer. Einfach pures, ignorantes Verhalten unter 20px)
-    let lastWinW = window.innerWidth;
+    let resizeTimer;
 
     window.addEventListener('resize', () => {
-        // Wenn 3D offen ist, Buch-Aktualisierung komplett ignorieren (Vollbild-Schutz)
+        // Vollbild-Schutz für 3D Modelle
         if (is3DModelActive) return;
 
         const currentW = window.innerWidth;
         
-        // Die perfekte Barriere: Egal wer oder was, Änderungen unter 20px (wie Scrollbars/Klicks)
-        // werden abgewiesen.
-        if (Math.abs(currentW - lastWinW) > 20) {
-            lastWinW = currentW; 
+        // 🔥 DIE UNIVERSELLE REGEL: Wenn sich die Breite nicht ändert, mach GAR NICHTS!
+        // Ignoriert Adressleisten (Höhe) und kleine Klick-Zucken (Scrollbars) restlos auf allen Geräten.
+        if (currentW === lockedW) {
+            return; 
+        }
+
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            // Nur bei echter Breiten-Änderung werden die Anker-Werte neu gesetzt
+            lockedW = window.innerWidth; 
+            lockedH = window.innerHeight; 
+            
             window.scrollTo(0, 0); 
             if(bookWrapper) bookWrapper.style.opacity = '0';
             updateBookSize();
             if (pageFlip) pageFlip.update();
             setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
-        }
+        }, 200);
     });
 
     window.addEventListener('orientationchange', () => {
         if (is3DModelActive) return;
 
+        clearTimeout(resizeTimer);
         if(bookWrapper) bookWrapper.style.opacity = '0';
-        applyOrientationLock(); 
         
         setTimeout(() => {
-            lastWinW = window.innerWidth; 
+            lockedW = window.innerWidth; 
+            lockedH = window.innerHeight; 
+            window.scrollTo(0, 0); 
             updateBookSize();
             if (pageFlip) pageFlip.update();
-            applyOrientationLock(); 
             setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
-        }, 300); 
+        }, 400); 
     });
 
     function updateHeading() {
@@ -757,6 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Initiale Fixierung der Maße
         setTimeout(() => {
             updateBookSize();
             if (pageFlip) pageFlip.update();
