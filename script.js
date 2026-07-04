@@ -5,7 +5,6 @@
 const CONFIG = {
     // 📁 DEINE PROJEKTE (BÜCHER) -> ⚠️ HIER DEINE ECHTEN ORDNERNAMEN EINTRAGEN! ⚠️
     books: [
-        'Portfolio-MA'
         'book_1', 
         'book_2',
         'book_3',
