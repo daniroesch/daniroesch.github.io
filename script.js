@@ -244,12 +244,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔥 DIE UNIVERSELLE ANKER-LOGIK (Verhindert das Tablet-Flackern)
+    // 🔥 DIE UNIVERSELLE ANKER-LOGIK
     let lockedW = window.innerWidth;
     let lockedH = window.innerHeight;
 
     function updateBookSize() {
-        // Friert den Rahmen ein, damit Adressleisten das Buch nicht zerquetschen
         document.documentElement.style.overflow = 'hidden';
         document.body.style.overflow = 'hidden';
         
@@ -284,56 +283,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔥 DER MAGISCHE ROTATIONS-FIX ("Die 0,1 Sekunden Methode")
-    function performLayoutRecalculation() {
-        const viewport = document.querySelector('meta[name="viewport"]');
-
-        // 1. Zoom für den Bruchteil einer Sekunde hart blockieren.
-        // Das zwingt den Browser, alte, fehlerhafte Skalierungen sofort zu vergessen.
-        if (viewport) {
-            viewport.content = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no';
-        }
-
-        if (bookWrapper) bookWrapper.style.opacity = '0';
-
-        // 2. Kurz warten, bis der Browser die neuen Maße sauber erfasst hat
-        setTimeout(() => {
-            lockedW = window.innerWidth;
-            lockedH = window.innerHeight;
-            window.scrollTo(0, 0);
-
-            updateBookSize();
-            if (pageFlip) pageFlip.update();
-
-            // 3. Sichtbarkeit einschalten und Zoom sofort wieder freigeben!
-            setTimeout(() => {
-                if (bookWrapper) bookWrapper.style.opacity = '1';
-                if (viewport) {
-                    viewport.content = 'width=device-width, initial-scale=1.0';
-                }
-            }, 50);
-        }, 150);
-    }
-
     let resizeTimer;
 
     window.addEventListener('resize', () => {
-        // Vollbild-Schutz für 3D Modelle
         if (is3DModelActive) return;
 
         const currentW = window.innerWidth;
-        
-        // 🔥 HIER IST DEINE TABLET-LÖSUNG: 
-        // Solange sich die Breite nicht signifikant (mehr als 10px) ändert, mach GAR NICHTS!
-        // Das ignoriert alle Höhenänderungen (Adressleisten) komplett.
-        if (Math.abs(currentW - lockedW) < 10) {
-            return; 
-        }
+        if (currentW === lockedW) return; 
 
-        // Wenn wir hier ankommen, wurde wirklich gedreht oder das Fenster verkleinert
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
-            performLayoutRecalculation();
+            lockedW = window.innerWidth; 
+            lockedH = window.innerHeight; 
+            
+            window.scrollTo(0, 0); 
+            if(bookWrapper) bookWrapper.style.opacity = '0';
+            updateBookSize();
+            if (pageFlip) pageFlip.update();
+            setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
         }, 200);
     });
 
@@ -341,9 +308,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (is3DModelActive) return;
 
         clearTimeout(resizeTimer);
+        if(bookWrapper) bookWrapper.style.opacity = '0';
+        
         setTimeout(() => {
-            performLayoutRecalculation();
-        }, 300);
+            lockedW = window.innerWidth; 
+            lockedH = window.innerHeight; 
+            window.scrollTo(0, 0); 
+            updateBookSize();
+            if (pageFlip) pageFlip.update();
+            setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
+        }, 400); 
     });
 
     function updateHeading() {
@@ -502,6 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 triggerDiv.style.cssText = 'width: 100%; height: 100%; display: block; position: relative; background-color: #ffffff !important; color-scheme: light !important;';
                 
+                // Hitbox in der Mitte
                 const originalHtml = `
                     <img src="${folder}${file}" alt="Daniel Rösch 3D Vorschau" style="width: 100%; height: 100%; object-fit: cover;">
                     <div class="activation-hitbox" style="position: absolute; top: 10%; left: 20%; width: 60%; height: 80%; z-index: 10; cursor: pointer;"></div>
@@ -831,12 +806,46 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.closest('#back-to-start-btn') || e.target.closest('#home-btn')) {
             e.preventDefault();
             if (pageFlip && !isZoomed()) pageFlip.flip(0);
+            
+        // 🔥 NEU: Die intelligente Such-Logik für das nächste Projekt
         } else if (e.target.closest('#next-project-btn')) {
             e.preventDefault();
-            let currentIndex = CONFIG.books.indexOf(currentBook);
-            let nextIndex = (currentIndex + 1) % CONFIG.books.length;
-            let nextBook = CONFIG.books[nextIndex];
-            window.location.hash = `/${nextBook}/${currentLang}/1`;
+            const btn = e.target.closest('#next-project-btn');
+            const originalText = btn.innerText;
+            btn.innerText = ". . ."; // Kurzes Feedback während der Suche
+            btn.style.pointerEvents = 'none';
+
+            (async () => {
+                let currentIndex = CONFIG.books.indexOf(currentBook);
+                let foundNext = false;
+                let nextBook = currentBook;
+
+                // Wir prüfen alle nachfolgenden Bücher (und rotieren am Ende zum Anfang)
+                for (let i = 1; i < CONFIG.books.length; i++) {
+                    let checkIndex = (currentIndex + i) % CONFIG.books.length;
+                    let checkBook = CONFIG.books[checkIndex];
+                    let folder = `${checkBook}/pages_${currentLang}/`;
+                    
+                    let exists = await checkPageExists(`${folder}0${extension}`);
+                    if (exists) {
+                        nextBook = checkBook;
+                        foundNext = true;
+                        break; // Das erste verfügbare Buch gewinnt!
+                    }
+                }
+
+                btn.innerText = originalText;
+                btn.style.pointerEvents = 'auto';
+
+                if (foundNext) {
+                    // Nächstes verfügbares Buch in dieser Sprache laden
+                    window.location.hash = `/${nextBook}/${currentLang}/1`;
+                } else {
+                    // Fallback: Falls es GAR KEIN anderes Buch gibt, zum Anfang des aktuellen blättern
+                    if (pageFlip && !isZoomed()) pageFlip.flip(0);
+                }
+            })();
+
         } else if (e.target.closest('.all-books-trigger')) {
             e.preventDefault();
             window.location.hash = `/grid`;
