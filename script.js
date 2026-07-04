@@ -252,6 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.style.overflow = 'hidden';
         document.body.style.overflow = 'hidden';
         
+        // Fixieren des Körpers auf die zuletzt gemessenen Pixel
         document.body.style.width = lockedW + 'px';
         document.body.style.height = lockedH + 'px';
 
@@ -283,24 +284,61 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 🔥 DER MAGISCHE ROTATIONS-FIX
+    function performLayoutRecalculation() {
+        const viewport = document.querySelector('meta[name="viewport"]');
+
+        // 1. WICHTIG: Wir lösen das Korsett für eine Millisekunde!
+        // So kann das gedrehte Gerät seine neuen, echten Maße korrekt berechnen.
+        document.body.style.width = '';
+        document.body.style.height = '';
+        if (bookView) {
+            bookView.style.width = '';
+            bookView.style.height = '';
+        }
+
+        if (viewport) {
+            viewport.content = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no';
+        }
+
+        if (bookWrapper) bookWrapper.style.opacity = '0';
+
+        // 2. Kurz warten, bis der Browser die Rotation verarbeitet hat
+        setTimeout(() => {
+            // Jetzt lesen wir die sauberen, echten Hoch-/Querformat-Pixel aus
+            lockedW = window.innerWidth;
+            lockedH = window.innerHeight;
+            window.scrollTo(0, 0);
+
+            // Gießen das neue Korsett
+            updateBookSize();
+            if (pageFlip) pageFlip.update();
+
+            // 3. Sichtbarkeit und Zoom wieder einschalten
+            setTimeout(() => {
+                if (bookWrapper) bookWrapper.style.opacity = '1';
+                if (viewport) {
+                    viewport.content = 'width=device-width, initial-scale=1.0';
+                }
+            }, 50);
+        }, 200); // 200ms reichen dem Smartphone vollkommen aus
+    }
+
     let resizeTimer;
 
     window.addEventListener('resize', () => {
         if (is3DModelActive) return;
 
         const currentW = window.innerWidth;
-        if (currentW === lockedW) return; 
+        
+        // Tablet-Schutz: Wenn die Breite sich kaum ändert (Adressleiste poppt auf), mach GAR NICHTS!
+        if (Math.abs(currentW - lockedW) < 10) {
+            return; 
+        }
 
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
-            lockedW = window.innerWidth; 
-            lockedH = window.innerHeight; 
-            
-            window.scrollTo(0, 0); 
-            if(bookWrapper) bookWrapper.style.opacity = '0';
-            updateBookSize();
-            if (pageFlip) pageFlip.update();
-            setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
+            performLayoutRecalculation();
         }, 200);
     });
 
@@ -308,16 +346,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (is3DModelActive) return;
 
         clearTimeout(resizeTimer);
-        if(bookWrapper) bookWrapper.style.opacity = '0';
-        
         setTimeout(() => {
-            lockedW = window.innerWidth; 
-            lockedH = window.innerHeight; 
-            window.scrollTo(0, 0); 
-            updateBookSize();
-            if (pageFlip) pageFlip.update();
-            setTimeout(() => { if(bookWrapper) bookWrapper.style.opacity = '1'; }, 50);
-        }, 400); 
+            performLayoutRecalculation();
+        }, 300);
     });
 
     function updateHeading() {
@@ -476,7 +507,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 triggerDiv.style.cssText = 'width: 100%; height: 100%; display: block; position: relative; background-color: #ffffff !important; color-scheme: light !important;';
                 
-                // Hitbox in der Mitte
                 const originalHtml = `
                     <img src="${folder}${file}" alt="Daniel Rösch 3D Vorschau" style="width: 100%; height: 100%; object-fit: cover;">
                     <div class="activation-hitbox" style="position: absolute; top: 10%; left: 20%; width: 60%; height: 80%; z-index: 10; cursor: pointer;"></div>
@@ -546,7 +576,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 } else {
                                     triggerDiv.innerHTML = triggerDiv.dataset.originalHtml;
                                     triggerDiv.classList.remove('model-active');
-                                    
                                     is3DModelActive = false;
                                 }
                             });
@@ -807,12 +836,11 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             if (pageFlip && !isZoomed()) pageFlip.flip(0);
             
-        // 🔥 NEU: Die intelligente Such-Logik für das nächste Projekt
         } else if (e.target.closest('#next-project-btn')) {
             e.preventDefault();
             const btn = e.target.closest('#next-project-btn');
             const originalText = btn.innerText;
-            btn.innerText = ". . ."; // Kurzes Feedback während der Suche
+            btn.innerText = ". . ."; 
             btn.style.pointerEvents = 'none';
 
             (async () => {
@@ -820,7 +848,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 let foundNext = false;
                 let nextBook = currentBook;
 
-                // Wir prüfen alle nachfolgenden Bücher (und rotieren am Ende zum Anfang)
                 for (let i = 1; i < CONFIG.books.length; i++) {
                     let checkIndex = (currentIndex + i) % CONFIG.books.length;
                     let checkBook = CONFIG.books[checkIndex];
@@ -830,7 +857,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (exists) {
                         nextBook = checkBook;
                         foundNext = true;
-                        break; // Das erste verfügbare Buch gewinnt!
+                        break; 
                     }
                 }
 
@@ -838,10 +865,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.style.pointerEvents = 'auto';
 
                 if (foundNext) {
-                    // Nächstes verfügbares Buch in dieser Sprache laden
                     window.location.hash = `/${nextBook}/${currentLang}/1`;
                 } else {
-                    // Fallback: Falls es GAR KEIN anderes Buch gibt, zum Anfang des aktuellen blättern
                     if (pageFlip && !isZoomed()) pageFlip.flip(0);
                 }
             })();
