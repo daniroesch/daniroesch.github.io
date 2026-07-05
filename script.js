@@ -13,7 +13,7 @@ const CONFIG = {
 
     // 🕵️ UNSICHTBARE PROJEKTE (Nur per Direktlink erreichbar)
     hiddenBooks: [
-        'Portfolio-MA' 
+        'geheim_haus' 
     ],
 
     // 🧊 DEINE 3D MODELLE
@@ -241,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gridView.style.display = 'none'; 
             legalView.style.display = 'block';
             
-            // 🔥 FIX: Stellt sicher, dass das Bild imp.webp korrekt im Impressum geladen wird!
+            // 🔥 Garantiert, dass das Bild imp.webp korrekt im Impressum geladen wird!
             if (!legalView.querySelector('img')) {
                 const img = document.createElement('img');
                 img.src = 'hero/imp.webp';
@@ -342,13 +342,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentW = window.innerWidth;
         const currentH = window.innerHeight;
         
-        // 🔥 FIX FÜR LAPTOP VOLLBILD: Unterscheidet nun zwischen Handy und PC!
+        // 🔥 Clevere Unterscheidung: Handy vs. Laptop
         if (isTouchDevice) {
             // Handy/Tablet: Ignoriert Höhenänderungen (Adressleiste) komplett
             if (Math.abs(currentW - lockedW) < 10) return; 
         } else {
-            // PC/Laptop: Reagiert auf Höhenänderungen > 10px (perfekt für Vollbild!)
-            if (currentW === lockedW && Math.abs(currentH - lockedH) < 10) return;
+            // PC/Laptop: Reagiert z.B. wenn sich nur die Höhe ändert (Vollbildmodus!)
+            if (Math.abs(currentW - lockedW) < 10 && Math.abs(currentH - lockedH) < 10) return;
         }
 
         clearTimeout(resizeTimer);
@@ -356,6 +356,18 @@ document.addEventListener('DOMContentLoaded', () => {
             performLayoutRecalculation();
         }, 200);
     });
+
+    // 🔥 NEU: Der dedizierte Vollbild-Wächter!
+    // Wartet ab, bis die Browser-Animation komplett abgeschlossen ist, um saubere Werte zu messen.
+    function handleFullscreenTransition() {
+        if (is3DModelActive) return;
+        clearTimeout(resizeTimer);
+        setTimeout(() => {
+            performLayoutRecalculation();
+        }, 300); 
+    }
+    document.addEventListener('fullscreenchange', handleFullscreenTransition);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenTransition);
 
     window.addEventListener('orientationchange', () => {
         if (is3DModelActive) return;
@@ -439,7 +451,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.all-books-trigger').forEach(el => el.innerText = t.allBooks);
         document.getElementById('grid-heading').innerText = t.allBooks;
         
-        // Die Button-Texte aktualisieren
         const closeLegalBtn = document.getElementById('close-legal');
         if(closeLegalBtn) closeLegalBtn.innerText = t.close;
         const backToBookBtn = document.getElementById('back-to-book-btn');
@@ -852,7 +863,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {}
     }
 
-    // 🔥 FIX: Alle Klicks werden jetzt kugelsicher und zentral überwacht (Event-Delegation).
     document.addEventListener('click', (e) => {
         if (e.target.closest('#back-to-start-btn') || e.target.closest('#home-btn')) {
             e.preventDefault();
@@ -908,7 +918,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (e.target.closest('#fullscreen-btn')) { 
             e.preventDefault(); toggleFullscreen(); 
             
-        // 🔥 FIX FÜR DAS IMPRESSUM: Der Link wird sicher eingefangen!
         } else if (e.target.closest('#link-legal')) {
             e.preventDefault();
             window.location.hash = `/legal`;
