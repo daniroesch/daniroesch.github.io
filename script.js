@@ -13,7 +13,7 @@ const CONFIG = {
 
     // 🕵️ UNSICHTBARE PROJEKTE (Nur per Direktlink erreichbar)
     hiddenBooks: [
-        'geheim_haus' 
+        'Portfolio-MA' 
     ],
 
     // 🧊 DEINE 3D MODELLE
