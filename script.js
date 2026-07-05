@@ -265,6 +265,51 @@ document.addEventListener('DOMContentLoaded', () => {
     let lockedW = window.innerWidth;
     let lockedH = window.innerHeight;
 
+    // 🔥 NEU: Der sanfte 15-Pixel Sicherheitszaun (Zitterfrei)
+    function clampButtonsToScreen() {
+        const buttons = document.querySelectorAll('#home-btn, #fullscreen-btn, #close-legal, #back-to-book-btn, #back-to-start-btn, #next-project-btn, .close-3d-btn, .fs-3d-btn');
+        const padding = 15; // 15 Pixel absolute Grenze zum Bildschirmrand
+        
+        // Lösche alte Korrekturen, um die reine CSS-Position relativ zum Buch zu messen
+        buttons.forEach(btn => {
+            btn.style.removeProperty('translate');
+        });
+
+        // Browser zum Berechnen der echten Position zwingen
+        void document.body.offsetHeight;
+
+        buttons.forEach(btn => {
+            const rect = btn.getBoundingClientRect();
+            // Unsichtbare Buttons ignorieren
+            if (rect.width === 0 && rect.height === 0) return; 
+
+            let shiftX = 0;
+            let shiftY = 0;
+
+            // Ist der Knopf LINKS näher als 15px am Bildschirmrand?
+            if (rect.left < padding) {
+                shiftX = padding - rect.left;
+            // Ist er RECHTS näher als 15px am Rand?
+            } else if (rect.right > window.innerWidth - padding) {
+                shiftX = (window.innerWidth - padding) - rect.right;
+            }
+
+            // Ist er OBEN näher als 15px am Rand?
+            if (rect.top < padding) {
+                shiftY = padding - rect.top;
+            // Ist er UNTEN näher als 15px am Rand?
+            } else if (rect.bottom > window.innerHeight - padding) {
+                shiftY = (window.innerHeight - padding) - rect.bottom;
+            }
+
+            // Nur eingreifen, wenn der Zaun wirklich berührt wurde!
+            // Schiebt den Button per CSS in Sicherheit (notfalls ins Buch hinein).
+            if (shiftX !== 0 || shiftY !== 0) {
+                btn.style.setProperty('translate', `${shiftX}px ${shiftY}px`, 'important');
+            }
+        });
+    }
+
     function updateBookSize() {
         document.documentElement.style.overflow = 'hidden';
         document.body.style.overflow = 'hidden';
@@ -325,6 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pageFlip) pageFlip.update();
 
             setTimeout(() => {
+                clampButtonsToScreen(); // Sicherheitszaun aktivieren
                 if (bookWrapper) bookWrapper.style.opacity = '1';
                 if (viewport) {
                     viewport.content = 'width=device-width, initial-scale=1.0';
@@ -514,7 +560,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function buildBook(imageUrls, folder, width, height, initialPage = 0) {
         const bookContainer = document.getElementById('book');
-        const niceBookName = currentBook.replace(/[-_]/g, ' ');
+        const niceBookName = currentBook.replace(/[-_g]/g, ' ');
 
         imageUrls.forEach((file) => {
             const pageDiv = document.createElement('div');
@@ -572,6 +618,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                     style="width: 100%; height: 100%; background-color: #ffffff !important; color-scheme: light !important; outline: none;"
                                 ></model-viewer>
                             `;
+
+                            // Sicherheitszaun für die neu erzeugten 3D-Buttons anwenden
+                            setTimeout(clampButtonsToScreen, 50);
 
                             const closeBtn = triggerDiv.querySelector('.close-3d-btn');
                             const fsBtn = triggerDiv.querySelector('.fs-3d-btn');
@@ -775,6 +824,9 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 pendingTargetPage = -1; 
                 isInternalHashUpdate = false;
+                
+                // 🔥 Hier greift der Wächter (zitterfrei nach dem Umblättern), bevor die Knöpfe sichtbar werden
+                clampButtonsToScreen();
 
                 if (currentPage === 0) {
                     menuPositioner.style.zIndex = '3'; 
@@ -812,6 +864,8 @@ document.addEventListener('DOMContentLoaded', () => {
             updateBookSize();
             if (pageFlip) pageFlip.update();
             setTimeout(() => {
+                clampButtonsToScreen(); // Initialer Sicherheitscheck
+                
                 if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
                     menuPositioner.style.zIndex = '3';
                     startMenu.style.pointerEvents = 'auto';
