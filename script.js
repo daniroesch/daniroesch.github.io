@@ -13,7 +13,7 @@ const CONFIG = {
 
     // 🕵️ UNSICHTBARE PROJEKTE (Nur per Direktlink erreichbar)
     hiddenBooks: [
-        'Portfolio-MA' 
+        'geheim_haus' 
     ],
 
     // 🧊 DEINE 3D MODELLE
@@ -265,47 +265,46 @@ document.addEventListener('DOMContentLoaded', () => {
     let lockedW = window.innerWidth;
     let lockedH = window.innerHeight;
 
-    // 🔥 NEU: Der statische und zitterfreie Wächter!
-    // Wird NUR im Ruhezustand aufgerufen, niemals während die Seite blättert.
+    // 🔥 DIE NEUE, 100% SICHERE RAND-KONTROLLE FÜR DIE BUTTONS
     function enforceScreenBounds() {
-        const buttons = document.querySelectorAll('#home-btn, #fullscreen-btn, #close-legal, #back-to-book-btn, #back-to-start-btn, #next-project-btn, .close-3d-btn, .fs-3d-btn');
-        const padding = 20; 
+        const buttons = document.querySelectorAll('#home-btn, #fullscreen-btn');
+        const padding = 20; // Sicherheitsabstand zum Rand in Pixeln
         
+        // 1. Zuerst unsere eventuell gesetzten "Schiebe-Befehle" entfernen,
+        // damit wir die Original-Position aus deinem CSS messen können.
         buttons.forEach(btn => {
-            btn.style.setProperty('margin-left', '0px', 'important');
-            btn.style.setProperty('margin-right', '0px', 'important');
-            btn.style.setProperty('margin-top', '0px', 'important');
-            btn.style.setProperty('margin-bottom', '0px', 'important');
+            btn.style.removeProperty('translate');
         });
 
+        // Den Browser zwingen, die echte Position kurz zu berechnen
         void document.body.offsetHeight;
 
+        // 2. Positionen nachmessen
         buttons.forEach(btn => {
             const rect = btn.getBoundingClientRect();
+            // Wenn der Knopf aktuell unsichtbar ist (display: none), abbrechen
             if (rect.width === 0 && rect.height === 0) return; 
 
             let shiftX = 0;
             let shiftY = 0;
 
+            // Berührt er den linken oder rechten Bildschirmrand?
             if (rect.left < padding) {
-                shiftX = padding - rect.left;
+                shiftX = padding - rect.left; // Schiebe nach rechts
             } else if (rect.right > window.innerWidth - padding) {
-                shiftX = (window.innerWidth - padding) - rect.right;
+                shiftX = (window.innerWidth - padding) - rect.right; // Schiebe nach links (negativer Wert)
             }
 
+            // Berührt er den oberen oder unteren Bildschirmrand?
             if (rect.top < padding) {
-                shiftY = padding - rect.top;
+                shiftY = padding - rect.top; // Schiebe nach unten
             } else if (rect.bottom > window.innerHeight - padding) {
-                shiftY = (window.innerHeight - padding) - rect.bottom;
+                shiftY = (window.innerHeight - padding) - rect.bottom; // Schiebe nach oben (negativer Wert)
             }
 
-            if (shiftX !== 0) {
-                btn.style.setProperty('margin-left', shiftX + 'px', 'important');
-                btn.style.setProperty('margin-right', -shiftX + 'px', 'important');
-            }
-            if (shiftY !== 0) {
-                btn.style.setProperty('margin-top', shiftY + 'px', 'important');
-                btn.style.setProperty('margin-bottom', -shiftY + 'px', 'important');
+            // 3. WENN ER DEN RAND BERÜHRT -> Physikalisch auf dem Bildschirm verschieben (translate)
+            if (shiftX !== 0 || shiftY !== 0) {
+                btn.style.setProperty('translate', `${shiftX}px ${shiftY}px`, 'important');
             }
         });
     }
@@ -374,7 +373,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (viewport) {
                     viewport.content = 'width=device-width, initial-scale=1.0';
                 }
-                // Sicherheitsscan erst, wenn alles ruhig und stabil ist
+                
+                // 🔥 Nach jeder Neuberechnung die Knöpfe in Sicherheit bringen!
                 enforceScreenBounds();
             }, 50);
         }, 200); 
@@ -620,9 +620,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ></model-viewer>
                             `;
 
-                            // Sicherheitsscan für die neu aufgetauchten 3D-Buttons (ohne Flackern)
-                            setTimeout(enforceScreenBounds, 50);
-
                             const closeBtn = triggerDiv.querySelector('.close-3d-btn');
                             const fsBtn = triggerDiv.querySelector('.fs-3d-btn');
 
@@ -792,7 +789,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 endOfBookMenu.style.transition = 'none';
                 endOfBookMenu.style.opacity = '0';
             }
-            // 🔥 Kein enforceScreenBounds() hier! Jitter blockiert.
         });
 
         pageFlip.on('changeState', (e) => {
@@ -856,7 +852,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     endOfBookMenu.style.opacity = '0'; 
                     endOfBookMenu.style.pointerEvents = 'none';
                 }
-                // 🔥 Kein enforceScreenBounds() hier! Jitter blockiert.
             }
         });
 
@@ -874,7 +869,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     menuPositioner.style.visibility = 'visible';
                 }
                 isInternalHashUpdate = false;
-                enforceScreenBounds(); // Einmaliger, sauberer Aufruf nach dem vollständigen Laden!
+                
+                // 🔥 Nach dem allerersten Laden prüfen wir EINMAL, ob die Knöpfe im Bild sind.
+                enforceScreenBounds();
             }, 100);
         }, 150);
     }
