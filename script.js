@@ -3,7 +3,7 @@
 // ==========================================================================================
 
 const CONFIG = {
-    // 📁 DEINE PROJEKTE (BÜCHER) -> ⚠️ HIER DEINE ECHTEN ORDNERNAMEN EINTRAGEN! ⚠️
+    // 📁 ÖFFENTLICHE PROJEKTE (Erscheinen im Grid-Menü) -> ⚠️ ECHTE NAMEN EINTRAGEN ⚠️
     books: [
         'book_1', 
         'book_2',
@@ -11,10 +11,18 @@ const CONFIG = {
         'book_4'
     ],
 
+    // 🕵️ UNSICHTBARE PROJEKTE (Nur per Direktlink erreichbar)
+    hiddenBooks: [
+        'geheim_haus' 
+    ],
+
     // 🧊 DEINE 3D MODELLE
     threedee: {
         'book_1': { 
             5: '5.glb'
+        },
+        'geheim_haus': {
+            3: 'geheimes_modell.glb'
         }
     },
 
@@ -98,6 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.style.textSizeAdjust = '100%';
 
     let is3DModelActive = false;
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
     const emailLinkElem = document.getElementById('link-email');
     if (emailLinkElem) {
@@ -228,7 +237,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (params.view === 'legal') {
-            bookView.style.display = 'none'; gridView.style.display = 'none'; legalView.style.display = 'block';
+            bookView.style.display = 'none'; 
+            gridView.style.display = 'none'; 
+            legalView.style.display = 'block';
+            
+            // 🔥 FIX: Stellt sicher, dass das Bild imp.webp korrekt im Impressum geladen wird!
+            if (!legalView.querySelector('img')) {
+                const img = document.createElement('img');
+                img.src = 'hero/imp.webp';
+                img.alt = 'Impressum & Datenschutz';
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'contain';
+                legalView.appendChild(img);
+            }
             return;
         }
 
@@ -318,8 +340,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (is3DModelActive) return;
 
         const currentW = window.innerWidth;
-        if (Math.abs(currentW - lockedW) < 10) {
-            return; 
+        const currentH = window.innerHeight;
+        
+        // 🔥 FIX FÜR LAPTOP VOLLBILD: Unterscheidet nun zwischen Handy und PC!
+        if (isTouchDevice) {
+            // Handy/Tablet: Ignoriert Höhenänderungen (Adressleiste) komplett
+            if (Math.abs(currentW - lockedW) < 10) return; 
+        } else {
+            // PC/Laptop: Reagiert auf Höhenänderungen > 10px (perfekt für Vollbild!)
+            if (currentW === lockedW && Math.abs(currentH - lockedH) < 10) return;
         }
 
         clearTimeout(resizeTimer);
@@ -409,9 +438,15 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingScreen.innerHTML = `<div class="menu-wrapper"><div class="menu-row"><span class="bracket">[</span><span class="menu-links">${t.loading}</span><span class="bracket">]</span></div></div>`;
         document.querySelectorAll('.all-books-trigger').forEach(el => el.innerText = t.allBooks);
         document.getElementById('grid-heading').innerText = t.allBooks;
-        document.getElementById('back-to-book-btn').innerText = t.close;
-        document.getElementById('close-legal').innerText = t.close;
-        document.getElementById('back-to-start-btn').innerText = t.backToStart;
+        
+        // Die Button-Texte aktualisieren
+        const closeLegalBtn = document.getElementById('close-legal');
+        if(closeLegalBtn) closeLegalBtn.innerText = t.close;
+        const backToBookBtn = document.getElementById('back-to-book-btn');
+        if(backToBookBtn) backToBookBtn.innerText = t.close;
+        const backToStartBtn = document.getElementById('back-to-start-btn');
+        if(backToStartBtn) backToStartBtn.innerText = t.backToStart;
+        
         if (homeBtn) homeBtn.innerHTML = t.home;
 
         const nextProjectBtn = document.getElementById('next-project-btn');
@@ -817,6 +852,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {}
     }
 
+    // 🔥 FIX: Alle Klicks werden jetzt kugelsicher und zentral überwacht (Event-Delegation).
     document.addEventListener('click', (e) => {
         if (e.target.closest('#back-to-start-btn') || e.target.closest('#home-btn')) {
             e.preventDefault();
@@ -849,9 +885,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 btn.innerText = originalText;
-                
-                // 🔥 HIER IST DER FIX: Die Inline-Sonderregel wird gelöscht, statt auf 'auto' gezwungen zu werden.
-                // Dadurch ordnet sich der Button unsichtbar den Regeln des Menüs unter!
                 btn.style.pointerEvents = ''; 
 
                 if (foundNext) {
@@ -864,14 +897,29 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (e.target.closest('.all-books-trigger')) {
             e.preventDefault();
             window.location.hash = `/grid`;
-        } else if (e.target.id === 'link-email') {
+        } else if (e.target.id === 'link-email' || e.target.closest('#link-email')) {
+            e.preventDefault();
             navigator.clipboard.writeText(CONFIG.email).then(() => {
-                const originalText = e.target.innerText;
-                e.target.innerText = 'kopiert!';
-                setTimeout(() => { e.target.innerText = originalText; }, 2000);
+                const btn = e.target.closest('#link-email');
+                const originalText = btn.innerText;
+                btn.innerText = 'kopiert!';
+                setTimeout(() => { btn.innerText = originalText; }, 2000);
             });
         } else if (e.target.closest('#fullscreen-btn')) { 
             e.preventDefault(); toggleFullscreen(); 
+            
+        // 🔥 FIX FÜR DAS IMPRESSUM: Der Link wird sicher eingefangen!
+        } else if (e.target.closest('#link-legal')) {
+            e.preventDefault();
+            window.location.hash = `/legal`;
+        } else if (e.target.closest('#close-legal')) {
+            e.preventDefault();
+            const page = pageFlip ? pageFlip.getCurrentPageIndex() + 1 : 1;
+            window.location.hash = `/${currentBook}/${currentLang}/${page}`;
+        } else if (e.target.closest('#back-to-book-btn')) {
+            e.preventDefault();
+            const page = pageFlip ? pageFlip.getCurrentPageIndex() + 1 : 1;
+            window.location.hash = `/${currentBook}/${currentLang}/${page}`;
         }
     });
 
@@ -885,18 +933,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-
-    document.getElementById('link-legal').onclick = (e) => { e.preventDefault(); window.location.hash = `/legal`; };
-    document.getElementById('close-legal').onclick = (e) => { 
-        e.preventDefault(); 
-        const page = pageFlip ? pageFlip.getCurrentPageIndex() + 1 : 1;
-        window.location.hash = `/${currentBook}/${currentLang}/1`; 
-    };
-    document.getElementById('back-to-book-btn').onclick = (e) => { 
-        e.preventDefault(); 
-        const page = pageFlip ? pageFlip.getCurrentPageIndex() + 1 : 1;
-        window.location.hash = `/${currentBook}/${currentLang}/${page}`; 
-    };
 
     window.addEventListener('hashchange', handleRouting);
     handleRouting();
