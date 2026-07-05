@@ -13,7 +13,7 @@ const CONFIG = {
 
     // 🕵️ UNSICHTBARE PROJEKTE (Nur per Direktlink erreichbar)
     hiddenBooks: [
-        'Portfolio-MA' 
+        'geheim_haus' 
     ],
 
     // 🧊 DEINE 3D MODELLE
@@ -265,28 +265,41 @@ document.addEventListener('DOMContentLoaded', () => {
     let lockedW = window.innerWidth;
     let lockedH = window.innerHeight;
 
-    // 🔥 DIE MATHEMATISCH PERFEKTE RANDKONTROLLE
+    // 🔥 DIE PERFEKTE BIDSCHIRMRAND-VERANKERUNG (Deine roten Boxen)
     function enforceScreenBounds() {
-        // Obere Knöpfe (X) und untere Knöpfe ([ ]) trennen
+        // Trennt die oberen und unteren Knöpfe zur sauberen Berechnung
         const topBtns = document.querySelectorAll('#home-btn, .close-3d-btn, #close-legal, #back-to-book-btn');
         const bottomBtns = document.querySelectorAll('#fullscreen-btn, .fs-3d-btn');
         const allBtns = [...topBtns, ...bottomBtns];
         
-        // Zurücksetzen für Rohmessung
+        // CSS-Eingriffe kurz zurücknehmen, um echte Werte zu messen
         allBtns.forEach(btn => btn.style.removeProperty('translate'));
         void document.body.offsetHeight;
 
-        // 1. Die echte visuelle Distanz des oberen "X" zum Bildschirmrand messen
-        let unifiedPadding = 25; // Fallback, falls kein Button sichtbar
-        for (let btn of topBtns) {
+        let unifiedPadding = 25; // Standard Sicherheits-Padding
+        let minDistance = Infinity;
+
+        // Sucht dynamisch nach dem exakten Randabstand, den dein CSS vorgibt (z.B. 28 Pixel)
+        for (let btn of allBtns) {
             const r = btn.getBoundingClientRect();
-            if (r.top > 0 && r.width > 0) {
-                unifiedPadding = r.top; // z.B. exakt 28px
-                break;
+            if (r.width > 0 && r.height > 0) {
+                const distTop = r.top;
+                const distBottom = window.innerHeight - r.bottom;
+                const distLeft = r.left;
+                const distRight = window.innerWidth - r.right;
+                
+                const localMin = Math.min(distTop, distBottom, distLeft, distRight);
+                if (localMin >= 0 && localMin < minDistance) {
+                    minDistance = localMin;
+                }
             }
         }
+        
+        if (minDistance < 100 && minDistance > 0) {
+            unifiedPadding = minDistance; // Gewinner-Padding gefunden!
+        }
 
-        // 2. Allen Buttons exakt diesen einen gemessenen Wert aufzwingen!
+        // Nagelt JEDEN Knopf rigoros in die äußersten Ecken des Bildschirms fest!
         allBtns.forEach(btn => {
             const rect = btn.getBoundingClientRect();
             if (rect.width === 0 && rect.height === 0) return; 
@@ -294,25 +307,22 @@ document.addEventListener('DOMContentLoaded', () => {
             let shiftX = 0;
             let shiftY = 0;
 
-            // Vertikale Symmetrie herstellen
+            // Zieht die Knöpfe exakt an den Rand nach Oben oder Unten
             if (Array.from(bottomBtns).includes(btn)) {
-                // Untere Knöpfe: Abstand nach unten muss exakt unifiedPadding sein
-                const currentBottom = window.innerHeight - rect.bottom;
-                shiftY = currentBottom - unifiedPadding; 
+                shiftY = (window.innerHeight - unifiedPadding) - rect.bottom; 
             } else {
-                // Obere Knöpfe: Abstand nach oben muss exakt unifiedPadding sein
-                const currentTop = rect.top;
-                shiftY = unifiedPadding - currentTop;
+                shiftY = unifiedPadding - rect.top;
             }
 
-            // Horizontale Ränder: Links und rechts genau denselben Abstand verwenden!
-            if (rect.left < unifiedPadding) {
+            // Zieht die Knöpfe exakt an den Rand nach Links oder Rechts
+            const isLeft = (rect.left + rect.width / 2) < (window.innerWidth / 2);
+            if (isLeft) {
                 shiftX = unifiedPadding - rect.left;
-            } else if (rect.right > window.innerWidth - unifiedPadding) {
+            } else {
                 shiftX = (window.innerWidth - unifiedPadding) - rect.right;
             }
 
-            // Sicher anwenden via CSS Translate
+            // Unaufhaltsames Verschieben in die Ecke
             if (shiftX !== 0 || shiftY !== 0) {
                 btn.style.setProperty('translate', `${shiftX}px ${shiftY}px`, 'important');
             }
