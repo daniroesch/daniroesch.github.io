@@ -71,7 +71,7 @@ const CONFIG = {
             loading: "cargando . . .", 
             notAvailable: "proyecto aún no disponible en este idioma",
             
-            seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabajo y conceptos.", 
+            seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabajo y concepts.", 
             seoH1: "Portafolio de Arquitectura de Daniel Rösch", 
             seoIntro: "Bienvenido al portafolio digital de Daniel Rösch. Aquí puedes encontrar mis proyectos:", 
             seoContact: "Contáctame en arch.daniroesch@gmail.com para consultas."
@@ -241,7 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
             gridView.style.display = 'none'; 
             legalView.style.display = 'block';
             
-            // 🔥 Garantiert, dass das Bild imp.webp korrekt im Impressum geladen wird!
             if (!legalView.querySelector('img')) {
                 const img = document.createElement('img');
                 img.src = 'hero/imp.webp';
@@ -291,8 +290,14 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.classList.add('fit-height'); document.body.classList.remove('fit-width');
         }
         
-        document.body.style.setProperty('--real-book-width', finalWidth + 'px');
-        document.body.style.setProperty('--real-book-height', finalHeight + 'px');
+        // 🔥 FIX: Der "virtuelle Sicherheitsrahmen" für die Buttons.
+        // Das Buch bleibt originalgroß, aber den Buttons wird gemeldet, dass das Buch 140px schmaler ist.
+        // Dadurch rücken die Buttons garantiert immer sicher ins Bild (und notfalls ins Cover)!
+        const uiSafeWidth = Math.min(finalWidth, lockedW - 140);
+        const uiSafeHeight = Math.min(finalHeight, lockedH - 140);
+        
+        document.body.style.setProperty('--real-book-width', Math.max(0, uiSafeWidth) + 'px');
+        document.body.style.setProperty('--real-book-height', Math.max(0, uiSafeHeight) + 'px');
         
         const bookContainer = document.getElementById('book');
         if (bookContainer) {
@@ -342,13 +347,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentW = window.innerWidth;
         const currentH = window.innerHeight;
         
-        // 🔥 Clevere Unterscheidung: Handy vs. Laptop
         if (isTouchDevice) {
-            // Handy/Tablet: Ignoriert Höhenänderungen (Adressleiste) komplett
             if (Math.abs(currentW - lockedW) < 10) return; 
         } else {
-            // PC/Laptop: Reagiert z.B. wenn sich nur die Höhe ändert (Vollbildmodus!)
-            if (Math.abs(currentW - lockedW) < 10 && Math.abs(currentH - lockedH) < 10) return;
+            if (currentW === lockedW && Math.abs(currentH - lockedH) < 10) return;
         }
 
         clearTimeout(resizeTimer);
@@ -357,8 +359,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 200);
     });
 
-    // 🔥 NEU: Der dedizierte Vollbild-Wächter!
-    // Wartet ab, bis die Browser-Animation komplett abgeschlossen ist, um saubere Werte zu messen.
     function handleFullscreenTransition() {
         if (is3DModelActive) return;
         clearTimeout(resizeTimer);
