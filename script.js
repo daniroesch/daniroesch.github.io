@@ -13,7 +13,7 @@ const CONFIG = {
 
     // 🕵️ UNSICHTBARE PROJEKTE (Nur per Direktlink erreichbar)
     hiddenBooks: [
-        'Portfolio-MA' 
+        'geheim_haus' 
     ],
 
     // 🧊 DEINE 3D MODELLE
@@ -265,70 +265,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let lockedW = window.innerWidth;
     let lockedH = window.innerHeight;
 
-    // 🔥 DIE PERFEKTE BIDSCHIRMRAND-VERANKERUNG (Deine roten Boxen)
-    function enforceScreenBounds() {
-        // Trennt die oberen und unteren Knöpfe zur sauberen Berechnung
-        const topBtns = document.querySelectorAll('#home-btn, .close-3d-btn, #close-legal, #back-to-book-btn');
-        const bottomBtns = document.querySelectorAll('#fullscreen-btn, .fs-3d-btn');
-        const allBtns = [...topBtns, ...bottomBtns];
-        
-        // CSS-Eingriffe kurz zurücknehmen, um echte Werte zu messen
-        allBtns.forEach(btn => btn.style.removeProperty('translate'));
-        void document.body.offsetHeight;
-
-        let unifiedPadding = 25; // Standard Sicherheits-Padding
-        let minDistance = Infinity;
-
-        // Sucht dynamisch nach dem exakten Randabstand, den dein CSS vorgibt (z.B. 28 Pixel)
-        for (let btn of allBtns) {
-            const r = btn.getBoundingClientRect();
-            if (r.width > 0 && r.height > 0) {
-                const distTop = r.top;
-                const distBottom = window.innerHeight - r.bottom;
-                const distLeft = r.left;
-                const distRight = window.innerWidth - r.right;
-                
-                const localMin = Math.min(distTop, distBottom, distLeft, distRight);
-                if (localMin >= 0 && localMin < minDistance) {
-                    minDistance = localMin;
-                }
-            }
-        }
-        
-        if (minDistance < 100 && minDistance > 0) {
-            unifiedPadding = minDistance; // Gewinner-Padding gefunden!
-        }
-
-        // Nagelt JEDEN Knopf rigoros in die äußersten Ecken des Bildschirms fest!
-        allBtns.forEach(btn => {
-            const rect = btn.getBoundingClientRect();
-            if (rect.width === 0 && rect.height === 0) return; 
-
-            let shiftX = 0;
-            let shiftY = 0;
-
-            // Zieht die Knöpfe exakt an den Rand nach Oben oder Unten
-            if (Array.from(bottomBtns).includes(btn)) {
-                shiftY = (window.innerHeight - unifiedPadding) - rect.bottom; 
-            } else {
-                shiftY = unifiedPadding - rect.top;
-            }
-
-            // Zieht die Knöpfe exakt an den Rand nach Links oder Rechts
-            const isLeft = (rect.left + rect.width / 2) < (window.innerWidth / 2);
-            if (isLeft) {
-                shiftX = unifiedPadding - rect.left;
-            } else {
-                shiftX = (window.innerWidth - unifiedPadding) - rect.right;
-            }
-
-            // Unaufhaltsames Verschieben in die Ecke
-            if (shiftX !== 0 || shiftY !== 0) {
-                btn.style.setProperty('translate', `${shiftX}px ${shiftY}px`, 'important');
-            }
-        });
-    }
-
     function updateBookSize() {
         document.documentElement.style.overflow = 'hidden';
         document.body.style.overflow = 'hidden';
@@ -393,7 +329,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (viewport) {
                     viewport.content = 'width=device-width, initial-scale=1.0';
                 }
-                enforceScreenBounds();
             }, 50);
         }, 200); 
     }
@@ -637,8 +572,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                     style="width: 100%; height: 100%; background-color: #ffffff !important; color-scheme: light !important; outline: none;"
                                 ></model-viewer>
                             `;
-
-                            setTimeout(enforceScreenBounds, 50);
 
                             const closeBtn = triggerDiv.querySelector('.close-3d-btn');
                             const fsBtn = triggerDiv.querySelector('.fs-3d-btn');
@@ -889,7 +822,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     menuPositioner.style.visibility = 'visible';
                 }
                 isInternalHashUpdate = false;
-                enforceScreenBounds();
             }, 100);
         }, 150);
     }
