@@ -265,6 +265,57 @@ document.addEventListener('DOMContentLoaded', () => {
     let lockedW = window.innerWidth;
     let lockedH = window.innerHeight;
 
+    // 🔥 NEU: Der unsichtbare Wächter für deine Buttons
+    // Verhindert zu 100%, dass Knöpfe aus dem Bildschirmrand geschoben werden.
+    function enforceScreenBounds() {
+        const buttons = document.querySelectorAll('#home-btn, #fullscreen-btn, #close-legal, #back-to-book-btn, #back-to-start-btn, #next-project-btn, .close-3d-btn, .fs-3d-btn');
+        const padding = 20; // 20 Pixel Sicherheitsabstand zum Bildschirmrand
+        
+        // 1. Alle vorherigen Eingriffe löschen, damit das Original-CSS wirkt
+        buttons.forEach(btn => {
+            btn.style.setProperty('margin-left', '0px', 'important');
+            btn.style.setProperty('margin-right', '0px', 'important');
+            btn.style.setProperty('margin-top', '0px', 'important');
+            btn.style.setProperty('margin-bottom', '0px', 'important');
+        });
+
+        // 2. Den Browser zwingen, die Original-CSS Positionen kurz zu berechnen
+        void document.body.offsetHeight;
+
+        // 3. Nachmessen und bei Bedarf in den Bildschirm schieben
+        buttons.forEach(btn => {
+            const rect = btn.getBoundingClientRect();
+            if (rect.width === 0 && rect.height === 0) return; // Button ist unsichtbar
+
+            let shiftX = 0;
+            let shiftY = 0;
+
+            // Berührt er den linken oder rechten Rand?
+            if (rect.left < padding) {
+                shiftX = padding - rect.left;
+            } else if (rect.right > window.innerWidth - padding) {
+                shiftX = (window.innerWidth - padding) - rect.right;
+            }
+
+            // Berührt er den oberen oder unteren Rand?
+            if (rect.top < padding) {
+                shiftY = padding - rect.top;
+            } else if (rect.bottom > window.innerHeight - padding) {
+                shiftY = (window.innerHeight - padding) - rect.bottom;
+            }
+
+            // Wenn ja -> Sicher verschieben (ohne dein CSS zu zerstören!)
+            if (shiftX !== 0) {
+                btn.style.setProperty('margin-left', shiftX + 'px', 'important');
+                btn.style.setProperty('margin-right', -shiftX + 'px', 'important');
+            }
+            if (shiftY !== 0) {
+                btn.style.setProperty('margin-top', shiftY + 'px', 'important');
+                btn.style.setProperty('margin-bottom', -shiftY + 'px', 'important');
+            }
+        });
+    }
+
     function updateBookSize() {
         document.documentElement.style.overflow = 'hidden';
         document.body.style.overflow = 'hidden';
@@ -290,14 +341,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.classList.add('fit-height'); document.body.classList.remove('fit-width');
         }
         
-        // 🔥 FIX: Der "virtuelle Sicherheitsrahmen" für die Buttons.
-        // Das Buch bleibt originalgroß, aber den Buttons wird gemeldet, dass das Buch 140px schmaler ist.
-        // Dadurch rücken die Buttons garantiert immer sicher ins Bild (und notfalls ins Cover)!
-        const uiSafeWidth = Math.min(finalWidth, lockedW - 140);
-        const uiSafeHeight = Math.min(finalHeight, lockedH - 140);
-        
-        document.body.style.setProperty('--real-book-width', Math.max(0, uiSafeWidth) + 'px');
-        document.body.style.setProperty('--real-book-height', Math.max(0, uiSafeHeight) + 'px');
+        // 🔥 ZURÜCK AUF ORIGINAL: Die Variablen sind jetzt wieder zu 100% unverfälscht!
+        // Die Buttons sitzen im Normalzustand wieder exakt an ihrer Position.
+        document.body.style.setProperty('--real-book-width', finalWidth + 'px');
+        document.body.style.setProperty('--real-book-height', finalHeight + 'px');
         
         const bookContainer = document.getElementById('book');
         if (bookContainer) {
@@ -335,6 +382,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (viewport) {
                     viewport.content = 'width=device-width, initial-scale=1.0';
                 }
+                // Sicherheitsscan für die Buttons nach dem Aufbau
+                enforceScreenBounds();
             }, 50);
         }, 200); 
     }
@@ -579,6 +628,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ></model-viewer>
                             `;
 
+                            // Sicherheitsscan für die neu erstellten 3D-Buttons
+                            setTimeout(enforceScreenBounds, 50);
+
                             const closeBtn = triggerDiv.querySelector('.close-3d-btn');
                             const fsBtn = triggerDiv.querySelector('.fs-3d-btn');
 
@@ -748,6 +800,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 endOfBookMenu.style.transition = 'none';
                 endOfBookMenu.style.opacity = '0';
             }
+            // Sicherheitsscan, falls durch das Blättern neue Buttons auftauchen
+            setTimeout(enforceScreenBounds, 100);
         });
 
         pageFlip.on('changeState', (e) => {
@@ -811,6 +865,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     endOfBookMenu.style.opacity = '0'; 
                     endOfBookMenu.style.pointerEvents = 'none';
                 }
+                // Sicherheitsscan nach Abschluss der Umblätter-Animation
+                setTimeout(enforceScreenBounds, 50);
             }
         });
 
@@ -828,6 +884,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     menuPositioner.style.visibility = 'visible';
                 }
                 isInternalHashUpdate = false;
+                enforceScreenBounds();
             }, 100);
         }, 150);
     }
