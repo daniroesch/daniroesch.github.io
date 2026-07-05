@@ -13,7 +13,7 @@ const CONFIG = {
 
     // 🕵️ UNSICHTBARE PROJEKTE (Nur per Direktlink erreichbar)
     hiddenBooks: [
-        'Portfolio-MA' 
+        'geheim_haus' 
     ],
 
     // 🧊 DEINE 3D MODELLE
@@ -71,7 +71,7 @@ const CONFIG = {
             loading: "cargando . . .", 
             notAvailable: "proyecto aún no disponible en este idioma",
             
-            seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabajo y concepts.", 
+            seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabalho y concepts.", 
             seoH1: "Portafolio de Arquitectura de Daniel Rösch", 
             seoIntro: "Bienvenido al portafolio digital de Daniel Rösch. Aquí puedes encontrar mis proyectos:", 
             seoContact: "Contáctame en arch.daniroesch@gmail.com para consultas."
@@ -265,45 +265,60 @@ document.addEventListener('DOMContentLoaded', () => {
     let lockedW = window.innerWidth;
     let lockedH = window.innerHeight;
 
-    // 🔥 NEU: Der sanfte 15-Pixel Sicherheitszaun (Zitterfrei)
-    function clampButtonsToScreen() {
-        const buttons = document.querySelectorAll('#home-btn, #fullscreen-btn, #close-legal, #back-to-book-btn, #back-to-start-btn, #next-project-btn, .close-3d-btn, .fs-3d-btn');
-        const padding = 15; // 15 Pixel absolute Grenze zum Bildschirmrand
+    // 🔥 DIE MATHEMATISCH PERFEKTE UND RUHIGE RANDKONTROLLE (3 Pixel!)
+    function enforceScreenBounds() {
+        const topBtns = document.querySelectorAll('#home-btn, .close-3d-btn, #close-legal, #back-to-book-btn');
+        const bottomBtns = document.querySelectorAll('#fullscreen-btn, .fs-3d-btn');
+        const allBtns = [...topBtns, ...bottomBtns];
         
-        // Lösche alte Korrekturen, um die reine CSS-Position relativ zum Buch zu messen
-        buttons.forEach(btn => {
-            btn.style.removeProperty('translate');
-        });
-
-        // Browser zum Berechnen der echten Position zwingen
+        allBtns.forEach(btn => btn.style.removeProperty('translate'));
         void document.body.offsetHeight;
 
-        buttons.forEach(btn => {
+        let unifiedPadding = 3; // 🔥 3 CSS-Pixel Sicherheitsabstand (extrem nah am Rand!)
+        let minDistance = Infinity;
+
+        // Echten CSS-Abstand nachmessen
+        for (let btn of allBtns) {
+            const r = btn.getBoundingClientRect();
+            if (r.width > 0 && r.height > 0) {
+                const distTop = r.top;
+                const distBottom = window.innerHeight - r.bottom;
+                const distLeft = r.left;
+                const distRight = window.innerWidth - r.right;
+                
+                const localMin = Math.min(distTop, distBottom, distLeft, distRight);
+                if (localMin >= 0 && localMin < minDistance) {
+                    minDistance = localMin;
+                }
+            }
+        }
+        
+        // Entweder nehmen wir den Abstand aus deinem CSS (z.B. 28px), 
+        // oder mindestens unsere 3 Pixel Sicherheitszaun!
+        if (minDistance < 100 && minDistance >= 3) {
+            unifiedPadding = minDistance; 
+        }
+
+        allBtns.forEach(btn => {
             const rect = btn.getBoundingClientRect();
-            // Unsichtbare Buttons ignorieren
             if (rect.width === 0 && rect.height === 0) return; 
 
             let shiftX = 0;
             let shiftY = 0;
 
-            // Ist der Knopf LINKS näher als 15px am Bildschirmrand?
-            if (rect.left < padding) {
-                shiftX = padding - rect.left;
-            // Ist er RECHTS näher als 15px am Rand?
-            } else if (rect.right > window.innerWidth - padding) {
-                shiftX = (window.innerWidth - padding) - rect.right;
+            if (Array.from(bottomBtns).includes(btn)) {
+                shiftY = (window.innerHeight - unifiedPadding) - rect.bottom; 
+            } else {
+                shiftY = unifiedPadding - rect.top;
             }
 
-            // Ist er OBEN näher als 15px am Rand?
-            if (rect.top < padding) {
-                shiftY = padding - rect.top;
-            // Ist er UNTEN näher als 15px am Rand?
-            } else if (rect.bottom > window.innerHeight - padding) {
-                shiftY = (window.innerHeight - padding) - rect.bottom;
+            const isLeft = (rect.left + rect.width / 2) < (window.innerWidth / 2);
+            if (isLeft) {
+                shiftX = unifiedPadding - rect.left;
+            } else {
+                shiftX = (window.innerWidth - unifiedPadding) - rect.right;
             }
 
-            // Nur eingreifen, wenn der Zaun wirklich berührt wurde!
-            // Schiebt den Button per CSS in Sicherheit (notfalls ins Buch hinein).
             if (shiftX !== 0 || shiftY !== 0) {
                 btn.style.setProperty('translate', `${shiftX}px ${shiftY}px`, 'important');
             }
@@ -370,11 +385,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pageFlip) pageFlip.update();
 
             setTimeout(() => {
-                clampButtonsToScreen(); // Sicherheitszaun aktivieren
                 if (bookWrapper) bookWrapper.style.opacity = '1';
                 if (viewport) {
                     viewport.content = 'width=device-width, initial-scale=1.0';
                 }
+                // Einmaliger Wächter-Aufruf, nachdem alles fertig geladen ist
+                enforceScreenBounds();
             }, 50);
         }, 200); 
     }
@@ -560,7 +576,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function buildBook(imageUrls, folder, width, height, initialPage = 0) {
         const bookContainer = document.getElementById('book');
-        const niceBookName = currentBook.replace(/[-_g]/g, ' ');
+        const niceBookName = currentBook.replace(/[-_]/g, ' ');
 
         imageUrls.forEach((file) => {
             const pageDiv = document.createElement('div');
@@ -619,8 +635,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ></model-viewer>
                             `;
 
-                            // Sicherheitszaun für die neu erzeugten 3D-Buttons anwenden
-                            setTimeout(clampButtonsToScreen, 50);
+                            // Wächter-Check für die neu erschienenen 3D Knöpfe
+                            setTimeout(enforceScreenBounds, 50);
 
                             const closeBtn = triggerDiv.querySelector('.close-3d-btn');
                             const fsBtn = triggerDiv.querySelector('.fs-3d-btn');
@@ -749,6 +765,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // 🔥 WICHTIG: KEIN enforceScreenBounds() MEHR WÄHREND DEM BLÄTTERN!
         pageFlip.on('flip', (e) => {
             const targetPage = e.data; 
             const totalPages = pageFlip.getPageCount();
@@ -824,9 +841,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 pendingTargetPage = -1; 
                 isInternalHashUpdate = false;
-                
-                // 🔥 Hier greift der Wächter (zitterfrei nach dem Umblättern), bevor die Knöpfe sichtbar werden
-                clampButtonsToScreen();
 
                 if (currentPage === 0) {
                     menuPositioner.style.zIndex = '3'; 
@@ -864,8 +878,6 @@ document.addEventListener('DOMContentLoaded', () => {
             updateBookSize();
             if (pageFlip) pageFlip.update();
             setTimeout(() => {
-                clampButtonsToScreen(); // Initialer Sicherheitscheck
-                
                 if (pageFlip && pageFlip.getCurrentPageIndex() === 0) {
                     menuPositioner.style.zIndex = '3';
                     startMenu.style.pointerEvents = 'auto';
@@ -876,6 +888,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     menuPositioner.style.visibility = 'visible';
                 }
                 isInternalHashUpdate = false;
+                
+                // 🔥 Einmaliger Aufruf, NACHDEM alles ruhig und stabil ist.
+                enforceScreenBounds();
             }, 100);
         }, 150);
     }
