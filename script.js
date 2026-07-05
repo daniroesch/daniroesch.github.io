@@ -71,7 +71,7 @@ const CONFIG = {
             loading: "cargando . . .", 
             notAvailable: "proyecto aún no disponible en este idioma",
             
-            seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabajo y conceptos.", 
+            seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabajo y concepts.", 
             seoH1: "Portafolio de Arquitectura de Daniel Rösch", 
             seoIntro: "Bienvenido al portafolio digital de Daniel Rösch. Aquí puedes encontrar mis proyectos:", 
             seoContact: "Contáctame en arch.daniroesch@gmail.com para consultas."
@@ -265,44 +265,36 @@ document.addEventListener('DOMContentLoaded', () => {
     let lockedW = window.innerWidth;
     let lockedH = window.innerHeight;
 
-    // 🔥 DIE NEUE, 100% SICHERE RAND-KONTROLLE FÜR DIE BUTTONS
     function enforceScreenBounds() {
-        const buttons = document.querySelectorAll('#home-btn, #fullscreen-btn');
-        const padding = 20; // Sicherheitsabstand zum Rand in Pixeln
+        const buttons = document.querySelectorAll('#home-btn, #fullscreen-btn, #close-legal, #back-to-book-btn, #back-to-start-btn, #next-project-btn, .close-3d-btn, .fs-3d-btn');
+        // 🔥 HIER GEÄNDERT: Sicherheitsabstand auf 5 Pixel reduziert!
+        const padding = 5; 
         
-        // 1. Zuerst unsere eventuell gesetzten "Schiebe-Befehle" entfernen,
-        // damit wir die Original-Position aus deinem CSS messen können.
         buttons.forEach(btn => {
             btn.style.removeProperty('translate');
         });
 
-        // Den Browser zwingen, die echte Position kurz zu berechnen
         void document.body.offsetHeight;
 
-        // 2. Positionen nachmessen
         buttons.forEach(btn => {
             const rect = btn.getBoundingClientRect();
-            // Wenn der Knopf aktuell unsichtbar ist (display: none), abbrechen
             if (rect.width === 0 && rect.height === 0) return; 
 
             let shiftX = 0;
             let shiftY = 0;
 
-            // Berührt er den linken oder rechten Bildschirmrand?
             if (rect.left < padding) {
-                shiftX = padding - rect.left; // Schiebe nach rechts
+                shiftX = padding - rect.left;
             } else if (rect.right > window.innerWidth - padding) {
-                shiftX = (window.innerWidth - padding) - rect.right; // Schiebe nach links (negativer Wert)
+                shiftX = (window.innerWidth - padding) - rect.right;
             }
 
-            // Berührt er den oberen oder unteren Bildschirmrand?
             if (rect.top < padding) {
-                shiftY = padding - rect.top; // Schiebe nach unten
+                shiftY = padding - rect.top;
             } else if (rect.bottom > window.innerHeight - padding) {
-                shiftY = (window.innerHeight - padding) - rect.bottom; // Schiebe nach oben (negativer Wert)
+                shiftY = (window.innerHeight - padding) - rect.bottom;
             }
 
-            // 3. WENN ER DEN RAND BERÜHRT -> Physikalisch auf dem Bildschirm verschieben (translate)
             if (shiftX !== 0 || shiftY !== 0) {
                 btn.style.setProperty('translate', `${shiftX}px ${shiftY}px`, 'important');
             }
@@ -373,8 +365,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (viewport) {
                     viewport.content = 'width=device-width, initial-scale=1.0';
                 }
-                
-                // 🔥 Nach jeder Neuberechnung die Knöpfe in Sicherheit bringen!
                 enforceScreenBounds();
             }, 50);
         }, 200); 
@@ -619,6 +609,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                     style="width: 100%; height: 100%; background-color: #ffffff !important; color-scheme: light !important; outline: none;"
                                 ></model-viewer>
                             `;
+
+                            setTimeout(enforceScreenBounds, 50);
 
                             const closeBtn = triggerDiv.querySelector('.close-3d-btn');
                             const fsBtn = triggerDiv.querySelector('.fs-3d-btn');
@@ -869,8 +861,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     menuPositioner.style.visibility = 'visible';
                 }
                 isInternalHashUpdate = false;
-                
-                // 🔥 Nach dem allerersten Laden prüfen wir EINMAL, ob die Knöpfe im Bild sind.
                 enforceScreenBounds();
             }, 100);
         }, 150);
