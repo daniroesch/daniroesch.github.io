@@ -5,7 +5,6 @@
 const CONFIG = {
     // 📁 DEINE PROJEKTE (BÜCHER) -> ⚠️ HIER DEINE ECHTEN ORDNERNAMEN EINTRAGEN! ⚠️
     books: [
-        'Portfolio-MA', 
         'book_1', 
         'book_2',
         'book_3',
@@ -88,18 +87,16 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) ⚙️
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V1 BASE
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Verhindert das Font-Boosting (riesigen Text) auf mobilen Geräten.
     document.documentElement.style.webkitTextSizeAdjust = '100%';
     document.body.style.webkitTextSizeAdjust = '100%';
     document.documentElement.style.textSizeAdjust = '100%';
     document.body.style.textSizeAdjust = '100%';
 
-    // Schutzschild: Friert das Buch ein, solange ein 3D Modell offen ist!
     let is3DModelActive = false;
 
     const emailLinkElem = document.getElementById('link-email');
@@ -143,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let zoomCooldown = false; let zoomTimeout;
     function protectZoom(e) {
-        // VIP-AUSWEIS: 3D-Modell im Zoom-Modus immer drehbar
         if (e.composedPath && e.composedPath().some(el => el.tagName && el.tagName.toUpperCase() === 'MODEL-VIEWER')) {
             return; 
         }
@@ -245,7 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔥 DIE UNIVERSELLE ANKER-LOGIK
     let lockedW = window.innerWidth;
     let lockedH = window.innerHeight;
 
@@ -253,7 +248,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.style.overflow = 'hidden';
         document.body.style.overflow = 'hidden';
         
-        // Fixieren des Körpers auf die zuletzt gemessenen Pixel
         document.body.style.width = lockedW + 'px';
         document.body.style.height = lockedH + 'px';
 
@@ -285,12 +279,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔥 DER MAGISCHE ROTATIONS-FIX
     function performLayoutRecalculation() {
         const viewport = document.querySelector('meta[name="viewport"]');
 
-        // 1. WICHTIG: Wir lösen das Korsett für eine Millisekunde!
-        // So kann das gedrehte Gerät seine neuen, echten Maße korrekt berechnen.
         document.body.style.width = '';
         document.body.style.height = '';
         if (bookView) {
@@ -304,25 +295,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (bookWrapper) bookWrapper.style.opacity = '0';
 
-        // 2. Kurz warten, bis der Browser die Rotation verarbeitet hat
         setTimeout(() => {
-            // Jetzt lesen wir die sauberen, echten Hoch-/Querformat-Pixel aus
             lockedW = window.innerWidth;
             lockedH = window.innerHeight;
             window.scrollTo(0, 0);
 
-            // Gießen das neue Korsett
             updateBookSize();
             if (pageFlip) pageFlip.update();
 
-            // 3. Sichtbarkeit und Zoom wieder einschalten
             setTimeout(() => {
                 if (bookWrapper) bookWrapper.style.opacity = '1';
                 if (viewport) {
                     viewport.content = 'width=device-width, initial-scale=1.0';
                 }
             }, 50);
-        }, 200); // 200ms reichen dem Smartphone vollkommen aus
+        }, 200); 
     }
 
     let resizeTimer;
@@ -331,8 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (is3DModelActive) return;
 
         const currentW = window.innerWidth;
-        
-        // Tablet-Schutz: Wenn die Breite sich kaum ändert (Adressleiste poppt auf), mach GAR NICHTS!
         if (Math.abs(currentW - lockedW) < 10) {
             return; 
         }
@@ -849,8 +834,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 let foundNext = false;
                 let nextBook = currentBook;
 
-                for (let i = 1; i < CONFIG.books.length; i++) {
-                    let checkIndex = (currentIndex + i) % CONFIG.books.length;
+                for (let i = 1; i <= CONFIG.books.length; i++) {
+                    let checkIndex = (currentIndex === -1) ? (i - 1) : (currentIndex + i) % CONFIG.books.length;
+                    
                     let checkBook = CONFIG.books[checkIndex];
                     let folder = `${checkBook}/pages_${currentLang}/`;
                     
@@ -863,7 +849,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 btn.innerText = originalText;
-                btn.style.pointerEvents = 'auto';
+                
+                // 🔥 HIER IST DER FIX: Die Inline-Sonderregel wird gelöscht, statt auf 'auto' gezwungen zu werden.
+                // Dadurch ordnet sich der Button unsichtbar den Regeln des Menüs unter!
+                btn.style.pointerEvents = ''; 
 
                 if (foundNext) {
                     window.location.hash = `/${nextBook}/${currentLang}/1`;
