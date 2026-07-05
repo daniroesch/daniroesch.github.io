@@ -265,36 +265,54 @@ document.addEventListener('DOMContentLoaded', () => {
     let lockedW = window.innerWidth;
     let lockedH = window.innerHeight;
 
+    // 🔥 DIE MATHEMATISCH PERFEKTE RANDKONTROLLE
     function enforceScreenBounds() {
-        const buttons = document.querySelectorAll('#home-btn, #fullscreen-btn, #close-legal, #back-to-book-btn, #back-to-start-btn, #next-project-btn, .close-3d-btn, .fs-3d-btn');
-        // 🔥 HIER GEÄNDERT: Sicherheitsabstand auf 5 Pixel reduziert!
-        const padding = 5; 
+        // Obere Knöpfe (X) und untere Knöpfe ([ ]) trennen
+        const topBtns = document.querySelectorAll('#home-btn, .close-3d-btn, #close-legal, #back-to-book-btn');
+        const bottomBtns = document.querySelectorAll('#fullscreen-btn, .fs-3d-btn');
+        const allBtns = [...topBtns, ...bottomBtns];
         
-        buttons.forEach(btn => {
-            btn.style.removeProperty('translate');
-        });
-
+        // Zurücksetzen für Rohmessung
+        allBtns.forEach(btn => btn.style.removeProperty('translate'));
         void document.body.offsetHeight;
 
-        buttons.forEach(btn => {
+        // 1. Die echte visuelle Distanz des oberen "X" zum Bildschirmrand messen
+        let unifiedPadding = 25; // Fallback, falls kein Button sichtbar
+        for (let btn of topBtns) {
+            const r = btn.getBoundingClientRect();
+            if (r.top > 0 && r.width > 0) {
+                unifiedPadding = r.top; // z.B. exakt 28px
+                break;
+            }
+        }
+
+        // 2. Allen Buttons exakt diesen einen gemessenen Wert aufzwingen!
+        allBtns.forEach(btn => {
             const rect = btn.getBoundingClientRect();
             if (rect.width === 0 && rect.height === 0) return; 
 
             let shiftX = 0;
             let shiftY = 0;
 
-            if (rect.left < padding) {
-                shiftX = padding - rect.left;
-            } else if (rect.right > window.innerWidth - padding) {
-                shiftX = (window.innerWidth - padding) - rect.right;
+            // Vertikale Symmetrie herstellen
+            if (Array.from(bottomBtns).includes(btn)) {
+                // Untere Knöpfe: Abstand nach unten muss exakt unifiedPadding sein
+                const currentBottom = window.innerHeight - rect.bottom;
+                shiftY = currentBottom - unifiedPadding; 
+            } else {
+                // Obere Knöpfe: Abstand nach oben muss exakt unifiedPadding sein
+                const currentTop = rect.top;
+                shiftY = unifiedPadding - currentTop;
             }
 
-            if (rect.top < padding) {
-                shiftY = padding - rect.top;
-            } else if (rect.bottom > window.innerHeight - padding) {
-                shiftY = (window.innerHeight - padding) - rect.bottom;
+            // Horizontale Ränder: Links und rechts genau denselben Abstand verwenden!
+            if (rect.left < unifiedPadding) {
+                shiftX = unifiedPadding - rect.left;
+            } else if (rect.right > window.innerWidth - unifiedPadding) {
+                shiftX = (window.innerWidth - unifiedPadding) - rect.right;
             }
 
+            // Sicher anwenden via CSS Translate
             if (shiftX !== 0 || shiftY !== 0) {
                 btn.style.setProperty('translate', `${shiftX}px ${shiftY}px`, 'important');
             }
