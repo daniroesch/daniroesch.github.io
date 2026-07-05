@@ -71,7 +71,7 @@ const CONFIG = {
             loading: "cargando . . .", 
             notAvailable: "proyecto aún no disponible en este idioma",
             
-            seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabalho y concepts.", 
+            seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabajo y concepts.", 
             seoH1: "Portafolio de Arquitectura de Daniel Rösch", 
             seoIntro: "Bienvenido al portafolio digital de Daniel Rösch. Aquí puedes encontrar mis proyectos:", 
             seoContact: "Contáctame en arch.daniroesch@gmail.com para consultas."
@@ -265,63 +265,53 @@ document.addEventListener('DOMContentLoaded', () => {
     let lockedW = window.innerWidth;
     let lockedH = window.innerHeight;
 
-    // 🔥 DIE MATHEMATISCH PERFEKTE UND RUHIGE RANDKONTROLLE (3 Pixel!)
-    function enforceScreenBounds() {
-        const topBtns = document.querySelectorAll('#home-btn, .close-3d-btn, #close-legal, #back-to-book-btn');
-        const bottomBtns = document.querySelectorAll('#fullscreen-btn, .fs-3d-btn');
-        const allBtns = [...topBtns, ...bottomBtns];
-        
-        allBtns.forEach(btn => btn.style.removeProperty('translate'));
-        void document.body.offsetHeight;
+    // 🔥 DIE GEREINIGTE 3-PIXEL SICHERHEIT (KEIN ZITTERN, KEIN CHAOS)
+    function clampButtonsToScreen() {
+        const buttons = document.querySelectorAll('#home-btn, #fullscreen-btn, #close-legal, #back-to-book-btn, #back-to-start-btn, #next-project-btn, .close-3d-btn, .fs-3d-btn');
+        const padding = 3; // Exakt 3 CSS-Pixel "Sicherheitszaun" zum Bildschirmrand
 
-        let unifiedPadding = 3; // 🔥 3 CSS-Pixel Sicherheitsabstand (extrem nah am Rand!)
-        let minDistance = Infinity;
+        buttons.forEach(btn => {
+            // 1. Kurz weiche Animationen abschalten & alte Skript-Verschiebungen löschen
+            const oldTransition = btn.style.transition;
+            btn.style.setProperty('transition', 'none', 'important');
+            btn.style.removeProperty('translate');
+            
+            // Browser zwingen, diese Rücksetzung auf das reine CSS zu übernehmen
+            void btn.offsetHeight;
 
-        // Echten CSS-Abstand nachmessen
-        for (let btn of allBtns) {
-            const r = btn.getBoundingClientRect();
-            if (r.width > 0 && r.height > 0) {
-                const distTop = r.top;
-                const distBottom = window.innerHeight - r.bottom;
-                const distLeft = r.left;
-                const distRight = window.innerWidth - r.right;
-                
-                const localMin = Math.min(distTop, distBottom, distLeft, distRight);
-                if (localMin >= 0 && localMin < minDistance) {
-                    minDistance = localMin;
-                }
-            }
-        }
-        
-        // Entweder nehmen wir den Abstand aus deinem CSS (z.B. 28px), 
-        // oder mindestens unsere 3 Pixel Sicherheitszaun!
-        if (minDistance < 100 && minDistance >= 3) {
-            unifiedPadding = minDistance; 
-        }
-
-        allBtns.forEach(btn => {
+            // 2. Pure CSS-Position nachmessen (ohne Bewegung)
             const rect = btn.getBoundingClientRect();
-            if (rect.width === 0 && rect.height === 0) return; 
+            if (rect.width === 0 && rect.height === 0) return; // Button ist unsichtbar
 
             let shiftX = 0;
             let shiftY = 0;
 
-            if (Array.from(bottomBtns).includes(btn)) {
-                shiftY = (window.innerHeight - unifiedPadding) - rect.bottom; 
-            } else {
-                shiftY = unifiedPadding - rect.top;
+            // Ist der Button zu nah am linken Rand?
+            if (rect.left < padding) {
+                shiftX = padding - rect.left;
+            } 
+            // Ist er zu nah am rechten Rand?
+            else if (rect.right > window.innerWidth - padding) {
+                shiftX = (window.innerWidth - padding) - rect.right;
             }
 
-            const isLeft = (rect.left + rect.width / 2) < (window.innerWidth / 2);
-            if (isLeft) {
-                shiftX = unifiedPadding - rect.left;
-            } else {
-                shiftX = (window.innerWidth - unifiedPadding) - rect.right;
+            // Ist er zu nah am oberen Rand?
+            if (rect.top < padding) {
+                shiftY = padding - rect.top;
+            } 
+            // Ist er zu nah am unteren Rand?
+            else if (rect.bottom > window.innerHeight - padding) {
+                shiftY = (window.innerHeight - padding) - rect.bottom;
             }
 
+            // 3. Nur korrigieren, wenn er WIRKLICH den Zaun berührt!
             if (shiftX !== 0 || shiftY !== 0) {
                 btn.style.setProperty('translate', `${shiftX}px ${shiftY}px`, 'important');
             }
+
+            // 4. Animationen wiederherstellen
+            void btn.offsetHeight;
+            btn.style.transition = oldTransition;
         });
     }
 
@@ -389,8 +379,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (viewport) {
                     viewport.content = 'width=device-width, initial-scale=1.0';
                 }
-                // Einmaliger Wächter-Aufruf, nachdem alles fertig geladen ist
-                enforceScreenBounds();
+                
+                // 🔥 Einmaliger Aufruf, wenn das Layout 100% still steht
+                clampButtonsToScreen();
             }, 50);
         }, 200); 
     }
@@ -635,8 +626,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ></model-viewer>
                             `;
 
-                            // Wächter-Check für die neu erschienenen 3D Knöpfe
-                            setTimeout(enforceScreenBounds, 50);
+                            // Wächter-Aufruf für 3D-Buttons (Nachdem das HTML geladen ist)
+                            setTimeout(clampButtonsToScreen, 50);
 
                             const closeBtn = triggerDiv.querySelector('.close-3d-btn');
                             const fsBtn = triggerDiv.querySelector('.fs-3d-btn');
@@ -765,7 +756,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 🔥 WICHTIG: KEIN enforceScreenBounds() MEHR WÄHREND DEM BLÄTTERN!
         pageFlip.on('flip', (e) => {
             const targetPage = e.data; 
             const totalPages = pageFlip.getPageCount();
@@ -871,6 +861,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     endOfBookMenu.style.opacity = '0'; 
                     endOfBookMenu.style.pointerEvents = 'none';
                 }
+                
+                // 🔥 Einmaliger Aufruf, wenn die Seite GANZ RUHIG liegt
+                setTimeout(clampButtonsToScreen, 50);
             }
         });
 
@@ -889,8 +882,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 isInternalHashUpdate = false;
                 
-                // 🔥 Einmaliger Aufruf, NACHDEM alles ruhig und stabil ist.
-                enforceScreenBounds();
+                // Einmaliger Wächter-Check beim finalen Aufschlagen des Buchs
+                clampButtonsToScreen();
             }, 100);
         }, 150);
     }
