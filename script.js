@@ -13,7 +13,7 @@ const CONFIG = {
 
     // 🕵️ UNSICHTBARE PROJEKTE (Nur per Direktlink erreichbar)
     hiddenBooks: [
-        'geheim_haus' 
+        'Portfolio-MA' 
     ],
 
     // 🧊 DEINE 3D MODELLE
@@ -21,8 +21,14 @@ const CONFIG = {
         'book_1': { 
             5: '5.glb'
         },
+        'book_2': { 
+            3: '5.glb'
+        },
+        'book_4': { 
+            6: '5.glb'
+        },
         'geheim_haus': {
-            3: 'geheimes_modell.glb'
+            3: '5.glb'
         }
     },
 
@@ -32,6 +38,17 @@ const CONFIG = {
             2: { type: 'youtube', id: 'fcPWJ-4ziXY' }, 
             4: { type: 'vimeo', id: '525692078' },      
             6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } // Läuft jetzt endlos im Loop, wie ein GIF!
+        }
+        'book_3': {
+            2: { type: 'youtube', id: 'fcPWJ-4ziXY' },
+        }
+        'Portfolio-MA': {
+            2: { type: 'youtube', id: 'fcPWJ-4ziXY' }, 
+            4: { type: 'vimeo', id: '525692078' },      
+            6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } // Läuft jetzt endlos im Loop, wie ein GIF!
+        }
+        'book_4': {
+            1: { type: 'vimeo', id: '525692078' },      
         }
     },
 
