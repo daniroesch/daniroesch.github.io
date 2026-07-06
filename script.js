@@ -25,6 +25,7 @@ const CONFIG = {
             3: '5.glb'
         },
         'book_4': { 
+            0: '5.glb'
             6: '5.glb'
         },
         'geheim_haus': {
@@ -48,7 +49,7 @@ const CONFIG = {
             6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } // Läuft jetzt endlos im Loop, wie ein GIF!
         },
         'book_4': {
-            1: { type: 'vimeo', id: '525692078' },      
+            0: { type: 'vimeo', id: '525692078' },      
         },
     },
 
