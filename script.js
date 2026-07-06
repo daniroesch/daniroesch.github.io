@@ -30,8 +30,8 @@ const CONFIG = {
     // Trage hier ein, auf welcher Seite welches Video starten soll.
     videos: {
         'book_1': {
-            2: { type: 'youtube', id: 'dQw4w9WgXcQ' }, // Beispiel: YouTube Video-ID auf Seite 2
-            4: { type: 'vimeo', id: '76979871' },      // Beispiel: Vimeo Video-ID auf Seite 4
+            2: { type: 'youtube', id: 'fcPWJ-4ziXY&t=16s' }, // Beispiel: YouTube Video-ID auf Seite 2
+            4: { type: 'vimeo', id: '525692078' },      // Beispiel: Vimeo Video-ID auf Seite 4
             6: { type: 'local', id: 'hero/diagramm.mp4' } // Beispiel: Lokales MP4 auf Seite 6
         }
     },
