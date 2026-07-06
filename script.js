@@ -27,9 +27,9 @@ const CONFIG = {
     },
 
     // 🎬 DEINE VIDEOS (Unterstützt 'youtube', 'vimeo' und 'local')
-    // Du kannst ab sofort die nackte ID ODER den kompletten Link einfügen!
     videos: {
         'book_1': {
+            // Teste es! Der Müll (&t) wird jetzt vollautomatisch herausgefiltert.
             2: { type: 'youtube', id: 'fcPWJ-4ziXY&t' }, 
             4: { type: 'vimeo', id: '525692078' },      
             6: { type: 'local', id: 'hero/diagramm.mp4' } 
@@ -105,7 +105,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.1 PLATFORM
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.2 PLATFORM
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -588,7 +588,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 triggerDiv.style.cssText = 'width: 100%; height: 100%; display: block; position: relative; background-color: #ffffff !important; color-scheme: light !important;';
                 
-                // 🔥 FIX 1: Hitbox massiv auf 40% verkleinert! Sie blockiert jetzt keine Wischbewegungen mehr an den Rändern.
                 const originalHtml = `
                     <img src="${folder}${file}" alt="Daniel Rösch Medien Vorschau" style="width: 100%; height: 100%; object-fit: cover;">
                     <div class="activation-hitbox" style="position: absolute; top: 30%; left: 30%; width: 40%; height: 40%; z-index: 10; cursor: pointer;"></div>
@@ -599,7 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const blockFlip = (e) => {
                     if (!triggerDiv.classList.contains('model-active')) {
                         if (e.target.classList.contains('activation-hitbox')) {
-                            e.stopPropagation(); // Blockiert das Blättern, ABER NUR noch in der kleinen 40% Hitbox!
+                            e.stopPropagation();
                         }
                     }
                 };
@@ -631,17 +630,17 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const videoData = CONFIG.videos[currentBook][pageNum];
                                 let playerHtml = '';
 
-                                // 🔥 FIX 2: Der intelligente ID-Scanner für YouTube und Vimeo
+                                // 🔥 DIE NEUE "LINK-WASCHANLAGE" FÜR PERFEKTES VIDEO-LADEN
                                 if (videoData.type === 'youtube') {
-                                    let ytId = videoData.id;
-                                    const ytMatch = ytId.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?\n]+)/);
-                                    if (ytMatch) ytId = ytMatch[1];
+                                    let ytId = videoData.id.trim();
+                                    const ytMatch = ytId.match(/[a-zA-Z0-9_-]{11}/);
+                                    if (ytMatch) ytId = ytMatch[0]; // Extrahiert exakt die echten 11 Zeichen!
                                     
                                     playerHtml = `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen"></iframe>`;
                                 } else if (videoData.type === 'vimeo') {
-                                    let vimId = videoData.id;
-                                    const vimMatch = vimId.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(\d+)/);
-                                    if (vimMatch) vimId = vimMatch[1];
+                                    let vimId = videoData.id.trim();
+                                    const vimMatch = vimId.match(/\d+/);
+                                    if (vimMatch) vimId = vimMatch[0]; // Extrahiert nur die reinen Nummern!
                                     
                                     playerHtml = `<iframe src="https://player.vimeo.com/video/${vimId}?autoplay=1" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen"></iframe>`;
                                 } else if (videoData.type === 'local') {
