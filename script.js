@@ -32,7 +32,7 @@ const CONFIG = {
             // Teste es! Der Müll (&t) wird jetzt vollautomatisch herausgefiltert.
             2: { type: 'youtube', id: 'fcPWJ-4ziXY&t' }, 
             4: { type: 'vimeo', id: '525692078' },      
-            6: { type: 'local', id: 'hero/diagramm.mp4' } 
+            6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } 
         }
     },
 
