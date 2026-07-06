@@ -29,10 +29,9 @@ const CONFIG = {
     // 🎬 DEINE VIDEOS (Unterstützt 'youtube', 'vimeo' und 'local')
     videos: {
         'book_1': {
-            // Teste es! Der Müll (&t) wird jetzt vollautomatisch herausgefiltert.
-            2: { type: 'youtube', id: 'fcPWJ-4ziXY&t' }, 
+            2: { type: 'youtube', id: 'fcPWJ-4ziXY' }, 
             4: { type: 'vimeo', id: '525692078' },      
-            6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } 
+            6: { type: 'local', id: 'hero/diagramm.mp4' } // Läuft jetzt endlos im Loop, wie ein GIF!
         }
     },
 
@@ -105,7 +104,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.2 PLATFORM
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.3 PLATFORM
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -630,21 +629,23 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const videoData = CONFIG.videos[currentBook][pageNum];
                                 let playerHtml = '';
 
-                                // 🔥 DIE NEUE "LINK-WASCHANLAGE" FÜR PERFEKTES VIDEO-LADEN
-                                if (videoData.type === 'youtube') {
+                                const safeType = videoData.type.toLowerCase().trim();
+
+                                if (safeType === 'youtube') {
                                     let ytId = videoData.id.trim();
                                     const ytMatch = ytId.match(/[a-zA-Z0-9_-]{11}/);
-                                    if (ytMatch) ytId = ytMatch[0]; // Extrahiert exakt die echten 11 Zeichen!
+                                    if (ytMatch) ytId = ytMatch[0];
                                     
                                     playerHtml = `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen"></iframe>`;
-                                } else if (videoData.type === 'vimeo') {
+                                } else if (safeType === 'vimeo') {
                                     let vimId = videoData.id.trim();
                                     const vimMatch = vimId.match(/\d+/);
-                                    if (vimMatch) vimId = vimMatch[0]; // Extrahiert nur die reinen Nummern!
+                                    if (vimMatch) vimId = vimMatch[0]; 
                                     
                                     playerHtml = `<iframe src="https://player.vimeo.com/video/${vimId}?autoplay=1" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen"></iframe>`;
-                                } else if (videoData.type === 'local') {
-                                    playerHtml = `<video src="${videoData.id}" autoplay controls style="width:100%; height:100%; object-fit:contain; background:#ffffff;"></video>`;
+                                } else if (safeType === 'local') {
+                                    // 🔥 V2.3 FIX: Lokale Videos verhalten sich jetzt exakt wie GIFs (Loop, kein Ton, unsichtbare Steuerung)
+                                    playerHtml = `<video src="${videoData.id}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit:contain; background:#ffffff; pointer-events:none;"></video>`;
                                 }
 
                                 triggerDiv.innerHTML = uiButtonsHtml + playerHtml;
