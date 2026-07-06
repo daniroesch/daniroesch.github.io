@@ -25,7 +25,7 @@ const CONFIG = {
             3: 'book_1/5.glb' // Wiederverwendung desselben Modells aus book_1!
         },
         'book_4': { 
-            0: 'book_1/5.glb
+            0: 'book_1/5.glb'
             6: 'book_1/5.glb' // Eigener, buchübergreifender Ordner möglich!
         },
         'Portfolio-MA': {
