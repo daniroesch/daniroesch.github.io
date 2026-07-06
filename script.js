@@ -26,13 +26,13 @@ const CONFIG = {
         }
     },
 
-    // 🎬 DEINE VIDEOS (Unterstützt 'youtube', 'vimeo' und 'local' .mp4)
-    // Trage hier ein, auf welcher Seite welches Video starten soll.
+    // 🎬 DEINE VIDEOS (Unterstützt 'youtube', 'vimeo' und 'local')
+    // Du kannst ab sofort die nackte ID ODER den kompletten Link einfügen!
     videos: {
         'book_1': {
-            2: { type: 'youtube', id: 'fcPWJ-4ziXY&t=16s' }, // Beispiel: YouTube Video-ID auf Seite 2
-            4: { type: 'vimeo', id: '525692078' },      // Beispiel: Vimeo Video-ID auf Seite 4
-            6: { type: 'local', id: 'hero/diagramm.mp4' } // Beispiel: Lokales MP4 auf Seite 6
+            2: { type: 'youtube', id: 'fcPWJ-4ziXY&t' }, 
+            4: { type: 'vimeo', id: '525692078' },      
+            6: { type: 'local', id: 'hero/diagramm.mp4' } 
         }
     },
 
@@ -105,7 +105,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2 PLATFORM
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.1 PLATFORM
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -162,7 +162,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.composedPath && e.composedPath().some(el => el.tagName && el.tagName.toUpperCase() === 'MODEL-VIEWER')) {
             return; 
         }
-        // Schutz auch auf Video-Elemente ausweiten im Zoom
         if (e.composedPath && e.composedPath().some(el => el.tagName && (el.tagName.toUpperCase() === 'VIDEO' || el.tagName.toUpperCase() === 'IFRAME'))) {
             return;
         }
@@ -279,59 +278,43 @@ document.addEventListener('DOMContentLoaded', () => {
     let lockedW = window.innerWidth;
     let lockedH = window.innerHeight;
 
-    function enforceScreenBounds() {
-        const topBtns = document.querySelectorAll('#home-btn, .close-3d-btn, #close-legal, #back-to-book-btn');
-        const bottomBtns = document.querySelectorAll('#fullscreen-btn, .fs-3d-btn');
-        const allBtns = [...topBtns, ...bottomBtns];
-        
-        allBtns.forEach(btn => btn.style.removeProperty('translate'));
-        void document.body.offsetHeight;
+    function clampButtonsToScreen() {
+        const buttons = document.querySelectorAll('#home-btn, #fullscreen-btn, #close-legal, #back-to-book-btn, #back-to-start-btn, #next-project-btn, .close-3d-btn, .fs-3d-btn');
+        const padding = 3; 
 
-        let unifiedPadding = 3; 
-        let minDistance = Infinity;
+        buttons.forEach(btn => {
+            const oldTransition = btn.style.transition;
+            btn.style.setProperty('transition', 'none', 'important');
+            btn.style.removeProperty('translate');
+            
+            void btn.offsetHeight;
 
-        for (let btn of allBtns) {
-            const r = btn.getBoundingClientRect();
-            if (r.width > 0 && r.height > 0) {
-                const distTop = r.top;
-                const distBottom = window.innerHeight - r.bottom;
-                const distLeft = r.left;
-                const distRight = window.innerWidth - r.right;
-                
-                const localMin = Math.min(distTop, distBottom, distLeft, distRight);
-                if (localMin >= 0 && localMin < minDistance) {
-                    minDistance = localMin;
-                }
-            }
-        }
-        
-        if (minDistance < 100 && minDistance >= 3) {
-            unifiedPadding = minDistance; 
-        }
-
-        allBtns.forEach(btn => {
             const rect = btn.getBoundingClientRect();
             if (rect.width === 0 && rect.height === 0) return; 
 
             let shiftX = 0;
             let shiftY = 0;
 
-            if (Array.from(bottomBtns).includes(btn)) {
-                shiftY = (window.innerHeight - unifiedPadding) - rect.bottom; 
-            } else {
-                shiftY = unifiedPadding - rect.top;
+            if (rect.left < padding) {
+                shiftX = padding - rect.left;
+            } 
+            else if (rect.right > window.innerWidth - padding) {
+                shiftX = (window.innerWidth - padding) - rect.right;
             }
 
-            const isLeft = (rect.left + rect.width / 2) < (window.innerWidth / 2);
-            if (isLeft) {
-                shiftX = unifiedPadding - rect.left;
-            } else {
-                shiftX = (window.innerWidth - unifiedPadding) - rect.right;
+            if (rect.top < padding) {
+                shiftY = padding - rect.top;
+            } 
+            else if (rect.bottom > window.innerHeight - padding) {
+                shiftY = (window.innerHeight - padding) - rect.bottom;
             }
 
             if (shiftX !== 0 || shiftY !== 0) {
                 btn.style.setProperty('translate', `${shiftX}px ${shiftY}px`, 'important');
             }
+
+            void btn.offsetHeight;
+            btn.style.transition = oldTransition;
         });
     }
 
@@ -593,21 +576,22 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const pageNum = parseInt(file);
             
-            // 🔥 UNTERSTÜTZUNG FÜR 3D-MODELLE ODER VIDEOS PRÜFEN
             const has3D = CONFIG.threedee && CONFIG.threedee[currentBook] && CONFIG.threedee[currentBook][pageNum];
             const hasVideo = CONFIG.videos && CONFIG.videos[currentBook] && CONFIG.videos[currentBook][pageNum];
-
+            
             if (has3D || hasVideo) {
                 const isLeftPage = (pageNum % 2 !== 0);
                 const horizPos = isLeftPage ? 'right: 5% !important; left: auto !important;' : 'left: 5% !important; right: auto !important;';
                 
                 const triggerDiv = document.createElement('div');
                 triggerDiv.className = 'threedee-trigger';
+                
                 triggerDiv.style.cssText = 'width: 100%; height: 100%; display: block; position: relative; background-color: #ffffff !important; color-scheme: light !important;';
                 
+                // 🔥 FIX 1: Hitbox massiv auf 40% verkleinert! Sie blockiert jetzt keine Wischbewegungen mehr an den Rändern.
                 const originalHtml = `
                     <img src="${folder}${file}" alt="Daniel Rösch Medien Vorschau" style="width: 100%; height: 100%; object-fit: cover;">
-                    <div class="activation-hitbox" style="position: absolute; top: 10%; left: 20%; width: 60%; height: 80%; z-index: 10; cursor: pointer;"></div>
+                    <div class="activation-hitbox" style="position: absolute; top: 30%; left: 30%; width: 40%; height: 40%; z-index: 10; cursor: pointer;"></div>
                 `;
                 triggerDiv.innerHTML = originalHtml;
                 triggerDiv.dataset.originalHtml = originalHtml; 
@@ -615,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const blockFlip = (e) => {
                     if (!triggerDiv.classList.contains('model-active')) {
                         if (e.target.classList.contains('activation-hitbox')) {
-                            e.stopPropagation();
+                            e.stopPropagation(); // Blockiert das Blättern, ABER NUR noch in der kleinen 40% Hitbox!
                         }
                     }
                 };
@@ -626,9 +610,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!triggerDiv.classList.contains('model-active')) {
                         if (e.target.classList.contains('activation-hitbox')) {
                             triggerDiv.classList.add('model-active');
+                            
                             is3DModelActive = true; 
 
-                            // Gemeinsamer UI-Knopf-Rahmen oben und unten
                             let uiButtonsHtml = `
                                 <a href="#" class="close-3d-btn ui-btn" style="position: absolute !important; top: 4% !important; bottom: auto !important; ${horizPos} z-index: 100 !important; min-width: 50px !important; height: 50px !important; display: flex !important; justify-content: center !important; align-items: center !important; text-decoration: none !important; opacity: 1 !important; pointer-events: auto !important; margin: 0 !important; padding: 0 !important; transform: none !important; background: none !important; border: none !important;">
                                     <span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>
@@ -638,22 +622,28 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </a>
                             `;
 
-                            // FALL A: Ein 3D-Modell soll geladen werden
                             if (has3D) {
                                 const modelFile = CONFIG.threedee[currentBook][pageNum];
                                 triggerDiv.innerHTML = uiButtonsHtml + `
                                     <model-viewer src="${currentBook}/${modelFile}" camera-controls style="width: 100%; height: 100%; background-color: #ffffff !important; color-scheme: light !important; outline: none;"></model-viewer>
                                 `;
-                            } 
-                            // FALL B: Ein Video (YouTube, Vimeo oder Lokal) soll geladen werden
-                            else if (hasVideo) {
+                            } else if (hasVideo) {
                                 const videoData = CONFIG.videos[currentBook][pageNum];
                                 let playerHtml = '';
 
+                                // 🔥 FIX 2: Der intelligente ID-Scanner für YouTube und Vimeo
                                 if (videoData.type === 'youtube') {
-                                    playerHtml = `<iframe src="https://www.youtube.com/embed/${videoData.id}?autoplay=1&rel=0" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen"></iframe>`;
+                                    let ytId = videoData.id;
+                                    const ytMatch = ytId.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?\n]+)/);
+                                    if (ytMatch) ytId = ytMatch[1];
+                                    
+                                    playerHtml = `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen"></iframe>`;
                                 } else if (videoData.type === 'vimeo') {
-                                    playerHtml = `<iframe src="https://player.vimeo.com/video/${videoData.id}?autoplay=1" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen"></iframe>`;
+                                    let vimId = videoData.id;
+                                    const vimMatch = vimId.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(\d+)/);
+                                    if (vimMatch) vimId = vimMatch[1];
+                                    
+                                    playerHtml = `<iframe src="https://player.vimeo.com/video/${vimId}?autoplay=1" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen"></iframe>`;
                                 } else if (videoData.type === 'local') {
                                     playerHtml = `<video src="${videoData.id}" autoplay controls style="width:100%; height:100%; object-fit:contain; background:#ffffff;"></video>`;
                                 }
