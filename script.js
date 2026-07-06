@@ -38,18 +38,18 @@ const CONFIG = {
             2: { type: 'youtube', id: 'fcPWJ-4ziXY' }, 
             4: { type: 'vimeo', id: '525692078' },      
             6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } // Läuft jetzt endlos im Loop, wie ein GIF!
-        }
+        },
         'book_3': {
             2: { type: 'youtube', id: 'fcPWJ-4ziXY' },
-        }
+        },
         'Portfolio-MA': {
             2: { type: 'youtube', id: 'fcPWJ-4ziXY' }, 
             4: { type: 'vimeo', id: '525692078' },      
             6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } // Läuft jetzt endlos im Loop, wie ein GIF!
-        }
+        },
         'book_4': {
             1: { type: 'vimeo', id: '525692078' },      
-        }
+        },
     },
 
     // ✉️ DEINE KONTAKTDATEN
