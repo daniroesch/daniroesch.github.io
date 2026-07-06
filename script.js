@@ -16,20 +16,19 @@ const CONFIG = {
         'Portfolio-MA' 
     ],
 
-    // 🧊 DEINE 3D MODELLE
+    // 🧊 DEINE 3D MODELLE (Volle Pfad-Flexibilität!)
     threedee: {
         'book_1': { 
-            5: '5.glb'
+            5: 'book_1/5.glb' // Normaler Pfad
         },
         'book_2': { 
-            3: '5.glb'
+            3: 'book_1/5.glb' // Wiederverwendung desselben Modells aus book_1!
         },
         'book_4': { 
-            0: '5.glb'
-            6: '5.glb'
+            6: 'zentrale_modelle/5.glb' // Eigener, buchübergreifender Ordner möglich!
         },
         'geheim_haus': {
-            3: '5.glb'
+            3: 'geheim_haus/5.glb'
         }
     },
 
@@ -38,19 +37,19 @@ const CONFIG = {
         'book_1': {
             2: { type: 'youtube', id: 'fcPWJ-4ziXY' }, 
             4: { type: 'vimeo', id: '525692078' },      
-            6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } // Läuft jetzt endlos im Loop, wie ein GIF!
+            6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } 
         },
         'book_3': {
-            2: { type: 'youtube', id: 'fcPWJ-4ziXY' },
+            2: { type: 'youtube', id: 'fcPWJ-4ziXY' }
         },
         'Portfolio-MA': {
             2: { type: 'youtube', id: 'fcPWJ-4ziXY' }, 
             4: { type: 'vimeo', id: '525692078' },      
-            6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } // Läuft jetzt endlos im Loop, wie ein GIF!
+            6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } 
         },
         'book_4': {
-            0: { type: 'vimeo', id: '525692078' },      
-        },
+            1: { type: 'vimeo', id: '525692078' }       
+        }
     },
 
     // ✉️ DEINE KONTAKTDATEN
@@ -122,7 +121,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.3 PLATFORM
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.4 PLATFORM
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -639,9 +638,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             `;
 
                             if (has3D) {
-                                const modelFile = CONFIG.threedee[currentBook][pageNum];
+                                // 🔥 V2.4 FIX: Das Modell lädt nun direkt den exakten, individuellen Pfad aus der CONFIG!
+                                const modelPath = CONFIG.threedee[currentBook][pageNum];
                                 triggerDiv.innerHTML = uiButtonsHtml + `
-                                    <model-viewer src="${currentBook}/${modelFile}" camera-controls style="width: 100%; height: 100%; background-color: #ffffff !important; color-scheme: light !important; outline: none;"></model-viewer>
+                                    <model-viewer src="${modelPath}" camera-controls style="width: 100%; height: 100%; background-color: #ffffff !important; color-scheme: light !important; outline: none;"></model-viewer>
                                 `;
                             } else if (hasVideo) {
                                 const videoData = CONFIG.videos[currentBook][pageNum];
@@ -662,7 +662,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                     
                                     playerHtml = `<iframe src="https://player.vimeo.com/video/${vimId}?autoplay=1" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen"></iframe>`;
                                 } else if (safeType === 'local') {
-                                    // 🔥 V2.3 FIX: Lokale Videos verhalten sich jetzt exakt wie GIFs (Loop, kein Ton, unsichtbare Steuerung)
                                     playerHtml = `<video src="${videoData.id}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit:contain; background:#ffffff; pointer-events:none;"></video>`;
                                 }
 
