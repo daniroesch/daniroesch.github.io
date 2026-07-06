@@ -71,9 +71,9 @@ const CONFIG = {
             loading: "cargando . . .", 
             notAvailable: "proyecto aún no disponible en este idioma",
             
-            seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabajo y concepts.", 
+            seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabalho y concepts.", 
             seoH1: "Portafolio de Arquitectura de Daniel Rösch", 
-            seoIntro: "Bienvenido al portafolio digital de Daniel Rösch. Aquí puedes encontrar mis proyectos:", 
+            seoIntro: "Bienvenido al portafolio digital of Daniel Rösch. Aquí puedes encontrar mis proyectos:", 
             seoContact: "Contáctame en arch.daniroesch@gmail.com para consultas."
         },
         'pt': { 
@@ -265,51 +265,42 @@ document.addEventListener('DOMContentLoaded', () => {
     let lockedW = window.innerWidth;
     let lockedH = window.innerHeight;
 
-    // 🔥 DIE GEREINIGTE 3-PIXEL SICHERHEIT (KEIN ZITTERN, KEIN CHAOS)
+    // DIE GEREINIGTE 3-PIXEL SICHERHEIT (KEIN ZITTERN, KEIN CHAOS)
     function clampButtonsToScreen() {
         const buttons = document.querySelectorAll('#home-btn, #fullscreen-btn, #close-legal, #back-to-book-btn, #back-to-start-btn, #next-project-btn, .close-3d-btn, .fs-3d-btn');
-        const padding = 3; // Exakt 3 CSS-Pixel "Sicherheitszaun" zum Bildschirmrand
+        const padding = 3; 
 
         buttons.forEach(btn => {
-            // 1. Kurz weiche Animationen abschalten & alte Skript-Verschiebungen löschen
             const oldTransition = btn.style.transition;
             btn.style.setProperty('transition', 'none', 'important');
             btn.style.removeProperty('translate');
             
-            // Browser zwingen, diese Rücksetzung auf das reine CSS zu übernehmen
             void btn.offsetHeight;
 
-            // 2. Pure CSS-Position nachmessen (ohne Bewegung)
             const rect = btn.getBoundingClientRect();
-            if (rect.width === 0 && rect.height === 0) return; // Button ist unsichtbar
+            if (rect.width === 0 && rect.height === 0) return; 
 
             let shiftX = 0;
             let shiftY = 0;
 
-            // Ist der Button zu nah am linken Rand?
             if (rect.left < padding) {
                 shiftX = padding - rect.left;
             } 
-            // Ist er zu nah am rechten Rand?
             else if (rect.right > window.innerWidth - padding) {
                 shiftX = (window.innerWidth - padding) - rect.right;
             }
 
-            // Ist er zu nah am oberen Rand?
             if (rect.top < padding) {
                 shiftY = padding - rect.top;
             } 
-            // Ist er zu nah am unteren Rand?
             else if (rect.bottom > window.innerHeight - padding) {
                 shiftY = (window.innerHeight - padding) - rect.bottom;
             }
 
-            // 3. Nur korrigieren, wenn er WIRKLICH den Zaun berührt!
             if (shiftX !== 0 || shiftY !== 0) {
                 btn.style.setProperty('translate', `${shiftX}px ${shiftY}px`, 'important');
             }
 
-            // 4. Animationen wiederherstellen
             void btn.offsetHeight;
             btn.style.transition = oldTransition;
         });
@@ -379,8 +370,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (viewport) {
                     viewport.content = 'width=device-width, initial-scale=1.0';
                 }
-                
-                // 🔥 Einmaliger Aufruf, wenn das Layout 100% still steht
                 clampButtonsToScreen();
             }, 50);
         }, 200); 
@@ -626,7 +615,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ></model-viewer>
                             `;
 
-                            // Wächter-Aufruf für 3D-Buttons (Nachdem das HTML geladen ist)
                             setTimeout(clampButtonsToScreen, 50);
 
                             const closeBtn = triggerDiv.querySelector('.close-3d-btn');
@@ -832,6 +820,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 pendingTargetPage = -1; 
                 isInternalHashUpdate = false;
 
+                clampButtonsToScreen();
+
                 if (currentPage === 0) {
                     menuPositioner.style.zIndex = '3'; 
                     startMenu.style.pointerEvents = 'auto';
@@ -861,9 +851,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     endOfBookMenu.style.opacity = '0'; 
                     endOfBookMenu.style.pointerEvents = 'none';
                 }
-                
-                // 🔥 Einmaliger Aufruf, wenn die Seite GANZ RUHIG liegt
-                setTimeout(clampButtonsToScreen, 50);
             }
         });
 
@@ -881,9 +868,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     menuPositioner.style.visibility = 'visible';
                 }
                 isInternalHashUpdate = false;
-                
-                // Einmaliger Wächter-Check beim finalen Aufschlagen des Buchs
-                clampButtonsToScreen();
+                clampButtonsToScreen(); 
             }, 100);
         }, 150);
     }
@@ -963,14 +948,12 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (e.target.closest('.all-books-trigger')) {
             e.preventDefault();
             window.location.hash = `/grid`;
+            
+        // 🔥 FIX: Hier wurde das 'mailto:' sauber wieder integriert, damit das E-Mail-Programm anspringt!
         } else if (e.target.id === 'link-email' || e.target.closest('#link-email')) {
             e.preventDefault();
-            navigator.clipboard.writeText(CONFIG.email).then(() => {
-                const btn = e.target.closest('#link-email');
-                const originalText = btn.innerText;
-                btn.innerText = 'kopiert!';
-                setTimeout(() => { btn.innerText = originalText; }, 2000);
-            });
+            window.location.href = `mailto:${CONFIG.email}`;
+
         } else if (e.target.closest('#fullscreen-btn')) { 
             e.preventDefault(); toggleFullscreen(); 
             
