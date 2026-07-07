@@ -16,16 +16,21 @@ const CONFIG = {
         'Portfolio-MA' 
     ],
 
-    // 🧊 DEINE 3D MODELLE (Mit Innenraum-Schalter!)
+    // 🧊 DEINE 3D MODELLE (Mit Kamera-Kontrolle für Innenräume!)
     threedee: {
         'book_1': { 
             5: { file: 'book_1/5.glb', type: 'exterior' } // Normales Modell von außen
         },
         'book_2': { 
-            3: { file: 'book_1/3.glb', type: 'interior' } // 🔥 Das ist ein reines Innenraum-Modell!
+            3: { 
+                file: 'book_1/3.glb', 
+                type: 'interior', 
+                fov: '90deg',         // Weitwinkel (ca. 18mm)
+                target: '0m -0.3m 0m'  // Augenhöhe exakt 1,60m über dem Nullpunkt
+            }
         },
         'book_4': { 
-            0: { file: 'book_1/5.glb', type: 'exterior' },
+            0: { file: 'book_1/3.glb', type: 'interior', fov: '90deg', target: '0m -1.5m -4m'  },
             6: { file: 'book_1/5.glb', type: 'exterior' } 
         },
         'Portfolio-MA': {
@@ -386,7 +391,6 @@ document.addEventListener('DOMContentLoaded', () => {
             window.scrollTo(0, 0);
 
             updateBookSize();
-            
             if (pageFlip) {
                 pageFlip.destroy();
                 pageFlip = null;
@@ -635,15 +639,18 @@ document.addEventListener('DOMContentLoaded', () => {
                             `;
 
                             if (has3D) {
-                                // 🔥 V2.8 FIX: Innenraum vs. Außenraum Weiche
                                 const modelData = CONFIG.threedee[currentBook][pageNum];
                                 const modelPath = typeof modelData === 'string' ? modelData : modelData.file;
                                 const modelType = typeof modelData === 'string' ? 'exterior' : (modelData.type || 'exterior');
                                 
-                                let extraAttributes = '';
+                                // 🔥 NEU: Individuelle Kamera-Einstellungen (Weitwinkel & Augenhöhe)
+                                const customFov = modelData.fov || (modelType === 'interior' ? '90deg' : 'auto');
+                                const customTarget = modelData.target || 'auto auto auto';
+                                
+                                let extraAttributes = ` field-of-view="${customFov}" camera-target="${customTarget}"`;
+                                
                                 if (modelType === 'interior') {
-                                    // Fesselt die Kamera an den Mittelpunkt und erlaubt nur das Umsehen
-                                    extraAttributes = ' camera-orbit="0deg 90deg 0.1m" min-camera-orbit="auto auto 0.1m" max-camera-orbit="auto auto 0.1m"';
+                                    extraAttributes += ' camera-orbit="0deg 90deg 0.1m" min-camera-orbit="auto auto 0.1m" max-camera-orbit="auto auto 0.1m"';
                                 }
 
                                 triggerDiv.innerHTML = uiButtonsHtml + `
