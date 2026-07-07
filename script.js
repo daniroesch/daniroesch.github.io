@@ -122,7 +122,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.6 
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.7
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -370,19 +370,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 🔥 HIER IST DER FIX: Die Viewport-Manipulation wurde komplett entfernt!
+    // Der Browser sperrt den Zoom beim Drehen nun nicht mehr, daher gibt es keinen Bug mehr.
     function performLayoutRecalculation() {
-        const viewport = document.querySelector('meta[name="viewport"]');
-
         document.body.style.width = '';
         document.body.style.height = '';
         if (bookView) {
             bookView.style.width = '';
             bookView.style.height = '';
-        }
-
-        // 🔥 Kurzzeitige Zoom-Sperre aktivieren, damit die Abmessungen beim Drehen exakt sind
-        if (viewport) {
-            viewport.content = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no';
         }
 
         if (bookWrapper) bookWrapper.style.opacity = '0';
@@ -397,12 +392,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             setTimeout(() => {
                 if (bookWrapper) bookWrapper.style.opacity = '1';
-                
-                // 🔥 HIER IST DER ZOOM-FIX: Den Browser zwingen, den Zoom danach wieder ausdrücklich freizugeben!
-                if (viewport) {
-                    viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes';
-                }
-                
                 clampButtonsToScreen();
             }, 50);
         }, 200); 
@@ -466,13 +455,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 🔥 HIER WAR DER CRASH-FEHLER IN V2.5. clearTimeout() behebt das Problem vollständig!
     async function checkPageExists(url) {
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 4000);
             const res = await fetch(url, { method: 'HEAD', signal: controller.signal, cache: 'no-store' });
-            clearTimeout(timeoutId); // <--- FEHLER BEHOBEN
+            clearTimeout(timeoutId);
             return res.ok;
         } catch (e) { return false; }
     }
