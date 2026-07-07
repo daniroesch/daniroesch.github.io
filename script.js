@@ -16,20 +16,20 @@ const CONFIG = {
         'Portfolio-MA' 
     ],
 
-    // 🧊 DEINE 3D MODELLE (Volle Pfad-Flexibilität!)
+    // 🧊 DEINE 3D MODELLE (Mit Innenraum-Schalter!)
     threedee: {
         'book_1': { 
-            5: 'book_1/5.glb' // Normaler Pfad
+            5: { file: 'book_1/5.glb', type: 'exterior' } // Normales Modell von außen
         },
         'book_2': { 
-            3: 'book_1/5.glb' // Wiederverwendung desselben Modells aus book_1!
+            3: { file: 'book_1/5.glb', type: 'interior' } // 🔥 Das ist ein reines Innenraum-Modell!
         },
         'book_4': { 
-            0: 'book_1/5.glb',
-            6: 'book_1/5.glb' // Eigener, buchübergreifender Ordner möglich!
+            0: { file: 'book_1/5.glb', type: 'exterior' },
+            6: { file: 'book_1/5.glb', type: 'exterior' } 
         },
         'Portfolio-MA': {
-            3: 'book_1/5.glb'
+            3: { file: 'book_1/5.glb', type: 'exterior' }
         }
     },
 
@@ -38,7 +38,7 @@ const CONFIG = {
         'book_1': {
             2: { type: 'youtube', id: 'fcPWJ-4ziXY' }, 
             4: { type: 'vimeo', id: '525692078' },      
-            6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } // Läuft jetzt endlos im Loop, wie ein GIF!
+            6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } 
         },
         'book_3': {
             2: { type: 'youtube', id: 'fcPWJ-4ziXY' }
@@ -115,14 +115,14 @@ const CONFIG = {
             
             seoDesc: "Projetos de arquitetura digital e portfólio de design de Daniel Rösch. Explore meu trabalho e conceitos.", 
             seoH1: "Portfólio de Arquitetura de Daniel Rösch", 
-            seoIntro: "Bem-vindo ao portfólio digital de Daniel Rösch. Aqui você pode encontrar meus projetos:", 
+            seoIntro: "Bem-vindo ao portfólio digital de Daniel Rösch. Hier finden Sie meine Architekturprojekte:", 
             seoContact: "Contate-me em arch.daniroesch@gmail.com para dúvidas."
         }
     }
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.7
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.8 PLATFORM
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -370,8 +370,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔥 HIER IST DER FIX: Die Viewport-Manipulation wurde komplett entfernt!
-    // Der Browser sperrt den Zoom beim Drehen nun nicht mehr, daher gibt es keinen Bug mehr.
     function performLayoutRecalculation() {
         document.body.style.width = '';
         document.body.style.height = '';
@@ -388,7 +386,12 @@ document.addEventListener('DOMContentLoaded', () => {
             window.scrollTo(0, 0);
 
             updateBookSize();
-            if (pageFlip) pageFlip.update();
+            
+            if (pageFlip) {
+                pageFlip.destroy();
+                pageFlip = null;
+                loadBook(currentBook, currentLang, 0); 
+            }
 
             setTimeout(() => {
                 if (bookWrapper) bookWrapper.style.opacity = '1';
@@ -632,9 +635,19 @@ document.addEventListener('DOMContentLoaded', () => {
                             `;
 
                             if (has3D) {
-                                const modelPath = CONFIG.threedee[currentBook][pageNum];
+                                // 🔥 V2.8 FIX: Innenraum vs. Außenraum Weiche
+                                const modelData = CONFIG.threedee[currentBook][pageNum];
+                                const modelPath = typeof modelData === 'string' ? modelData : modelData.file;
+                                const modelType = typeof modelData === 'string' ? 'exterior' : (modelData.type || 'exterior');
+                                
+                                let extraAttributes = '';
+                                if (modelType === 'interior') {
+                                    // Fesselt die Kamera an den Mittelpunkt und erlaubt nur das Umsehen
+                                    extraAttributes = ' camera-orbit="0deg 90deg 0.1m" min-camera-orbit="auto auto 0.1m" max-camera-orbit="auto auto 0.1m"';
+                                }
+
                                 triggerDiv.innerHTML = uiButtonsHtml + `
-                                    <model-viewer src="${modelPath}" camera-controls style="width: 100%; height: 100%; background-color: #ffffff !important; color-scheme: light !important; outline: none;"></model-viewer>
+                                    <model-viewer src="${modelPath}" camera-controls${extraAttributes} style="width: 100%; height: 100%; background-color: #ffffff !important; color-scheme: light !important; outline: none;"></model-viewer>
                                 `;
                             } else if (hasVideo) {
                                 const videoData = CONFIG.videos[currentBook][pageNum];
