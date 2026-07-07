@@ -122,7 +122,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.4 PLATFORM
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.5 PLATFORM
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -397,7 +397,8 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 if (bookWrapper) bookWrapper.style.opacity = '1';
                 if (viewport) {
-                    viewport.content = 'width=device-width, initial-scale=1.0';
+                    // 🔥 HIER IST DER FIX: Die Zoom-Fähigkeit wird nach dem Messen wieder ausdrücklich erlaubt!
+                    viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes';
                 }
                 clampButtonsToScreen();
             }, 50);
@@ -639,7 +640,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             `;
 
                             if (has3D) {
-                                // 🔥 V2.4 FIX: Das Modell lädt nun direkt den exakten, individuellen Pfad aus der CONFIG!
                                 const modelPath = CONFIG.threedee[currentBook][pageNum];
                                 triggerDiv.innerHTML = uiButtonsHtml + `
                                     <model-viewer src="${modelPath}" camera-controls style="width: 100%; height: 100%; background-color: #ffffff !important; color-scheme: light !important; outline: none;"></model-viewer>
