@@ -25,12 +25,12 @@ const CONFIG = {
             3: { 
                 file: 'book_1/4.glb', 
                 type: 'interior', 
-                fov: '90deg',         // Weitwinkel (ca. 18mm)
+                fov: '60deg',         // Weitwinkel (ca. 18mm)
                 target: '0m 0m 0m'  // Augenhöhe exakt 1,60m über dem Nullpunkt
             }
         },
         'book_4': { 
-            0: { file: 'book_1/5.glb', type: 'interior', fov: '90deg', target: '3m 1.6m 2m'  },
+            0: { file: 'book_1/5.glb', type: 'interior', fov: '120deg', target: '5m 1.6m -3m'  },
             6: { file: 'book_1/5.glb', type: 'exterior' } 
         },
         'Portfolio-MA': {
