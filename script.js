@@ -38,7 +38,7 @@ const CONFIG = {
         'book_1': {
             2: { type: 'youtube', id: 'fcPWJ-4ziXY' }, 
             4: { type: 'vimeo', id: '525692078' },      
-            6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } 
+            6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } // Läuft jetzt endlos im Loop, wie ein GIF!
         },
         'book_3': {
             2: { type: 'youtube', id: 'fcPWJ-4ziXY' }
@@ -113,16 +113,16 @@ const CONFIG = {
             loading: "carregando . . .", 
             notAvailable: "projeto ainda não disponible neste idioma",
             
-            seoDesc: "Projetos de arquitetura digital e portfólio de design de Daniel Rösch. Explore meu trabalho und conceitos.", 
+            seoDesc: "Projetos de arquitetura digital e portfólio de design de Daniel Rösch. Explore meu trabalho e conceitos.", 
             seoH1: "Portfólio de Arquitetura de Daniel Rösch", 
-            seoIntro: "Bem-vindo ao portfólio digital de Daniel Rösch. Hier finden Sie meine Architekturprojekte:", 
+            seoIntro: "Bem-vindo ao portfólio digital de Daniel Rösch. Aqui você pode encontrar meus projetos:", 
             seoContact: "Contate-me em arch.daniroesch@gmail.com para dúvidas."
         }
     }
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.5 PLATFORM
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.6 
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -371,6 +371,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function performLayoutRecalculation() {
+        const viewport = document.querySelector('meta[name="viewport"]');
+
         document.body.style.width = '';
         document.body.style.height = '';
         if (bookView) {
@@ -378,8 +380,10 @@ document.addEventListener('DOMContentLoaded', () => {
             bookView.style.height = '';
         }
 
-        // 🔥 FIX: Wir manipulieren den Viewport-Tag hier gar nicht mehr! 
-        // Das verhindert, dass mobile Browser die Zoom-Gestensteuerung nach dem Drehen dauerhaft sperren.
+        // 🔥 Kurzzeitige Zoom-Sperre aktivieren, damit die Abmessungen beim Drehen exakt sind
+        if (viewport) {
+            viewport.content = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no';
+        }
 
         if (bookWrapper) bookWrapper.style.opacity = '0';
 
@@ -393,6 +397,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             setTimeout(() => {
                 if (bookWrapper) bookWrapper.style.opacity = '1';
+                
+                // 🔥 HIER IST DER ZOOM-FIX: Den Browser zwingen, den Zoom danach wieder ausdrücklich freizugeben!
+                if (viewport) {
+                    viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes';
+                }
+                
                 clampButtonsToScreen();
             }, 50);
         }, 200); 
@@ -456,12 +466,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // 🔥 HIER WAR DER CRASH-FEHLER IN V2.5. clearTimeout() behebt das Problem vollständig!
     async function checkPageExists(url) {
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 4000);
             const res = await fetch(url, { method: 'HEAD', signal: controller.signal, cache: 'no-store' });
-            timeoutId = setTimeout(() => controller.abort(), 4000);
+            clearTimeout(timeoutId); // <--- FEHLER BEHOBEN
             return res.ok;
         } catch (e) { return false; }
     }
