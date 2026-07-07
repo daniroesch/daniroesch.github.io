@@ -16,21 +16,21 @@ const CONFIG = {
         'Portfolio-MA' 
     ],
 
-    // 🧊 DEINE 3D MODELLE (Mit Kamera-Kontrolle für Innenräume!)
+    // 🧊 DEINE 3D MODELLE
     threedee: {
         'book_1': { 
-            5: { file: 'book_1/5.glb', type: 'exterior' } // Normales Modell von außen
+            5: { file: 'book_1/5.glb', type: 'exterior' }
         },
         'book_2': { 
             3: { 
                 file: 'book_1/4.glb', 
                 type: 'interior', 
-                fov: '160deg',         // Weitwinkel (ca. 18mm)
-                target: '0m 0m 0m'  // Augenhöhe exakt 1,60m über dem Nullpunkt
+                fov: '110deg',        // 🔥 Jetzt frei wählbar! (z.B. 100deg, 120deg)
+                target: '0m 1.6m 0m'  // Augenhöhe exakt 1,60m über dem Nullpunkt
             }
         },
         'book_4': { 
-            0: { file: 'book_1/5.glb', type: 'interior', fov: '140deg', target: '5m 1.6m -2.5m'  },
+            0: { file: 'book_1/5.glb', type: 'interior', fov: '140deg', target: '5m 1.6m -2.5m' },
             6: { file: 'book_1/5.glb', type: 'exterior' } 
         },
         'Portfolio-MA': {
@@ -127,7 +127,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.8 PLATFORM
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.9
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -172,7 +172,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.changedTouches.length === 1) {
             const yDiff = e.changedTouches[0].clientY - pullStartY;
             const xDiff = Math.abs(e.changedTouches[0].clientX - pullStartX);
-            if (yDiff > 130 && xDiff < 40 && !isZoomed()) {
+            
+            // 🔥 FIX: Prüfen, ob ein 3D-Modell geöffnet ist. Wenn ja, das Neu-Laden blockieren!
+            const is3DOpen = document.querySelector('model-viewer') !== null;
+
+            if (yDiff > 130 && xDiff < 40 && !isZoomed() && !is3DOpen) {
                 window.location.hash = `/${currentBook}/${currentLang}/1`;
                 setTimeout(() => { window.location.reload(); }, 30);
             }
@@ -391,6 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.scrollTo(0, 0);
 
             updateBookSize();
+            
             if (pageFlip) {
                 pageFlip.destroy();
                 pageFlip = null;
@@ -643,11 +648,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const modelPath = typeof modelData === 'string' ? modelData : modelData.file;
                                 const modelType = typeof modelData === 'string' ? 'exterior' : (modelData.type || 'exterior');
                                 
-                                // 🔥 NEU: Individuelle Kamera-Einstellungen (Weitwinkel & Augenhöhe)
                                 const customFov = modelData.fov || (modelType === 'interior' ? '90deg' : 'auto');
                                 const customTarget = modelData.target || 'auto auto auto';
                                 
-                                let extraAttributes = ` field-of-view="${customFov}" camera-target="${customTarget}"`;
+                                // 🔥 FIX: FOV-Schutz aufgehoben (max-field-of-view auf 180deg gesetzt)
+                                let extraAttributes = ` field-of-view="${customFov}" min-field-of-view="10deg" max-field-of-view="180deg" camera-target="${customTarget}"`;
                                 
                                 if (modelType === 'interior') {
                                     extraAttributes += ' camera-orbit="0deg 90deg 0.1m" min-camera-orbit="auto auto 0.1m" max-camera-orbit="auto auto 0.1m"';
