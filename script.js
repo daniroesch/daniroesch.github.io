@@ -38,7 +38,7 @@ const CONFIG = {
         'book_1': {
             2: { type: 'youtube', id: 'fcPWJ-4ziXY' }, 
             4: { type: 'vimeo', id: '525692078' },      
-            6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } 
+            6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } // Läuft jetzt endlos im Loop, wie ein GIF!
         },
         'book_3': {
             2: { type: 'youtube', id: 'fcPWJ-4ziXY' }
@@ -46,7 +46,7 @@ const CONFIG = {
         'Portfolio-MA': {
             2: { type: 'youtube', id: 'fcPWJ-4ziXY' }, 
             4: { type: 'vimeo', id: '525692078' },      
-            6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } 
+            6: { type: 'local', id: 'book_1/VID-20231110-WA0007.mp4' } // Läuft jetzt endlos im Loop, wie ein GIF!
         },
         'book_4': {
             1: { type: 'vimeo', id: '525692078' }       
@@ -122,7 +122,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.5 PLATFORM
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM)
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -380,6 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
             bookView.style.height = '';
         }
 
+        // Zoom kurz sperren für die Messung
         if (viewport) {
             viewport.content = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no';
         }
@@ -396,10 +397,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             setTimeout(() => {
                 if (bookWrapper) bookWrapper.style.opacity = '1';
+                
+                // 🔥 HIER IST DER FIX: Zoom nach der Messung ausdrücklich wieder erlauben!
                 if (viewport) {
-                    // 🔥 HIER IST DER FIX: Die Zoom-Fähigkeit wird nach dem Messen wieder ausdrücklich erlaubt!
-                    viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes';
+                    viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes';
                 }
+                
                 clampButtonsToScreen();
             }, 50);
         }, 200); 
