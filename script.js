@@ -22,7 +22,7 @@ const CONFIG = {
             5: { file: 'book_1/5.glb', type: 'exterior' } // Normales Modell von außen
         },
         'book_2': { 
-            3: { file: 'book_1/5.glb', type: 'interior' } // 🔥 Das ist ein reines Innenraum-Modell!
+            3: { file: 'book_1/3.glb', type: 'interior' } // 🔥 Das ist ein reines Innenraum-Modell!
         },
         'book_4': { 
             0: { file: 'book_1/5.glb', type: 'exterior' },
