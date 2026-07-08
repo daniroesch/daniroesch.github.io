@@ -25,12 +25,12 @@ const CONFIG = {
             3: { 
                 file: 'book_1/4.glb', 
                 type: 'interior', 
-                fov: '85deg',        // 🔥 Jetzt frei wählbar! (z.B. 100deg, 120deg)
+                fov: '110deg',        // 🔥 Jetzt frei wählbar! (z.B. 100deg, 120deg)
                 target: '0m 0m 0m'  // Augenhöhe exakt 1,60m über dem Nullpunkt
             }
         },
         'book_4': { 
-            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '5m 1.6m -2.5m' },
+            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '5m 4.4m -2.5m' },
             6: { file: 'book_1/5.glb', type: 'exterior' } 
         },
         'Portfolio-MA': {
@@ -127,7 +127,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.10
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.11
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -395,7 +395,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateBookSize();
             
-            // 🔥 FIX: Skript merkt sich vor dem Neustart die aktuelle Seite!
             if (pageFlip) {
                 const savedPage = pageFlip.getCurrentPageIndex();
                 pageFlip.destroy();
@@ -652,7 +651,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const customFov = modelData.fov || (modelType === 'interior' ? '90deg' : 'auto');
                                 const customTarget = modelData.target || 'auto auto auto';
                                 
-                                // 🔥 FIX: "disable-zoom" hinzugefügt. Blockiert Mausrad & Touch-Pinch komplett!
                                 let extraAttributes = ` field-of-view="${customFov}" max-field-of-view="180deg" disable-zoom camera-target="${customTarget}"`;
                                 
                                 if (modelType === 'interior') {
@@ -926,6 +924,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // 🔥 HIER IST DER FIX: Menü-Sichtbarkeit wird IMMER wiederhergestellt!
         setTimeout(() => {
             updateBookSize();
             if (pageFlip) pageFlip.update();
@@ -937,8 +936,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     startMenu.style.opacity = '1'; 
                     endOfBookMenu.style.transition = 'none';
                     endOfBookMenu.style.opacity = '0'; 
-                    menuPositioner.style.visibility = 'visible';
                 }
+                
+                // Menü zwingend wieder sichtbar machen, egal welche Seite beim Reload aktiv ist!
+                if(menuPositioner) menuPositioner.style.visibility = 'visible'; 
+                
                 isInternalHashUpdate = false;
                 clampButtonsToScreen(); 
             }, 100);
