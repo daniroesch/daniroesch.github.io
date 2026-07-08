@@ -23,14 +23,14 @@ const CONFIG = {
         },
         'book_2': { 
             3: { 
-                file: 'book_1/4.glb', 
+                file: 'book_1/5.glb', 
                 type: 'interior', 
-                fov: '40deg',        // Jetzt frei wählbar! (z.B. 100deg, 120deg)
-                target: '0m 0m 0m'  // Augenhöhe exakt 1,60m über dem Nullpunkt
+                fov: '110deg',        // Jetzt frei wählbar! (z.B. 100deg, 120deg)
+                target: '0m 1.6m 0m'  // Augenhöhe exakt 1,60m über dem Nullpunkt
             }
         },
         'book_4': { 
-            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '5m 1.6m -2.5m' },
+            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '8m 4.6m -2.5m' },
             6: { file: 'book_1/5.glb', type: 'exterior' } 
         },
         'Portfolio-MA': {
@@ -127,7 +127,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.15 PLATFORM
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.16 PLATFORM
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -139,6 +139,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let is3DModelActive = false;
     const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    
+    // 🔥 NEU: Globale Wächter-Variablen für das Vollbild
+    let suppressRecalc = false;
+    let activeFSElement = null;
 
     const emailLinkElem = document.getElementById('link-email');
     if (emailLinkElem) {
@@ -413,6 +417,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let resizeTimer;
 
     window.addEventListener('resize', () => {
+        // 🔥 WÄCHTER: Wenn das Layout wegen des 3D-Vollbild-Exits gesperrt ist, ABBRECHEN!
+        if (suppressRecalc) return;
+        
         const fsElem = document.fullscreenElement || document.webkitFullscreenElement;
         if (fsElem && fsElem.closest && fsElem.closest('.threedee-trigger')) return;
 
@@ -427,17 +434,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
-            performLayoutRecalculation();
+            if (!suppressRecalc) performLayoutRecalculation();
         }, 200);
     });
 
     function handleFullscreenTransition() {
-        const fsElem = document.fullscreenElement || document.webkitFullscreenElement;
-        if (fsElem && fsElem.closest && fsElem.closest('.threedee-trigger')) return;
+        const currentFS = document.fullscreenElement || document.webkitFullscreenElement;
+        const was3DFS = activeFSElement && activeFSElement.classList.contains('threedee-trigger');
+        activeFSElement = currentFS;
+
+        // Wir gehen in den 3D-Vollbildmodus -> nichts tun
+        if (currentFS && currentFS.classList.contains('threedee-trigger')) {
+            return; 
+        }
         
+        // 🔥 FIX: Wir kommen GERADE aus dem 3D-Vollbildmodus -> Kurzzeitige Sperre für Layout-Neuladen!
+        if (was3DFS && (!currentFS || !currentFS.classList.contains('threedee-trigger'))) {
+            suppressRecalc = true;
+            setTimeout(() => { suppressRecalc = false; }, 800); // 800ms warten, bis sich der Browser beruhigt hat
+            return;
+        }
+        
+        // In allen anderen Fällen (z.B. Buch in Vollbild) -> Layout sauber anpassen
         clearTimeout(resizeTimer);
         setTimeout(() => {
-            performLayoutRecalculation();
+            if (!suppressRecalc) performLayoutRecalculation();
         }, 300); 
     }
     
@@ -450,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         clearTimeout(resizeTimer);
         setTimeout(() => {
-            performLayoutRecalculation();
+            if (!suppressRecalc) performLayoutRecalculation();
         }, 300);
     });
 
@@ -721,7 +742,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (fsElement === triggerDiv) {
                                     if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
                                     else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(()=>{});
-                                    // 🔥 FIX: Wenn wir im Vollbild waren, brechen wir hier ab und schließen das Modell nicht!
                                     return; 
                                 }
                                 
