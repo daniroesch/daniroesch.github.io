@@ -16,23 +16,29 @@ const CONFIG = {
         'Portfolio-MA' 
     ],
 
-    // 🧊 DEINE 3D MODELLE (Mit Kamera-Blickrichtung und HDRI-Beleuchtung!)
+    // 🧊 DEINE 3D MODELLE
     threedee: {
         'book_1': { 
-            5: { file: 'book_1/5.glb', type: 'exterior' } 
+            5: { 
+                file: 'book_1/5.glb', 
+                type: 'exterior',
+                env: 'book_1/studio.hdr',    // Optional: Macht nur Beleuchtung und Spiegelungen
+                skybox: 'book_1/studio.hdr'  // 🔥 NEU: Zeigt das Bild als sichtbaren 360°-Hintergrund! skybox=realisitischer Himmel und env=nur beleuchtung
+            }
         },
         'book_2': { 
             3: { 
-                file: 'book_1/4.glb', 
+                file: 'book_1/3.glb', 
                 type: 'interior', 
                 fov: '110deg',        
-                target: '0m 0m 0m', 
-                orbit: '180deg 90deg 0.1m',   // 🔥 NEU: Start-Blickrichtung (z.B. 90deg nach rechts gedreht)
-                env: 'book_1/studio.hdr'     // 🔥 NEU: Optionales Umgebungslicht für realistische Spiegelungen!
+                target: '0m 1.6m 0m',
+                orbit: '180deg 100deg 0.1m',
+                env: 'book_1/studio.hdr',
+                skybox: 'book_1/studio.hdr'
             }
         },
         'book_4': { 
-            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '8m 4.6m -2.5m', orbit: '90deg 60deg 0.1m', env: 'book_1/studio.hdr' },
+            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '8m 4.6m -2.5m', orbit: '90deg 90deg 0.1m', env: 'book_1/studio.hdr' },
             6: { file: 'book_1/5.glb', type: 'exterior' } 
         },
         'Portfolio-MA': {
@@ -129,7 +135,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.17 PLATFORM
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.18 PLATFORM
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -676,13 +682,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                 
                                 const customFov = modelData.fov || (modelType === 'interior' ? '90deg' : 'auto');
                                 const customTarget = modelData.target || 'auto auto auto';
-                                
-                                // 🔥 NEU: orbit und env-Daten aus CONFIG laden
                                 const customOrbit = modelData.orbit || (modelType === 'interior' ? '0deg 90deg 0.1m' : 'auto auto auto');
-                                const customEnv = modelData.env ? ` environment-image="${modelData.env}"` : '';
                                 
-                                // 🔥 FIX: Schatten und HDRI-Vorbereitung für High-End Architektur-Look
-                                let extraAttributes = ` field-of-view="${customFov}" max-field-of-view="180deg" disable-zoom camera-target="${customTarget}" camera-orbit="${customOrbit}" shadow-intensity="1" shadow-softness="1"${customEnv}`;
+                                // 🔥 NEU: Berücksichtigung von Skybox und Environment
+                                const customEnv = modelData.env ? ` environment-image="${modelData.env}"` : '';
+                                const customSkybox = modelData.skybox ? ` skybox-image="${modelData.skybox}"` : '';
+                                
+                                let extraAttributes = ` field-of-view="${customFov}" max-field-of-view="180deg" disable-zoom camera-target="${customTarget}" camera-orbit="${customOrbit}" shadow-intensity="1" shadow-softness="1"${customEnv}${customSkybox}`;
                                 
                                 if (modelType === 'interior') {
                                     extraAttributes += ' min-camera-orbit="auto auto 0.1m" max-camera-orbit="auto auto 0.1m"';
