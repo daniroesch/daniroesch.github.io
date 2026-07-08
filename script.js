@@ -26,11 +26,11 @@ const CONFIG = {
                 file: 'book_1/4.glb', 
                 type: 'interior', 
                 fov: '110deg',        // Jetzt frei wählbar! (z.B. 100deg, 120deg)
-                target: '0m 0m 0m'  // Augenhöhe exakt 1,60m über dem Nullpunkt
+                target: '0m 1.6m 0m'  // Augenhöhe exakt 1,60m über dem Nullpunkt
             }
         },
         'book_4': { 
-            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '5m 4.4m -2.5m' },
+            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '5m 1.6m -2.5m' },
             6: { file: 'book_1/5.glb', type: 'exterior' } 
         },
         'Portfolio-MA': {
@@ -127,7 +127,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.12 PLATFORM
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.13 PLATFORM
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -399,6 +399,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const savedPage = pageFlip.getCurrentPageIndex();
                 pageFlip.destroy();
                 pageFlip = null;
+                // 🔥 FIX: Wir setzen den Status hier aktiv zurück, damit sich das Buch fehlerfrei neu lädt
+                is3DModelActive = false;
                 loadBook(currentBook, currentLang, savedPage); 
             }
 
@@ -412,7 +414,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let resizeTimer;
 
     window.addEventListener('resize', () => {
-        if (is3DModelActive) return;
+        // 🔥 FIX: Wir ignorieren Resize-Events nur noch, wenn wir WIRKLICH im Browser-Vollbildmodus sind. 
+        // Drehen des Handys wird nun immer sofort sauber verarbeitet!
+        const isFS = document.fullscreenElement || document.webkitFullscreenElement;
+        if (isFS) return;
 
         const currentW = window.innerWidth;
         const currentH = window.innerHeight;
@@ -430,17 +435,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function handleFullscreenTransition() {
-        if (is3DModelActive) return;
+        const isFS = document.fullscreenElement || document.webkitFullscreenElement;
+        // Beim Beenden des Vollbilds (isFS === null) passen wir das Layout perfekt an.
+        if (isFS) return; 
+        
         clearTimeout(resizeTimer);
         setTimeout(() => {
             performLayoutRecalculation();
         }, 300); 
     }
+    
     document.addEventListener('fullscreenchange', handleFullscreenTransition);
     document.addEventListener('webkitfullscreenchange', handleFullscreenTransition);
 
     window.addEventListener('orientationchange', () => {
-        if (is3DModelActive) return;
+        const isFS = document.fullscreenElement || document.webkitFullscreenElement;
+        if (isFS) return;
 
         clearTimeout(resizeTimer);
         setTimeout(() => {
@@ -507,6 +517,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadBook(bookName, lang, initialPage = 0) {
         const myLoadId = ++activeLoadId;
         currentBook = bookName; currentLang = lang;
+        is3DModelActive = false; // Sicherheits-Reset
+        
         const t = CONFIG.translations[lang] || CONFIG.translations['de'];
         
         const homeBtn = document.getElementById('home-btn');
@@ -706,34 +718,28 @@ document.addEventListener('DOMContentLoaded', () => {
                             attachEventBlockers(closeBtn);
                             attachEventBlockers(fsBtn);
 
-                            // 🔥 FIX 1: Trennung von Buch-Vollbild und 3D-Modell Schließen!
                             closeBtn.addEventListener('click', (evt) => {
                                 killEvent(evt);
                                 const fsElement = document.fullscreenElement || document.webkitFullscreenElement;
                                 
-                                // Nur wenn GENAU dieses 3D-Fenster im Vollbild ist, wird das Vollbild beendet
                                 if (fsElement === triggerDiv) {
                                     if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
                                     else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(()=>{});
                                 }
                                 
-                                // Das 3D-Modell schließt sich ab jetzt in jedem Fall sofort
                                 triggerDiv.innerHTML = triggerDiv.dataset.originalHtml;
                                 triggerDiv.classList.remove('model-active');
                                 is3DModelActive = false;
                             });
 
-                            // 🔥 FIX 2: Trennung von Buch-Vollbild und 3D-Modell Vollbild!
                             fsBtn.addEventListener('click', (evt) => {
                                 killEvent(evt);
                                 const fsElement = document.fullscreenElement || document.webkitFullscreenElement;
                                 
                                 if (fsElement === triggerDiv) {
-                                    // Wenn das 3D-Fenster im Vollbild ist -> Vollbild für dieses Fenster beenden
                                     if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
                                     else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(()=>{});
                                 } else {
-                                    // Wenn das 3D-Fenster nicht im Vollbild ist (auch wenn das Buch es ist!) -> 3D ins Vollbild
                                     if (triggerDiv.requestFullscreen) triggerDiv.requestFullscreen().catch(()=>{});
                                     else if (triggerDiv.webkitRequestFullscreen) triggerDiv.webkitRequestFullscreen().catch(()=>{});
                                 }
@@ -1032,7 +1038,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (e.target.id === 'link-email' || e.target.closest('#link-email')) {
             e.preventDefault();
             
-            // 🔥 FIX 3: Erst Adresse ins Clipboard kopieren, dann Mailto auslösen
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(CONFIG.email)
                     .then(() => { window.location.href = `mailto:${CONFIG.email}`; })
