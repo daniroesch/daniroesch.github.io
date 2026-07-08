@@ -16,21 +16,21 @@ const CONFIG = {
         'Portfolio-MA' 
     ],
 
-    // 🧊 DEINE 3D MODELLE
+    // 🧊 DEINE 3D MODELLE (Mit Kamera-Kontrolle für Innenräume!)
     threedee: {
         'book_1': { 
-            5: { file: 'book_1/5.glb', type: 'exterior' }
+            5: { file: 'book_1/5.glb', type: 'exterior' } // Normales Modell von außen
         },
         'book_2': { 
             3: { 
                 file: 'book_1/4.glb', 
                 type: 'interior', 
-                fov: '80deg',        // 🔥 Jetzt frei wählbar! (z.B. 100deg, 120deg)
+                fov: '85deg',        // 🔥 Jetzt frei wählbar! (z.B. 100deg, 120deg)
                 target: '0m 0m 0m'  // Augenhöhe exakt 1,60m über dem Nullpunkt
             }
         },
         'book_4': { 
-            0: { file: 'book_1/5.glb', type: 'interior', fov: '90deg', target: '5m 1.6m -2.5m' },
+            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '5m 1.6m -2.5m' },
             6: { file: 'book_1/5.glb', type: 'exterior' } 
         },
         'Portfolio-MA': {
@@ -127,7 +127,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.9
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.10
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -173,7 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const yDiff = e.changedTouches[0].clientY - pullStartY;
             const xDiff = Math.abs(e.changedTouches[0].clientX - pullStartX);
             
-            // 🔥 FIX: Prüfen, ob ein 3D-Modell geöffnet ist. Wenn ja, das Neu-Laden blockieren!
             const is3DOpen = document.querySelector('model-viewer') !== null;
 
             if (yDiff > 130 && xDiff < 40 && !isZoomed() && !is3DOpen) {
@@ -396,10 +395,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateBookSize();
             
+            // 🔥 FIX: Skript merkt sich vor dem Neustart die aktuelle Seite!
             if (pageFlip) {
+                const savedPage = pageFlip.getCurrentPageIndex();
                 pageFlip.destroy();
                 pageFlip = null;
-                loadBook(currentBook, currentLang, 0); 
+                loadBook(currentBook, currentLang, savedPage); 
             }
 
             setTimeout(() => {
@@ -651,8 +652,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const customFov = modelData.fov || (modelType === 'interior' ? '90deg' : 'auto');
                                 const customTarget = modelData.target || 'auto auto auto';
                                 
-                                // 🔥 FIX: FOV-Schutz aufgehoben (max-field-of-view auf 180deg gesetzt)
-                                let extraAttributes = ` field-of-view="${customFov}" min-field-of-view="10deg" max-field-of-view="180deg" camera-target="${customTarget}"`;
+                                // 🔥 FIX: "disable-zoom" hinzugefügt. Blockiert Mausrad & Touch-Pinch komplett!
+                                let extraAttributes = ` field-of-view="${customFov}" max-field-of-view="180deg" disable-zoom camera-target="${customTarget}"`;
                                 
                                 if (modelType === 'interior') {
                                     extraAttributes += ' camera-orbit="0deg 90deg 0.1m" min-camera-orbit="auto auto 0.1m" max-camera-orbit="auto auto 0.1m"';
