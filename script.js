@@ -16,21 +16,23 @@ const CONFIG = {
         'Portfolio-MA' 
     ],
 
-    // 🧊 DEINE 3D MODELLE (Mit Kamera-Kontrolle für Innenräume!)
+    // 🧊 DEINE 3D MODELLE (Mit Kamera-Blickrichtung und HDRI-Beleuchtung!)
     threedee: {
         'book_1': { 
-            5: { file: 'book_1/5.glb', type: 'exterior' } // Normales Modell von außen
+            5: { file: 'book_1/5.glb', type: 'exterior' } 
         },
         'book_2': { 
             3: { 
-                file: 'book_1/5.glb', 
+                file: 'book_1/4.glb', 
                 type: 'interior', 
-                fov: '110deg',        // Jetzt frei wählbar! (z.B. 100deg, 120deg)
-                target: '0m 1.6m 0m'  // Augenhöhe exakt 1,60m über dem Nullpunkt
+                fov: '110deg',        
+                target: '0m 0m 0m', 
+                orbit: '180deg 90deg 0.1m',   // 🔥 NEU: Start-Blickrichtung (z.B. 90deg nach rechts gedreht)
+                env: 'book_1/studio.hdr'     // 🔥 NEU: Optionales Umgebungslicht für realistische Spiegelungen!
             }
         },
         'book_4': { 
-            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '8m 4.6m -2.5m' },
+            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '8m 4.6m -2.5m', orbit: '90deg 60deg 0.1m', env: 'book_1/studio.hdr' },
             6: { file: 'book_1/5.glb', type: 'exterior' } 
         },
         'Portfolio-MA': {
@@ -127,7 +129,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.16 PLATFORM
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.17 PLATFORM
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -140,7 +142,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let is3DModelActive = false;
     const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     
-    // 🔥 NEU: Globale Wächter-Variablen für das Vollbild
     let suppressRecalc = false;
     let activeFSElement = null;
 
@@ -417,7 +418,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let resizeTimer;
 
     window.addEventListener('resize', () => {
-        // 🔥 WÄCHTER: Wenn das Layout wegen des 3D-Vollbild-Exits gesperrt ist, ABBRECHEN!
         if (suppressRecalc) return;
         
         const fsElem = document.fullscreenElement || document.webkitFullscreenElement;
@@ -443,19 +443,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const was3DFS = activeFSElement && activeFSElement.classList.contains('threedee-trigger');
         activeFSElement = currentFS;
 
-        // Wir gehen in den 3D-Vollbildmodus -> nichts tun
         if (currentFS && currentFS.classList.contains('threedee-trigger')) {
             return; 
         }
         
-        // 🔥 FIX: Wir kommen GERADE aus dem 3D-Vollbildmodus -> Kurzzeitige Sperre für Layout-Neuladen!
         if (was3DFS && (!currentFS || !currentFS.classList.contains('threedee-trigger'))) {
             suppressRecalc = true;
-            setTimeout(() => { suppressRecalc = false; }, 800); // 800ms warten, bis sich der Browser beruhigt hat
+            setTimeout(() => { suppressRecalc = false; }, 800); 
             return;
         }
         
-        // In allen anderen Fällen (z.B. Buch in Vollbild) -> Layout sauber anpassen
         clearTimeout(resizeTimer);
         setTimeout(() => {
             if (!suppressRecalc) performLayoutRecalculation();
@@ -680,10 +677,15 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const customFov = modelData.fov || (modelType === 'interior' ? '90deg' : 'auto');
                                 const customTarget = modelData.target || 'auto auto auto';
                                 
-                                let extraAttributes = ` field-of-view="${customFov}" max-field-of-view="180deg" disable-zoom camera-target="${customTarget}"`;
+                                // 🔥 NEU: orbit und env-Daten aus CONFIG laden
+                                const customOrbit = modelData.orbit || (modelType === 'interior' ? '0deg 90deg 0.1m' : 'auto auto auto');
+                                const customEnv = modelData.env ? ` environment-image="${modelData.env}"` : '';
+                                
+                                // 🔥 FIX: Schatten und HDRI-Vorbereitung für High-End Architektur-Look
+                                let extraAttributes = ` field-of-view="${customFov}" max-field-of-view="180deg" disable-zoom camera-target="${customTarget}" camera-orbit="${customOrbit}" shadow-intensity="1" shadow-softness="1"${customEnv}`;
                                 
                                 if (modelType === 'interior') {
-                                    extraAttributes += ' camera-orbit="0deg 90deg 0.1m" min-camera-orbit="auto auto 0.1m" max-camera-orbit="auto auto 0.1m"';
+                                    extraAttributes += ' min-camera-orbit="auto auto 0.1m" max-camera-orbit="auto auto 0.1m"';
                                 }
 
                                 triggerDiv.innerHTML = uiButtonsHtml + `
