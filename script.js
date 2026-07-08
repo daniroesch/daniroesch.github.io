@@ -25,8 +25,8 @@ const CONFIG = {
             3: { 
                 file: 'book_1/4.glb', 
                 type: 'interior', 
-                fov: '110deg',        // Jetzt frei wählbar! (z.B. 100deg, 120deg)
-                target: '0m 1.6m 0m'  // Augenhöhe exakt 1,60m über dem Nullpunkt
+                fov: '70deg',        // Jetzt frei wählbar! (z.B. 100deg, 120deg)
+                target: '0m 0m 0m'  // Augenhöhe exakt 1,60m über dem Nullpunkt
             }
         },
         'book_4': { 
