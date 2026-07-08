@@ -2,8 +2,7 @@
 // 🛑 1. DEIN KONTROLLZENTRUM (HANDBUCH & EINSTELLUNGEN) 🛑
 // ==========================================================================================
 
-/* 
-📖 LEGENDE / WIE FUNKTIONIERT DAS HIER?
+/* 📖 LEGENDE / WIE FUNKTIONIERT DAS HIER?
 
 1. PROJEKTE (books / hiddenBooks)
    - 'books': Diese Projekte tauchen im Menü ("alle projekte") auf.
@@ -12,10 +11,11 @@
 
 2. 3D-MODELLE (threedee)
    - Aufbau: 'Buchname': { Seitenzahl: { Einstellungen } }
-   - 'file': Pfad zur .glb Datei (z.B. 'book_1/modell.glb').
+   - 'file': Pfad zur .glb Datei (z.B. 'book_1/modell.glb'). 
+     (Hinweis: Texturen & Materialien aus Rhino werden immer automatisch angezeigt!)
    - 'type': 
-       -> 'exterior' (Kunde dreht das Modell von außen)
-       -> 'interior' (Ego-Perspektive: Kunde steht fest im Raum und guckt sich um)
+       -> 'exterior' (Kunde dreht das Modell von außen, Zoom ist erlaubt!)
+       -> 'interior' (Ego-Perspektive: Kunde steht fest im Raum, Zoom ist gesperrt!)
    - 'fov' (optional): Sichtfeld/Weitwinkel. Standard ist 'auto', für Räume sind '90deg' oder '110deg' gut.
    - 'target' (optional): Kamera-Ankerpunkt (X Y Z). Z.B. '0m 1.6m 0m' für Augenhöhe auf 1,60m.
    - 'orbit' (optional): Start-Blickrichtung. Z.B. '90deg 90deg 0.1m' (guckt beim Start nach rechts).
@@ -54,13 +54,13 @@ const CONFIG = {
             3: { 
                 file: 'book_1/4.glb', 
                 type: 'interior', 
-                fov: '110deg',        
-                target: '0m 1.6m 0m',
-                orbit: '0deg 90deg 0.1m' 
+                fov: '80deg',        
+                target: '0m 0m 0m',
+                orbit: '180deg 100deg 0.1m' 
             }
         },
         'book_4': { 
-            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '8m 4.6m -2.5m' },
+            0: { file: 'book_1/5.glb', type: 'interior', fov: '90deg', target: '8m 4.6m -2.5m', orbit: '180deg 80deg 0.1m' },
             6: { file: 'book_1/5.glb', type: 'exterior' } 
         },
         'Portfolio-MA': {
@@ -157,7 +157,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.20 PLATFORM (Clay Render Edition)
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.21 PLATFORM
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -475,9 +475,22 @@ document.addEventListener('DOMContentLoaded', () => {
             return; 
         }
         
+        // 🔥 FIX: Wenn das Modell aus dem Vollbild kommt, prüfen wir, ob das Handy in der Zwischenzeit gedreht wurde!
         if (was3DFS && (!currentFS || !currentFS.classList.contains('threedee-trigger'))) {
-            suppressRecalc = true;
-            setTimeout(() => { suppressRecalc = false; }, 800); 
+            
+            const lockedIsLandscape = lockedW > lockedH;
+            const currentIsLandscape = window.innerWidth > window.innerHeight;
+            
+            if (lockedIsLandscape !== currentIsLandscape) {
+                // Das Gerät WURDE gedreht. Wir MÜSSEN die Sperre aufheben und das Buch quer anlegen!
+                suppressRecalc = false; 
+                clearTimeout(resizeTimer);
+                setTimeout(() => { performLayoutRecalculation(); }, 300);
+            } else {
+                // Keine Drehung, nur ein Klick auf 'X'. Sperre aktivieren, um Chaos zu vermeiden!
+                suppressRecalc = true;
+                setTimeout(() => { suppressRecalc = false; }, 800); 
+            }
             return;
         }
         
@@ -706,10 +719,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const customTarget = modelData.target || 'auto auto auto';
                                 const customOrbit = modelData.orbit || (modelType === 'interior' ? '0deg 90deg 0.1m' : 'auto auto auto');
                                 
-                                // 🔥 NEU V2.20: Clean Code (Clay-Render)
-                                // HDRI-Himmel, Tone-Mapping und Exposure wurden entfernt. 
-                                // Weiche Boden-Schatten bleiben für das edle Gipsmodell erhalten!
-                                let extraAttributes = ` field-of-view="${customFov}" max-field-of-view="180deg" disable-zoom camera-target="${customTarget}" camera-orbit="${customOrbit}" shadow-intensity="1" shadow-softness="1"`;
+                                // 🔥 FIX: Zoom-Sperre nur noch für Innenräume! Exterior kann nach Belieben zoomen.
+                                const disableZoomAttr = modelType === 'interior' ? ' disable-zoom' : '';
+                                
+                                let extraAttributes = ` field-of-view="${customFov}" max-field-of-view="180deg"${disableZoomAttr} camera-target="${customTarget}" camera-orbit="${customOrbit}" shadow-intensity="1" shadow-softness="1"`;
                                 
                                 if (modelType === 'interior') {
                                     extraAttributes += ' min-camera-orbit="auto auto 0.1m" max-camera-orbit="auto auto 0.1m"';
