@@ -22,23 +22,22 @@ const CONFIG = {
             5: { 
                 file: 'book_1/5.glb', 
                 type: 'exterior',
-                env: 'book_1/studio.hdr',    // Optional: Macht nur Beleuchtung und Spiegelungen
-                skybox: 'book_1/studio.hdr'  // 🔥 NEU: Zeigt das Bild als sichtbaren 360°-Hintergrund! skybox=realisitischer Himmel und env=nur beleuchtung
+                env: 'book_1/studio.hdr'    // Optional: Macht nur Beleuchtung und Spiegelungen
             }
         },
         'book_2': { 
             3: { 
-                file: 'book_1/3.glb', 
+                file: 'book_1/4.glb', 
                 type: 'interior', 
                 fov: '110deg',        
                 target: '0m 1.6m 0m',
                 orbit: '180deg 100deg 0.1m',
                 env: 'book_1/studio.hdr',
-                skybox: 'book_1/studio.hdr'
+                skybox: 'book_1/studio.hdr'   // 🔥 NEU: Zeigt das Bild als sichtbaren 360°-Hintergrund! skybox=realisitischer Himmel und env=nur beleuchtung 
             }
         },
         'book_4': { 
-            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '8m 4.6m -2.5m', orbit: '90deg 90deg 0.1m', env: 'book_1/studio.hdr' },
+            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '8m 4.6m -2.5m', orbit: '90deg 90deg 0.1m', env: 'book_1/studio.hdr',skybox: 'book_1/studio.hdr' },
             6: { file: 'book_1/5.glb', type: 'exterior' } 
         },
         'Portfolio-MA': {
