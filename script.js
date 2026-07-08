@@ -25,7 +25,7 @@ const CONFIG = {
             3: { 
                 file: 'book_1/4.glb', 
                 type: 'interior', 
-                fov: '110deg',        // 🔥 Jetzt frei wählbar! (z.B. 100deg, 120deg)
+                fov: '110deg',        // Jetzt frei wählbar! (z.B. 100deg, 120deg)
                 target: '0m 0m 0m'  // Augenhöhe exakt 1,60m über dem Nullpunkt
             }
         },
@@ -127,7 +127,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.11
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.12 PLATFORM
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -706,28 +706,36 @@ document.addEventListener('DOMContentLoaded', () => {
                             attachEventBlockers(closeBtn);
                             attachEventBlockers(fsBtn);
 
+                            // 🔥 FIX 1: Trennung von Buch-Vollbild und 3D-Modell Schließen!
                             closeBtn.addEventListener('click', (evt) => {
                                 killEvent(evt);
-                                const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+                                const fsElement = document.fullscreenElement || document.webkitFullscreenElement;
                                 
-                                if (isFullscreen) {
+                                // Nur wenn GENAU dieses 3D-Fenster im Vollbild ist, wird das Vollbild beendet
+                                if (fsElement === triggerDiv) {
                                     if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
                                     else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(()=>{});
-                                } else {
-                                    triggerDiv.innerHTML = triggerDiv.dataset.originalHtml;
-                                    triggerDiv.classList.remove('model-active');
-                                    is3DModelActive = false;
                                 }
+                                
+                                // Das 3D-Modell schließt sich ab jetzt in jedem Fall sofort
+                                triggerDiv.innerHTML = triggerDiv.dataset.originalHtml;
+                                triggerDiv.classList.remove('model-active');
+                                is3DModelActive = false;
                             });
 
+                            // 🔥 FIX 2: Trennung von Buch-Vollbild und 3D-Modell Vollbild!
                             fsBtn.addEventListener('click', (evt) => {
                                 killEvent(evt);
-                                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                                    if (triggerDiv.requestFullscreen) triggerDiv.requestFullscreen().catch(()=>{});
-                                    else if (triggerDiv.webkitRequestFullscreen) triggerDiv.webkitRequestFullscreen().catch(()=>{});
-                                } else {
+                                const fsElement = document.fullscreenElement || document.webkitFullscreenElement;
+                                
+                                if (fsElement === triggerDiv) {
+                                    // Wenn das 3D-Fenster im Vollbild ist -> Vollbild für dieses Fenster beenden
                                     if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
                                     else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(()=>{});
+                                } else {
+                                    // Wenn das 3D-Fenster nicht im Vollbild ist (auch wenn das Buch es ist!) -> 3D ins Vollbild
+                                    if (triggerDiv.requestFullscreen) triggerDiv.requestFullscreen().catch(()=>{});
+                                    else if (triggerDiv.webkitRequestFullscreen) triggerDiv.webkitRequestFullscreen().catch(()=>{});
                                 }
                             });
 
@@ -924,7 +932,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // 🔥 HIER IST DER FIX: Menü-Sichtbarkeit wird IMMER wiederhergestellt!
         setTimeout(() => {
             updateBookSize();
             if (pageFlip) pageFlip.update();
@@ -938,7 +945,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     endOfBookMenu.style.opacity = '0'; 
                 }
                 
-                // Menü zwingend wieder sichtbar machen, egal welche Seite beim Reload aktiv ist!
                 if(menuPositioner) menuPositioner.style.visibility = 'visible'; 
                 
                 isInternalHashUpdate = false;
@@ -1025,7 +1031,15 @@ document.addEventListener('DOMContentLoaded', () => {
             
         } else if (e.target.id === 'link-email' || e.target.closest('#link-email')) {
             e.preventDefault();
-            window.location.href = `mailto:${CONFIG.email}`;
+            
+            // 🔥 FIX 3: Erst Adresse ins Clipboard kopieren, dann Mailto auslösen
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(CONFIG.email)
+                    .then(() => { window.location.href = `mailto:${CONFIG.email}`; })
+                    .catch(() => { window.location.href = `mailto:${CONFIG.email}`; });
+            } else {
+                window.location.href = `mailto:${CONFIG.email}`;
+            }
 
         } else if (e.target.closest('#fullscreen-btn')) { 
             e.preventDefault(); toggleFullscreen(); 
