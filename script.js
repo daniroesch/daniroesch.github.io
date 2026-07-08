@@ -1,9 +1,35 @@
 // ==========================================================================================
-// 🛑 1. DEIN KONTROLLZENTRUM (HIER KANNST DU ALLES ANPASSEN) 🛑
+// 🛑 1. DEIN KONTROLLZENTRUM (HANDBUCH & EINSTELLUNGEN) 🛑
 // ==========================================================================================
 
+/* 
+📖 LEGENDE / WIE FUNKTIONIERT DAS HIER?
+
+1. PROJEKTE (books / hiddenBooks)
+   - 'books': Diese Projekte tauchen im Menü ("alle projekte") auf.
+   - 'hiddenBooks': Diese Projekte sind unsichtbar und nur per Direktlink erreichbar.
+   - Der Name (z.B. 'book_1') MUSS exakt dem Ordnernamen auf dem Server entsprechen!
+
+2. 3D-MODELLE (threedee)
+   - Aufbau: 'Buchname': { Seitenzahl: { Einstellungen } }
+   - 'file': Pfad zur .glb Datei (z.B. 'book_1/modell.glb').
+   - 'type': 
+       -> 'exterior' (Kunde dreht das Modell von außen)
+       -> 'interior' (Ego-Perspektive: Kunde steht fest im Raum und guckt sich um)
+   - 'fov' (optional): Sichtfeld/Weitwinkel. Standard ist 'auto', für Räume sind '90deg' oder '110deg' gut.
+   - 'target' (optional): Kamera-Ankerpunkt (X Y Z). Z.B. '0m 1.6m 0m' für Augenhöhe auf 1,60m.
+   - 'orbit' (optional): Start-Blickrichtung. Z.B. '90deg 90deg 0.1m' (guckt beim Start nach rechts).
+
+3. VIDEOS (videos)
+   - Aufbau: 'Buchname': { Seitenzahl: { Einstellungen } }
+   - 'type': 'youtube', 'vimeo' oder 'local'.
+   - 'id': 
+       -> Bei Youtube/Vimeo: Nur die Video-ID (oder der volle Link, das Skript filtert die ID heraus).
+       -> Bei Local: Der Pfad zur .mp4 Datei (z.B. 'book_1/video.mp4'). Lokale Videos loopen endlos (wie GIFs).
+*/
+
 const CONFIG = {
-    // 📁 ÖFFENTLICHE PROJEKTE (Erscheinen im Grid-Menü) -> ⚠️ ECHTE NAMEN EINTRAGEN ⚠️
+    // 📁 ÖFFENTLICHE PROJEKTE
     books: [
         'book_1', 
         'book_2',
@@ -11,7 +37,7 @@ const CONFIG = {
         'book_4'
     ],
 
-    // 🕵️ UNSICHTBARE PROJEKTE (Nur per Direktlink erreichbar)
+    // 🕵️ UNSICHTBARE PROJEKTE
     hiddenBooks: [
         'Portfolio-MA' 
     ],
@@ -21,8 +47,7 @@ const CONFIG = {
         'book_1': { 
             5: { 
                 file: 'book_1/5.glb', 
-                type: 'exterior',
-                env: 'book_1/studio.hdr'    // Optional: Macht nur Beleuchtung und Spiegelungen
+                type: 'exterior' 
             }
         },
         'book_2': { 
@@ -31,13 +56,11 @@ const CONFIG = {
                 type: 'interior', 
                 fov: '110deg',        
                 target: '0m 1.6m 0m',
-                orbit: '180deg 100deg 0.1m',
-                env: 'book_1/studio.hdr',
-                skybox: 'book_1/studio.hdr'   // 🔥 NEU: Zeigt das Bild als sichtbaren 360°-Hintergrund! skybox=realisitischer Himmel und env=nur beleuchtung 
+                orbit: '0deg 90deg 0.1m' 
             }
         },
         'book_4': { 
-            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '8m 4.6m -2.5m', orbit: '90deg 90deg 0.1m', env: 'book_1/studio.hdr',skybox: 'book_1/studio.hdr' },
+            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '8m 4.6m -2.5m' },
             6: { file: 'book_1/5.glb', type: 'exterior' } 
         },
         'Portfolio-MA': {
@@ -45,7 +68,7 @@ const CONFIG = {
         }
     },
 
-    // 🎬 DEINE VIDEOS (Unterstützt 'youtube', 'vimeo' und 'local')
+    // 🎬 DEINE VIDEOS 
     videos: {
         'book_1': {
             2: { type: 'youtube', id: 'fcPWJ-4ziXY' }, 
@@ -134,7 +157,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.18 PLATFORM
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.20 PLATFORM (Clay Render Edition)
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -683,11 +706,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const customTarget = modelData.target || 'auto auto auto';
                                 const customOrbit = modelData.orbit || (modelType === 'interior' ? '0deg 90deg 0.1m' : 'auto auto auto');
                                 
-                                // 🔥 NEU: Berücksichtigung von Skybox und Environment
-                                const customEnv = modelData.env ? ` environment-image="${modelData.env}"` : '';
-                                const customSkybox = modelData.skybox ? ` skybox-image="${modelData.skybox}"` : '';
-                                
-                                let extraAttributes = ` field-of-view="${customFov}" max-field-of-view="180deg" disable-zoom camera-target="${customTarget}" camera-orbit="${customOrbit}" shadow-intensity="1" shadow-softness="1"${customEnv}${customSkybox}`;
+                                // 🔥 NEU V2.20: Clean Code (Clay-Render)
+                                // HDRI-Himmel, Tone-Mapping und Exposure wurden entfernt. 
+                                // Weiche Boden-Schatten bleiben für das edle Gipsmodell erhalten!
+                                let extraAttributes = ` field-of-view="${customFov}" max-field-of-view="180deg" disable-zoom camera-target="${customTarget}" camera-orbit="${customOrbit}" shadow-intensity="1" shadow-softness="1"`;
                                 
                                 if (modelType === 'interior') {
                                     extraAttributes += ' min-camera-orbit="auto auto 0.1m" max-camera-orbit="auto auto 0.1m"';
