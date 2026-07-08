@@ -30,7 +30,7 @@ const CONFIG = {
             }
         },
         'book_4': { 
-            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '5m 1.6m -2.5m' },
+            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '8m 1.6m -2.5m' },
             6: { file: 'book_1/5.glb', type: 'exterior' } 
         },
         'Portfolio-MA': {
@@ -127,7 +127,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.13 PLATFORM
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.14 PLATFORM
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -399,7 +399,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const savedPage = pageFlip.getCurrentPageIndex();
                 pageFlip.destroy();
                 pageFlip = null;
-                // 🔥 FIX: Wir setzen den Status hier aktiv zurück, damit sich das Buch fehlerfrei neu lädt
                 is3DModelActive = false;
                 loadBook(currentBook, currentLang, savedPage); 
             }
@@ -414,10 +413,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let resizeTimer;
 
     window.addEventListener('resize', () => {
-        // 🔥 FIX: Wir ignorieren Resize-Events nur noch, wenn wir WIRKLICH im Browser-Vollbildmodus sind. 
-        // Drehen des Handys wird nun immer sofort sauber verarbeitet!
-        const isFS = document.fullscreenElement || document.webkitFullscreenElement;
-        if (isFS) return;
+        const fsElem = document.fullscreenElement || document.webkitFullscreenElement;
+        // 🔥 FIX: Resize nur ignorieren, wenn das 3D-Modell im Vollbild ist! (Buch-Vollbild darf resizen!)
+        if (fsElem && fsElem.closest && fsElem.closest('.threedee-trigger')) return;
 
         const currentW = window.innerWidth;
         const currentH = window.innerHeight;
@@ -435,9 +433,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function handleFullscreenTransition() {
-        const isFS = document.fullscreenElement || document.webkitFullscreenElement;
-        // Beim Beenden des Vollbilds (isFS === null) passen wir das Layout perfekt an.
-        if (isFS) return; 
+        const fsElem = document.fullscreenElement || document.webkitFullscreenElement;
+        // 🔥 FIX: Layout nur dann NICHT neu berechnen, wenn das 3D-Modell in den Vollbildmodus geht.
+        if (fsElem && fsElem.closest && fsElem.closest('.threedee-trigger')) return;
         
         clearTimeout(resizeTimer);
         setTimeout(() => {
@@ -449,8 +447,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('webkitfullscreenchange', handleFullscreenTransition);
 
     window.addEventListener('orientationchange', () => {
-        const isFS = document.fullscreenElement || document.webkitFullscreenElement;
-        if (isFS) return;
+        const fsElem = document.fullscreenElement || document.webkitFullscreenElement;
+        if (fsElem && fsElem.closest && fsElem.closest('.threedee-trigger')) return;
 
         clearTimeout(resizeTimer);
         setTimeout(() => {
@@ -517,8 +515,6 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadBook(bookName, lang, initialPage = 0) {
         const myLoadId = ++activeLoadId;
         currentBook = bookName; currentLang = lang;
-        is3DModelActive = false; // Sicherheits-Reset
-        
         const t = CONFIG.translations[lang] || CONFIG.translations['de'];
         
         const homeBtn = document.getElementById('home-btn');
