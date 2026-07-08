@@ -25,12 +25,12 @@ const CONFIG = {
             3: { 
                 file: 'book_1/4.glb', 
                 type: 'interior', 
-                fov: '70deg',        // Jetzt frei wählbar! (z.B. 100deg, 120deg)
+                fov: '40deg',        // Jetzt frei wählbar! (z.B. 100deg, 120deg)
                 target: '0m 0m 0m'  // Augenhöhe exakt 1,60m über dem Nullpunkt
             }
         },
         'book_4': { 
-            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '8m 1.6m -2.5m' },
+            0: { file: 'book_1/5.glb', type: 'interior', fov: '110deg', target: '5m 1.6m -2.5m' },
             6: { file: 'book_1/5.glb', type: 'exterior' } 
         },
         'Portfolio-MA': {
@@ -127,7 +127,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.14 PLATFORM
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.15 PLATFORM
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -414,7 +414,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('resize', () => {
         const fsElem = document.fullscreenElement || document.webkitFullscreenElement;
-        // 🔥 FIX: Resize nur ignorieren, wenn das 3D-Modell im Vollbild ist! (Buch-Vollbild darf resizen!)
         if (fsElem && fsElem.closest && fsElem.closest('.threedee-trigger')) return;
 
         const currentW = window.innerWidth;
@@ -434,7 +433,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleFullscreenTransition() {
         const fsElem = document.fullscreenElement || document.webkitFullscreenElement;
-        // 🔥 FIX: Layout nur dann NICHT neu berechnen, wenn das 3D-Modell in den Vollbildmodus geht.
         if (fsElem && fsElem.closest && fsElem.closest('.threedee-trigger')) return;
         
         clearTimeout(resizeTimer);
@@ -515,6 +513,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadBook(bookName, lang, initialPage = 0) {
         const myLoadId = ++activeLoadId;
         currentBook = bookName; currentLang = lang;
+        is3DModelActive = false;
+        
         const t = CONFIG.translations[lang] || CONFIG.translations['de'];
         
         const homeBtn = document.getElementById('home-btn');
@@ -721,6 +721,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (fsElement === triggerDiv) {
                                     if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
                                     else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(()=>{});
+                                    // 🔥 FIX: Wenn wir im Vollbild waren, brechen wir hier ab und schließen das Modell nicht!
+                                    return; 
                                 }
                                 
                                 triggerDiv.innerHTML = triggerDiv.dataset.originalHtml;
