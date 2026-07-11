@@ -82,12 +82,20 @@ h1:hover, h1:active,
     font-size: clamp(15px, calc(var(--real-book-height) * 0.05625), 27.5px) !important;
 }
 
-/* 2. EXTRA-GRÖSSE (+50%) NUR für die kleinen 'x' Schließen-Buttons! */
+/* 2. EXAKTER GRÖSSEN-AUSGLEICH FÜR ALLE 'X'-BUTTONS! */
 #home-btn:hover, #home-btn:active,
-#close-legal:hover, #close-legal:active,
-#back-to-book-btn:hover, #back-to-book-btn:active,
 .close-3d-btn:hover, .close-3d-btn:active {
     font-size: clamp(18px, calc(var(--real-book-height) * 0.0675), 33px) !important;
+}
+
+#close-legal, #back-to-book-btn, .grid-header a {
+    font-size: clamp(16.2px, calc(var(--real-book-height) * 0.06075), 29.7px) !important;
+}
+
+#close-legal:hover, #close-legal:active,
+#back-to-book-btn:hover, #back-to-book-btn:active,
+.grid-header a:hover, .grid-header a:active {
+    font-size: clamp(24.3px, calc(var(--real-book-height) * 0.091125), 44.55px) !important;
 }
 
 /* 3. Für Legal-Links (Mail & Impressum) */
@@ -95,12 +103,9 @@ h1:hover, h1:active,
     font-size: clamp(10px, calc(var(--real-book-height) * 0.03125), 13.75px) !important;
 }
 
-/* 4. Für Grid/Impressum-Überschriften und das X dort (Wieder zurück auf Originalgröße!) */
+/* 4. Für Grid/Impressum-Überschriften (+25%) */
 .grid-header h2:hover, .grid-header h2:active {
     font-size: 1.875rem !important; 
-}
-.grid-header a:hover, .grid-header a:active {
-    font-size: 2.25rem !important; 
 }
 
 /* TEIL C: FARB-LOGIK (Klickbare Links = Schwarz / Nicht klickbar = Grau) */
@@ -204,8 +209,8 @@ h1 {
     font-weight: 200;
     text-align: center;
     white-space: nowrap; 
-    /* 🔥 FIX: Abstand leicht vergrößert für den optischen Ausgleich */
-    margin: 0 0 0.45rem 0; 
+    /* 🔥 FIX: Exakt die goldene Mitte! Symmetrisch zur Zeile darunter. */
+    margin: 0 0 0.3rem 0; 
     line-height: 1; 
     color: #a0a0a0; 
     cursor: pointer;
@@ -287,7 +292,7 @@ h1 {
 
 .grid-header h2 { 
     font-weight: 200; 
-    font-size: 1.5rem; 
+    font-size: clamp(12px, calc(var(--real-book-height) * 0.045), 22px); 
     cursor: default; 
     color: #a0a0a0; 
 }
@@ -301,7 +306,6 @@ h1 {
     align-items: center;
     width: 60px;
     height: 60px;
-    font-size: 1.5rem; 
 }
 
 .grid-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; }
