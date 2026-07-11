@@ -78,29 +78,24 @@ h1:hover, h1:active,
 .menu-links a:hover, .menu-links a:active,
 [data-lang].active,
 #loading .menu-links:hover, #loading .menu-links:active,
-.ui-btn:hover, .ui-btn:active {
+.ui-btn:hover, .ui-btn:active,
+.grid-header h2:hover, .grid-header h2:active {
     font-size: clamp(15px, calc(var(--real-book-height) * 0.05625), 27.5px) !important;
 }
 
-/* 2. EXTRA-GRÖSSE (+50%) NUR für die kleinen 'x' Schließen-Buttons! */
+/* 2. EXTRA-GRÖSSE (+50%) NUR für die kleinen 'x' Schließen-Buttons! 
+      (Gilt jetzt EXAKT gleich für Home, 3D-Close und das Grid/Legal X) */
 #home-btn:hover, #home-btn:active,
 #close-legal:hover, #close-legal:active,
 #back-to-book-btn:hover, #back-to-book-btn:active,
-.close-3d-btn:hover, .close-3d-btn:active {
+.close-3d-btn:hover, .close-3d-btn:active,
+.grid-header a:hover, .grid-header a:active {
     font-size: clamp(18px, calc(var(--real-book-height) * 0.0675), 33px) !important;
 }
 
 /* 3. Für Legal-Links (Mail & Impressum) */
 .legal-links a:hover, .legal-links a:active {
     font-size: clamp(10px, calc(var(--real-book-height) * 0.03125), 13.75px) !important;
-}
-
-/* 4. Für Grid/Impressum-Überschriften und das X dort */
-.grid-header h2:hover, .grid-header h2:active {
-    font-size: 1.875rem !important; /* +25% für die reinen Titel */
-}
-.grid-header a:hover, .grid-header a:active {
-    font-size: 2.25rem !important; /* +50% für das winzige Crimson 'x' */
 }
 
 /* TEIL C: FARB-LOGIK (Klickbare Links = Schwarz / Nicht klickbar = Grau) */
@@ -205,8 +200,7 @@ h1 {
     font-weight: 200;
     text-align: center;
     white-space: nowrap; 
-    /* 🔥 FIX: Exakt gleicher Abstand wie die Sprachen zum Grid (.menu-row = 0.3rem) */
-    margin-bottom: 0.3rem; 
+    margin-bottom: 0.8rem; 
     color: #a0a0a0; 
     cursor: pointer;
 }
@@ -283,8 +277,26 @@ h1 {
 }
 
 .grid-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-.grid-header h2 { font-weight: 200; font-size: 1.5rem; cursor: default; color: #a0a0a0; }
-.grid-header a { color: #888; text-decoration: none; font-weight: 200; font-size: 1.5rem; display: inline-block; }
+
+.grid-header h2 { 
+    font-weight: 200; 
+    font-size: clamp(12px, calc(var(--real-book-height) * 0.045), 22px); 
+    cursor: default; 
+    color: #a0a0a0; 
+}
+
+/* 🔥 FIX: Feste 60x60 Box wie bei den UI-Buttons, damit das X beim Wachsen NICHT mehr nach unten springt! */
+.grid-header a { 
+    color: #888; 
+    text-decoration: none; 
+    font-weight: 200; 
+    font-size: clamp(12px, calc(var(--real-book-height) * 0.045), 22px); 
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+    width: 60px;
+    height: 60px;
+}
 
 .grid-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; }
 .book-tile { cursor: pointer; transition: transform 0.2s; }
