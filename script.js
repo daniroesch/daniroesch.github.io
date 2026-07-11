@@ -91,13 +91,13 @@ const CONFIG = {
     // ✉️ DEINE KONTAKTDATEN
     email: 'arch.daniroesch@gmail.com',
 
-    // 🌍 DEINE TEXTE & SEO-DATEN (🔥 FIX: Nur Nomen sind großgeschrieben!)
+    // 🌍 DEINE TEXTE & SEO-DATEN (🔥 FIX: Korrekte Grammatik pro Sprache)
     translations: {
         'de': { 
-            titles: ["meine Projekte", "schau dich um", "Architektur Portfolio", "daniroesch.de"], 
-            allBooks: "alle Projekte", 
-            backToStart: "zurück zum Anfang", 
-            nextProject: "nächstes Projekt", 
+            titles: ["Meine Projekte", "Schau dich um", "Architektur Portfolio", "daniroesch.de"], 
+            allBooks: "Alle Projekte", 
+            backToStart: "Zurück zum Anfang", 
+            nextProject: "Nächstes Projekt", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
             loading: "wird geladen . . .",
@@ -109,10 +109,10 @@ const CONFIG = {
             seoContact: "Kontaktieren Sie mich gerne unter arch.daniroesch@gmail.com für Projektanfragen."
         },
         'en': { 
-            titles: ["my Projects", "take a look", "Architecture Portfolio", "daniroesch.de"], 
-            allBooks: "all Projects", 
-            backToStart: "back to start", 
-            nextProject: "next Project", 
+            titles: ["My projects", "Take a look", "Architecture portfolio", "daniroesch.de"], 
+            allBooks: "All projects", 
+            backToStart: "Back to start", 
+            nextProject: "Next project", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
             loading: "loading . . .", 
@@ -124,10 +124,10 @@ const CONFIG = {
             seoContact: "Feel free to contact me at arch.daniroesch@gmail.com for inquiries."
         },
         'es': { 
-            titles: ["mis Proyectos", "echa un vistazo", "Portafolio de Arquitectura", "daniroesch.de"], 
-            allBooks: "todos los Proyectos", 
-            backToStart: "volver al inicio", 
-            nextProject: "siguiente Proyecto", 
+            titles: ["Mis proyectos", "Echa un vistazo", "Portafolio de arquitectura", "daniroesch.de"], 
+            allBooks: "Todos los proyectos", 
+            backToStart: "Volver al inicio", 
+            nextProject: "Siguiente proyecto", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
             loading: "cargando . . .", 
@@ -139,14 +139,14 @@ const CONFIG = {
             seoContact: "Contáctame en arch.daniroesch@gmail.com para consultas."
         },
         'pt': { 
-            titles: ["meus Projetos", "dê uma olhada", "Portfólio de Arquitetura", "daniroesch.de"], 
-            allBooks: "todos os Projetos", 
-            backToStart: "voltar ao início", 
-            nextProject: "próximo Projeto", 
+            titles: ["Meus projetos", "Dê uma olhada", "Portfólio de arquitetura", "daniroesch.de"], 
+            allBooks: "Todos os projetos", 
+            backToStart: "Voltar ao início", 
+            nextProject: "Próximo projeto", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
             loading: "carregando . . .", 
-            notAvailable: "Projeto ainda não disponible neste idioma",
+            notAvailable: "Projeto ainda não disponível neste idioma",
             
             seoDesc: "Projetos de arquitetura digital e portfólio de design de Daniel Rösch. Explore meu trabalho e conceitos.", 
             seoH1: "Portfólio de Arquitetura de Daniel Rösch", 
@@ -157,7 +157,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.22 PLATFORM
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.23 PLATFORM
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -591,7 +591,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (menuPositioner) menuPositioner.style.visibility = 'hidden'; 
         updateHeading();
         
-        loadingScreen.innerHTML = `<div class="menu-wrapper"><div class="menu-row"><span class="bracket">[</span><span class="menu-links">${t.loading}</span><span class="bracket">]</span></div></div>`;
+        // 🔥 FIX: Inline Margin-Bottom aus dem Loading Screen entfernt für perfekten .menu-wrapper gap!
+        loadingScreen.innerHTML = `
+            <div class="menu-wrapper">
+                <div class="menu-row">
+                    <span class="bracket">[</span><span class="menu-links">${t.loading}</span><span class="bracket">]</span>
+                </div>
+            </div>`;
+            
         document.querySelectorAll('.all-books-trigger').forEach(el => el.innerText = t.allBooks);
         document.getElementById('grid-heading').innerText = t.allBooks;
         
@@ -627,9 +634,10 @@ document.addEventListener('DOMContentLoaded', () => {
             currentImgW = cover.width > 0 ? cover.width : 1123; 
             currentImgH = cover.height > 0 ? cover.height : 794; 
         } else {
+            // 🔥 FIX: Inline Style hier ebenfalls gelöscht.
             loadingScreen.innerHTML = `
                 <div class="menu-wrapper">
-                    <div class="menu-row" style="margin-bottom: 0.8rem;">
+                    <div class="menu-row">
                         <span class="bracket">[</span><span class="menu-links">${t.notAvailable}</span><span class="bracket">]</span>
                     </div>
                     <div class="menu-row">
