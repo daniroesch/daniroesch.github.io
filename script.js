@@ -475,19 +475,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return; 
         }
         
-        // 🔥 FIX: Wenn das Modell aus dem Vollbild kommt, prüfen wir, ob das Handy in der Zwischenzeit gedreht wurde!
         if (was3DFS && (!currentFS || !currentFS.classList.contains('threedee-trigger'))) {
             
             const lockedIsLandscape = lockedW > lockedH;
             const currentIsLandscape = window.innerWidth > window.innerHeight;
             
             if (lockedIsLandscape !== currentIsLandscape) {
-                // Das Gerät WURDE gedreht. Wir MÜSSEN die Sperre aufheben und das Buch quer anlegen!
                 suppressRecalc = false; 
                 clearTimeout(resizeTimer);
                 setTimeout(() => { performLayoutRecalculation(); }, 300);
             } else {
-                // Keine Drehung, nur ein Klick auf 'X'. Sperre aktivieren, um Chaos zu vermeiden!
                 suppressRecalc = true;
                 setTimeout(() => { suppressRecalc = false; }, 800); 
             }
@@ -719,7 +716,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const customTarget = modelData.target || 'auto auto auto';
                                 const customOrbit = modelData.orbit || (modelType === 'interior' ? '0deg 90deg 0.1m' : 'auto auto auto');
                                 
-                                // 🔥 FIX: Zoom-Sperre nur noch für Innenräume! Exterior kann nach Belieben zoomen.
                                 const disableZoomAttr = modelType === 'interior' ? ' disable-zoom' : '';
                                 
                                 let extraAttributes = ` field-of-view="${customFov}" max-field-of-view="180deg"${disableZoomAttr} camera-target="${customTarget}" camera-orbit="${customOrbit}" shadow-intensity="1" shadow-softness="1"`;
