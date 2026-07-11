@@ -91,17 +91,17 @@ const CONFIG = {
     // ✉️ DEINE KONTAKTDATEN
     email: 'arch.daniroesch@gmail.com',
 
-    // 🌍 DEINE TEXTE & SEO-DATEN (🔥 FIX: Korrekte Grammatik pro Sprache)
+    // 🌍 DEINE TEXTE & SEO-DATEN (🔥 FIX: Strenge Kleinschreibung am Wortanfang!)
     translations: {
         'de': { 
-            titles: ["Meine Projekte", "Schau dich um", "Architektur Portfolio", "daniroesch.de"], 
-            allBooks: "Alle Projekte", 
-            backToStart: "Zurück zum Anfang", 
-            nextProject: "Nächstes Projekt", 
+            titles: ["meine Projekte", "schau dich um", "architektur Portfolio", "daniroesch.de"], 
+            allBooks: "alle Projekte", 
+            backToStart: "zurück zum Anfang", 
+            nextProject: "nächstes Projekt", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
             loading: "wird geladen . . .",
-            notAvailable: "Projekt noch nicht in dieser Sprache verfügbar",
+            notAvailable: "projekt noch nicht in dieser Sprache verfügbar",
             
             seoDesc: "Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch. Entdecken Sie meine Arbeiten, Entwürfe und Konzepte.", 
             seoH1: "Architektur Portfolio von Daniel Rösch", 
@@ -109,14 +109,14 @@ const CONFIG = {
             seoContact: "Kontaktieren Sie mich gerne unter arch.daniroesch@gmail.com für Projektanfragen."
         },
         'en': { 
-            titles: ["My projects", "Take a look", "Architecture portfolio", "daniroesch.de"], 
-            allBooks: "All projects", 
-            backToStart: "Back to start", 
-            nextProject: "Next project", 
+            titles: ["my projects", "take a look", "architecture portfolio", "daniroesch.de"], 
+            allBooks: "all projects", 
+            backToStart: "back to start", 
+            nextProject: "next project", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
             loading: "loading . . .", 
-            notAvailable: "Project not yet available in this language",
+            notAvailable: "project not yet available in this language",
             
             seoDesc: "Digital architecture projects and design portfolio of Daniel Rösch. Explore my work and concepts.", 
             seoH1: "Architecture Portfolio by Daniel Rösch", 
@@ -124,14 +124,14 @@ const CONFIG = {
             seoContact: "Feel free to contact me at arch.daniroesch@gmail.com for inquiries."
         },
         'es': { 
-            titles: ["Mis proyectos", "Echa un vistazo", "Portafolio de arquitectura", "daniroesch.de"], 
-            allBooks: "Todos los proyectos", 
-            backToStart: "Volver al inicio", 
-            nextProject: "Siguiente proyecto", 
+            titles: ["mis proyectos", "echa un vistazo", "portafolio de arquitectura", "daniroesch.de"], 
+            allBooks: "todos los proyectos", 
+            backToStart: "volver al inicio", 
+            nextProject: "siguiente proyecto", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
             loading: "cargando . . .", 
-            notAvailable: "Proyecto aún no disponible en este idioma",
+            notAvailable: "proyecto aún no disponible en este idioma",
             
             seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabalho y concepts.", 
             seoH1: "Portafolio de Arquitectura de Daniel Rösch", 
@@ -139,14 +139,14 @@ const CONFIG = {
             seoContact: "Contáctame en arch.daniroesch@gmail.com para consultas."
         },
         'pt': { 
-            titles: ["Meus projetos", "Dê uma olhada", "Portfólio de arquitetura", "daniroesch.de"], 
-            allBooks: "Todos os projetos", 
-            backToStart: "Voltar ao início", 
-            nextProject: "Próximo projeto", 
+            titles: ["meus projetos", "dê uma olhada", "portfólio de arquitetura", "daniroesch.de"], 
+            allBooks: "todos os projetos", 
+            backToStart: "voltar ao início", 
+            nextProject: "próximo projeto", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
             loading: "carregando . . .", 
-            notAvailable: "Projeto ainda não disponível neste idioma",
+            notAvailable: "projeto ainda não disponível neste idioma",
             
             seoDesc: "Projetos de arquitetura digital e portfólio de design de Daniel Rösch. Explore meu trabalho e conceitos.", 
             seoH1: "Portfólio de Arquitetura de Daniel Rösch", 
