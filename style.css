@@ -6,7 +6,7 @@
 @font-face {
     font-family: 'Montserrat';
     font-style: normal;
-    font-weight: 200; /* Extra Light für das gesamte Standard-Design */
+    font-weight: 200; /* Extra Light als Basis für alles */
     font-display: swap; 
     src: url('fonts/montserrat-200.woff2') format('woff2');
 }
@@ -14,7 +14,7 @@
 @font-face {
     font-family: 'Crimson Pro';
     font-style: normal;
-    font-weight: 700; /* Bold für Hover und aktive Links */
+    font-weight: 700; /* Bold für die Hover/Akzent-Schrift */
     font-display: swap; 
     src: url('fonts/crimson-pro-700.woff2') format('woff2');
 }
@@ -49,6 +49,39 @@ body {
     height: 100vh;
     height: 100dvh; 
 }
+
+/* ==========================================================================
+   🔥 HOVER-LOGIK FÜR ALLE TEXTE (CRIMSON PRO & GRÖSSENAUSGLEICH) 
+   ========================================================================== */
+
+/* Teil A: Schriftart und Stärke ändern (Das * sorgt dafür, dass auch 
+   verschachtelte Spans wie das X im Schließen-Button mitwechseln!) */
+h1:hover, h1:active, h1:hover *, h1:active *,
+h2:hover, h2:active, h2:hover *, h2:active *,
+h3:hover, h3:active, h3:hover *, h3:active *,
+a:hover, a:active, a:hover *, a:active *,
+button:hover, button:active, button:hover *, button:active *,
+.menu-links:hover, .menu-links:active, .menu-links:hover *, .menu-links:active *,
+.bracket:hover, .bracket:active,
+[data-lang].active, [data-lang].active * {
+    font-family: 'Crimson Pro', serif !important;
+    font-weight: 700 !important;
+}
+
+/* Teil B: Größen-Ausgleich (+15%), da Crimson Pro optisch kleiner ausfällt.
+   (Hier ohne Sternchen *, um zu verhindern, dass verschachtelte Elemente doppelt wachsen!) */
+h1:hover, h1:active,
+h2:hover, h2:active,
+h3:hover, h3:active,
+a:hover, a:active,
+button:hover, button:active,
+[data-lang].active,
+#loading .menu-links:hover, #loading .menu-links:active, /* Greift beim "wird geladen"-Text */
+.bracket:hover, .bracket:active {
+    font-size: 1.15em !important; 
+}
+
+/* ========================================================================== */
 
 /* --- 3. STRUKTUR DER BUCH-ANSICHT --- */
 #book-view {
@@ -85,13 +118,12 @@ body {
     opacity: 0;
     pointer-events: none; 
     transition: color 0.3s ease; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.ui-btn:hover, .ui-btn:active { 
-    color: #000; 
-    font-family: 'Crimson Pro', serif !important; 
-    font-weight: 700 !important; 
-}
+.ui-btn:hover, .ui-btn:active { color: #000; }
 
 #home-btn { top: clamp(8px, calc(var(--real-book-height) * 0.035), 20px); right: clamp(8px, calc(var(--real-book-height) * 0.035), 20px); left: auto; }
 #fullscreen-btn { bottom: clamp(8px, calc(var(--real-book-height) * 0.035), 20px); left: clamp(8px, calc(var(--real-book-height) * 0.035), 20px); right: auto; }
@@ -141,32 +173,23 @@ h1 {
     transition: color 0.3s ease;
 }
 
-h1:hover, h1:active { 
-    color: #000; 
-    font-family: 'Crimson Pro', serif !important; 
-    font-weight: 700 !important; 
-}
+h1:hover, h1:active { color: #000; }
 
 .menu-row {
     display: flex;
     justify-content: space-between; 
     align-items: center; 
-    /* Gleiche Größe wie der Titel */
     font-size: clamp(12px, calc(var(--real-book-height) * 0.045), 22px); 
     color: #888;
     margin-bottom: 0.3rem; 
 }
 
-.bracket { font-weight: 200; }
+.bracket { font-weight: 200; transition: color 0.2s; cursor: default; }
 
-.menu-links { flex-grow: 1; text-align: center; text-transform: lowercase; padding: 0 0.6em; }
-.menu-links a { color: #888; text-decoration: none; transition: color 0.2s; font-weight: 200; }
+.menu-links { flex-grow: 1; text-align: center; text-transform: lowercase; padding: 0 0.6em; transition: color 0.2s; cursor: pointer; }
+.menu-links a { color: #888; text-decoration: none; transition: color 0.2s; font-weight: 200; display: inline-block; }
 
-.menu-links a:hover, .menu-links a:active, .menu-links a.active { 
-    color: #000; 
-    font-family: 'Crimson Pro', serif !important; 
-    font-weight: 700 !important; 
-}
+.menu-links a:hover, .menu-links a:active, .menu-links a.active { color: #000; }
 
 .legal-links {
     display: flex;
@@ -174,8 +197,8 @@ h1:hover, h1:active {
     align-items: center;
     gap: 4px; 
     margin-top: clamp(8px, calc(var(--real-book-height) * 0.04), 20px); 
-    /* E-Mail und Impressum sind etwas kleiner */
-    font-size: clamp(9px, calc(var(--real-book-height) * 0.03), 14px); 
+    /* NOCH KLEINER GESTELLT: Jetzt nur noch 8px bis 11px */
+    font-size: clamp(8px, calc(var(--real-book-height) * 0.025), 11px); 
     text-transform: lowercase;
 }
 
@@ -184,13 +207,10 @@ h1:hover, h1:active {
     text-decoration: none; 
     transition: color 0.2s; 
     font-weight: 200; 
+    display: inline-block;
 }
 
-.legal-links a:hover, .legal-links a:active { 
-    color: #000; 
-    font-family: 'Crimson Pro', serif !important; 
-    font-weight: 700 !important; 
-}
+.legal-links a:hover, .legal-links a:active { color: #000; }
 
 /* --- 6. 3D BUCH & LADESCREEN --- */
 .flip-book-container, 
@@ -218,16 +238,12 @@ h1:hover, h1:active {
     display: flex; 
     flex-direction: column; 
     align-items: center;
+    cursor: pointer;
 }
 
-#loading a { color: #888; font-weight: 200; text-decoration: none; transition: color 0.2s; }
-#loading a:hover, #loading a:active { 
-    color: #000; 
-    font-family: 'Crimson Pro', serif !important; 
-    font-weight: 700 !important; 
-}
+#loading a { color: #888; font-weight: 200; text-decoration: none; transition: color 0.2s; display: inline-block; }
+#loading a:hover, #loading a:active { color: #000; }
 
-/* HIER IST WIEDER DER ZUVERLÄSSIGE WEISSE HINTERGRUND DES BUCHES */
 .page { background-color: #ffffff; position: relative; }
 .page img { width: 100%; height: 100%; object-fit: cover; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
 
@@ -238,13 +254,8 @@ h1:hover, h1:active {
 }
 
 .grid-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-.grid-header h2 { font-weight: 200; font-size: 1.5rem; text-transform: lowercase; }
-.grid-header a { color: #000; text-decoration: none; font-weight: 200; text-transform: lowercase; font-size: 1.5rem; }
-
-.grid-header a:hover, .grid-header a:active {
-    font-family: 'Crimson Pro', serif !important; 
-    font-weight: 700 !important; 
-}
+.grid-header h2 { font-weight: 200; font-size: 1.5rem; text-transform: lowercase; cursor: pointer; transition: color 0.2s;}
+.grid-header a { color: #000; text-decoration: none; font-weight: 200; text-transform: lowercase; font-size: 1.5rem; display: inline-block; transition: color 0.2s;}
 
 .grid-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; }
 .book-tile { cursor: pointer; transition: transform 0.2s; }
