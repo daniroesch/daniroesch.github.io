@@ -51,34 +51,51 @@ body {
 }
 
 /* ==========================================================================
-   🔥 HOVER-LOGIK FÜR ALLE TEXTE (CRIMSON PRO & GRÖSSENAUSGLEICH) 
+   🔥 HOVER-LOGIK FÜR ALLE TEXTE (CRIMSON PRO & EXAKTER GRÖSSENAUSGLEICH) 
    ========================================================================== */
 
-/* Teil A: Schriftart und Stärke ändern (Das * sorgt dafür, dass auch 
-   verschachtelte Spans wie das X im Schließen-Button mitwechseln!) */
-h1:hover, h1:active, h1:hover *, h1:active *,
-h2:hover, h2:active, h2:hover *, h2:active *,
-h3:hover, h3:active, h3:hover *, h3:active *,
-a:hover, a:active, a:hover *, a:active *,
-button:hover, button:active, button:hover *, button:active *,
-.menu-links:hover, .menu-links:active, .menu-links:hover *, .menu-links:active *,
-.bracket:hover, .bracket:active,
-[data-lang].active, [data-lang].active * {
-    font-family: 'Crimson Pro', serif !important;
-    font-weight: 700 !important;
+/* Basis-Animation für weiche Übergänge */
+h1, h2, h3, a, button, .ui-btn, .menu-links, #loading .menu-links {
+    transition: color 0.2s ease, font-size 0.2s ease;
 }
 
-/* Teil B: Größen-Ausgleich (+15%), da Crimson Pro optisch kleiner ausfällt.
-   (Hier ohne Sternchen *, um zu verhindern, dass verschachtelte Elemente doppelt wachsen!) */
+/* Teil A: Schriftart und Stärke ändern auf Crimson Pro Bold (700) 
+   (Wirkt NUR auf die fokussierten Elemente, nicht auf Klammern oder Trennstriche!) */
 h1:hover, h1:active,
 h2:hover, h2:active,
 h3:hover, h3:active,
 a:hover, a:active,
 button:hover, button:active,
+#loading .menu-links:hover, #loading .menu-links:active,
+[data-lang].active, 
+.ui-btn:hover, .ui-btn:active, 
+.ui-btn:hover *, .ui-btn:active * {
+    font-family: 'Crimson Pro', serif !important;
+    font-weight: 700 !important;
+    color: #000;
+}
+
+/* Teil B: EXAKTER GRÖSSEN-AUSGLEICH (Crimson wird mathematisch +15% größer berechnet)
+   Damit die kleiner ausfallende Schrift nicht das Layout zusammenschrumpfen lässt! */
+
+/* Für Titel, Menü-Links und UI-Buttons (Zwingt die Schrift von 12-22px auf 13.8-25px) */
+h1:hover, h1:active,
+.menu-links a:hover, .menu-links a:active,
 [data-lang].active,
-#loading .menu-links:hover, #loading .menu-links:active, /* Greift beim "wird geladen"-Text */
-.bracket:hover, .bracket:active {
-    font-size: 1.15em !important; 
+#loading .menu-links:hover, #loading .menu-links:active,
+.ui-btn:hover, .ui-btn:active {
+    font-size: clamp(13.8px, calc(var(--real-book-height) * 0.05175), 25.3px) !important;
+}
+
+/* Für Legal-Links (Mail/Impressum) (Zwingt die Schrift von 8-11px auf 9.2-12.6px) */
+.legal-links a:hover, .legal-links a:active {
+    font-size: clamp(9.2px, calc(var(--real-book-height) * 0.02875), 12.65px) !important;
+}
+
+/* Für Grid-Überschriften (Original: 1.5rem -> Neu: 1.72rem) */
+.grid-header h2:hover, .grid-header h2:active,
+.grid-header a:hover, .grid-header a:active {
+    font-size: 1.72rem !important; 
 }
 
 /* ========================================================================== */
@@ -113,17 +130,14 @@ button:hover, button:active,
     color: #888;
     text-decoration: none;
     font-weight: 200;
-    /* Einheitliche Schriftgröße wie der Titel und das Menü */
+    /* Einheitliche Basis-Schriftgröße */
     font-size: clamp(12px, calc(var(--real-book-height) * 0.045), 22px);
     opacity: 0;
     pointer-events: none; 
-    transition: color 0.3s ease; 
     display: flex;
     justify-content: center;
     align-items: center;
 }
-
-.ui-btn:hover, .ui-btn:active { color: #000; }
 
 #home-btn { top: clamp(8px, calc(var(--real-book-height) * 0.035), 20px); right: clamp(8px, calc(var(--real-book-height) * 0.035), 20px); left: auto; }
 #fullscreen-btn { bottom: clamp(8px, calc(var(--real-book-height) * 0.035), 20px); left: clamp(8px, calc(var(--real-book-height) * 0.035), 20px); right: auto; }
@@ -161,7 +175,6 @@ body.fit-height #fullscreen-btn { bottom: 10px; left: -5.5em; right: auto; }
 }
 
 h1 {
-    /* Gleiche Basis-Größe wie die Menü-Links */
     font-size: clamp(12px, calc(var(--real-book-height) * 0.045), 22px); 
     font-weight: 200;
     text-align: center;
@@ -170,10 +183,7 @@ h1 {
     text-transform: lowercase;
     color: #a0a0a0; 
     cursor: pointer;
-    transition: color 0.3s ease;
 }
-
-h1:hover, h1:active { color: #000; }
 
 .menu-row {
     display: flex;
@@ -184,12 +194,11 @@ h1:hover, h1:active { color: #000; }
     margin-bottom: 0.3rem; 
 }
 
-.bracket { font-weight: 200; transition: color 0.2s; cursor: default; }
+/* Klammern und Trennstriche sind geschützt */
+.bracket { font-weight: 200; cursor: default; }
 
-.menu-links { flex-grow: 1; text-align: center; text-transform: lowercase; padding: 0 0.6em; transition: color 0.2s; cursor: pointer; }
-.menu-links a { color: #888; text-decoration: none; transition: color 0.2s; font-weight: 200; display: inline-block; }
-
-.menu-links a:hover, .menu-links a:active, .menu-links a.active { color: #000; }
+.menu-links { flex-grow: 1; text-align: center; text-transform: lowercase; padding: 0 0.6em; }
+.menu-links a { color: #888; text-decoration: none; font-weight: 200; display: inline-block; }
 
 .legal-links {
     display: flex;
@@ -197,7 +206,7 @@ h1:hover, h1:active { color: #000; }
     align-items: center;
     gap: 4px; 
     margin-top: clamp(8px, calc(var(--real-book-height) * 0.04), 20px); 
-    /* NOCH KLEINER GESTELLT: Jetzt nur noch 8px bis 11px */
+    /* NOCH KLEINER GESTELLT: 8px bis 11px */
     font-size: clamp(8px, calc(var(--real-book-height) * 0.025), 11px); 
     text-transform: lowercase;
 }
@@ -205,12 +214,9 @@ h1:hover, h1:active { color: #000; }
 .legal-links a { 
     color: #a0a0a0; 
     text-decoration: none; 
-    transition: color 0.2s; 
     font-weight: 200; 
     display: inline-block;
 }
-
-.legal-links a:hover, .legal-links a:active { color: #000; }
 
 /* --- 6. 3D BUCH & LADESCREEN --- */
 .flip-book-container, 
@@ -241,8 +247,7 @@ h1:hover, h1:active { color: #000; }
     cursor: pointer;
 }
 
-#loading a { color: #888; font-weight: 200; text-decoration: none; transition: color 0.2s; display: inline-block; }
-#loading a:hover, #loading a:active { color: #000; }
+#loading a { color: #888; font-weight: 200; text-decoration: none; display: inline-block; }
 
 .page { background-color: #ffffff; position: relative; }
 .page img { width: 100%; height: 100%; object-fit: cover; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
@@ -254,8 +259,8 @@ h1:hover, h1:active { color: #000; }
 }
 
 .grid-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-.grid-header h2 { font-weight: 200; font-size: 1.5rem; text-transform: lowercase; cursor: pointer; transition: color 0.2s;}
-.grid-header a { color: #000; text-decoration: none; font-weight: 200; text-transform: lowercase; font-size: 1.5rem; display: inline-block; transition: color 0.2s;}
+.grid-header h2 { font-weight: 200; font-size: 1.5rem; text-transform: lowercase; cursor: pointer; }
+.grid-header a { color: #000; text-decoration: none; font-weight: 200; text-transform: lowercase; font-size: 1.5rem; display: inline-block; }
 
 .grid-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; }
 .book-tile { cursor: pointer; transition: transform 0.2s; }
