@@ -59,20 +59,22 @@ h1, h2, h3, a, button, .ui-btn, .menu-links, #loading .menu-links, span {
     transition: color 0.2s ease, font-size 0.2s ease;
 }
 
-/* TEIL A: SCHRIFTART & STÄRKE (Alles wird Crimson Pro Bold beim Hover) */
+/* TEIL A: SCHRIFTART & STÄRKE (Alles fokussierte wird Crimson Pro Bold) 
+   (Isoliert! Z.B. greift es nur auf <a> Tags, die Trennstriche '|' bleiben unberührt) */
 h1:hover, h1:active, h1:hover *, h1:active *,
 h2:hover, h2:active, h2:hover *, h2:active *,
 h3:hover, h3:active, h3:hover *, h3:active *,
 a:hover, a:active, a:hover *, a:active *,
 button:hover, button:active, button:hover *, button:active *,
-.menu-links:hover, .menu-links:active, .menu-links:hover *, .menu-links:active *,
-.bracket:hover, .bracket:active,
+#loading .menu-links:hover, #loading .menu-links:active,
 [data-lang].active, [data-lang].active * {
     font-family: 'Crimson Pro', serif !important;
     font-weight: 700 !important;
 }
 
-/* TEIL B: GRÖSSEN-AUSGLEICH (+25% Größer, damit Crimson optisch nicht schrumpft) */
+/* TEIL B: GRÖSSEN-AUSGLEICH */
+
+/* 1. Standard-Ausgleich (+25% Größer, damit Crimson nicht schrumpft) */
 h1:hover, h1:active,
 .menu-links a:hover, .menu-links a:active,
 [data-lang].active,
@@ -81,10 +83,20 @@ h1:hover, h1:active,
     font-size: clamp(15px, calc(var(--real-book-height) * 0.05625), 27.5px) !important;
 }
 
+/* 2. EXTRA-GRÖSSE (+50%) NUR für die kleinen 'x' Schließen-Buttons! */
+#home-btn:hover, #home-btn:active,
+#close-legal:hover, #close-legal:active,
+#back-to-book-btn:hover, #back-to-book-btn:active,
+.close-3d-btn:hover, .close-3d-btn:active {
+    font-size: clamp(18px, calc(var(--real-book-height) * 0.0675), 33px) !important;
+}
+
+/* 3. Für Legal-Links (Mail & Impressum) */
 .legal-links a:hover, .legal-links a:active {
     font-size: clamp(10px, calc(var(--real-book-height) * 0.03125), 13.75px) !important;
 }
 
+/* 4. Für Grid-Überschriften */
 .grid-header h2:hover, .grid-header h2:active,
 .grid-header a:hover, .grid-header a:active {
     font-size: 1.875rem !important; 
@@ -92,23 +104,19 @@ h1:hover, h1:active,
 
 /* TEIL C: FARB-LOGIK (Klickbare Links = Schwarz / Nicht klickbar = Grau) */
 
-/* 1. Links -> SCHWARZ */
+/* 1. Links & Titel (Klickbar) -> SCHWARZ */
+h1:hover, h1:active,
 .menu-links a:hover, .menu-links a:active, .menu-links a.active,
 .legal-links a:hover, .legal-links a:active,
 .ui-btn:hover, .ui-btn:active,
-.grid-header a:hover, .grid-header a:active,
-#loading a:hover, #loading a:active {
+.grid-header a:hover, .grid-header a:active {
     color: #000 !important;
 }
 
-/* 2. Titel & Info-Texte -> GRAU (Behalten ihre blasse, edle Farbe) */
-h1:hover, h1:active {
-    color: #a0a0a0 !important;
-}
-
+/* 2. Lade-Text (Nicht klickbar) -> GRAU (Behält blasse, edle Farbe) */
 #loading .menu-links:hover, #loading .menu-links:active {
     color: #888 !important;
-    cursor: default; /* Macht klar, dass der Ladebalken nicht klickbar ist */
+    cursor: default; 
 }
 
 /* ========================================================================== */
@@ -194,7 +202,6 @@ h1 {
     text-align: center;
     white-space: nowrap; 
     margin-bottom: 0.8rem; /* Exakt gleicher Abstand wie die Sprachen zum Grid */
-    text-transform: lowercase;
     color: #a0a0a0; 
     cursor: pointer;
 }
@@ -208,10 +215,10 @@ h1 {
     margin-bottom: 0.3rem; 
 }
 
-/* Klammern und Trennstriche sind geschützt */
+/* Klammern und Trennstriche sind geschützt und reagieren NICHT auf Hover */
 .bracket { font-weight: 200; cursor: default; }
 
-.menu-links { flex-grow: 1; text-align: center; text-transform: lowercase; padding: 0 0.6em; }
+.menu-links { flex-grow: 1; text-align: center; padding: 0 0.6em; }
 .menu-links a { color: #888; text-decoration: none; font-weight: 200; display: inline-block; }
 
 .legal-links {
@@ -221,7 +228,6 @@ h1 {
     gap: 4px; 
     margin-top: clamp(8px, calc(var(--real-book-height) * 0.04), 20px); 
     font-size: clamp(8px, calc(var(--real-book-height) * 0.025), 11px); 
-    text-transform: lowercase;
 }
 
 .legal-links a { 
@@ -272,8 +278,8 @@ h1 {
 }
 
 .grid-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-.grid-header h2 { font-weight: 200; font-size: 1.5rem; text-transform: lowercase; cursor: default; }
-.grid-header a { color: #000; text-decoration: none; font-weight: 200; text-transform: lowercase; font-size: 1.5rem; display: inline-block; }
+.grid-header h2 { font-weight: 200; font-size: 1.5rem; cursor: default; }
+.grid-header a { color: #000; text-decoration: none; font-weight: 200; font-size: 1.5rem; display: inline-block; }
 
 .grid-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; }
 .book-tile { cursor: pointer; transition: transform 0.2s; }
