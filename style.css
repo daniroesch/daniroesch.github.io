@@ -71,9 +71,9 @@ button:hover, button:active, button:hover *, button:active *,
     font-weight: 700 !important;
 }
 
-/* TEIL B: GRÖSSEN-AUSGLEICH */
+/* TEIL B: GRÖSSEN-AUSGLEICH (STRIKT GETRENNT NACH BEREICHEN) */
 
-/* 1. Standard-Ausgleich (+25% Größer, damit Crimson nicht schrumpft) */
+/* 1. Buch-Menü: Standard-Ausgleich (+25% Größer) */
 h1:hover, h1:active,
 .menu-links a:hover, .menu-links a:active,
 [data-lang].active,
@@ -82,20 +82,10 @@ h1:hover, h1:active,
     font-size: clamp(15px, calc(var(--real-book-height) * 0.05625), 27.5px) !important;
 }
 
-/* 2. EXAKTER GRÖSSEN-AUSGLEICH FÜR ALLE 'X'-BUTTONS! */
+/* 2. Buch-Menü: EXTRA-GRÖSSE (+50%) für die kleinen 'x' Schließen-Buttons! */
 #home-btn:hover, #home-btn:active,
 .close-3d-btn:hover, .close-3d-btn:active {
     font-size: clamp(18px, calc(var(--real-book-height) * 0.0675), 33px) !important;
-}
-
-#close-legal, #back-to-book-btn, .grid-header a {
-    font-size: clamp(16.2px, calc(var(--real-book-height) * 0.06075), 29.7px) !important;
-}
-
-#close-legal:hover, #close-legal:active,
-#back-to-book-btn:hover, #back-to-book-btn:active,
-.grid-header a:hover, .grid-header a:active {
-    font-size: clamp(24.3px, calc(var(--real-book-height) * 0.091125), 44.55px) !important;
 }
 
 /* 3. Für Legal-Links (Mail & Impressum) */
@@ -103,9 +93,12 @@ h1:hover, h1:active,
     font-size: clamp(10px, calc(var(--real-book-height) * 0.03125), 13.75px) !important;
 }
 
-/* 4. Für Grid/Impressum-Überschriften (+25%) */
+/* 4. 🔥 FIX: Grid & Impressum (Fest auf 1.5rem, streng isoliert von den clamps!) */
 .grid-header h2:hover, .grid-header h2:active {
-    font-size: 1.875rem !important; 
+    font-size: 1.875rem !important; /* +25% vom 1.5rem Original */
+}
+.grid-header a:hover, .grid-header a:active {
+    font-size: 2.25rem !important; /* +50% vom 1.5rem Original für das X */
 }
 
 /* TEIL C: FARB-LOGIK (Klickbare Links = Schwarz / Nicht klickbar = Grau) */
@@ -154,6 +147,7 @@ h3:hover, h3:active, h3:hover *, h3:active *,
 /* --- 4. ASYMMETRISCHE UI-BUTTONS (Home & Vollbild) --- */
 .ui-btn {
     position: absolute;
+    /* Feste Box-Größen verhindern, dass die Buttons beim Hover springen! */
     width: 60px;  
     height: 60px; 
     display: flex;
@@ -202,6 +196,8 @@ body.fit-height #fullscreen-btn { bottom: 10px; left: -4rem; right: auto; }
     width: max-content;
     max-width: 100%;
     margin: 0 auto;
+    /* Der GAP erzwingt pixelgenau identische Abstände! */
+    gap: 0.4rem; 
 }
 
 h1 {
@@ -209,8 +205,7 @@ h1 {
     font-weight: 200;
     text-align: center;
     white-space: nowrap; 
-    /* 🔥 FIX: Exakt die goldene Mitte! Symmetrisch zur Zeile darunter. */
-    margin: 0 0 0.3rem 0; 
+    margin: 0 !important; 
     line-height: 1; 
     color: #a0a0a0; 
     cursor: pointer;
@@ -222,7 +217,7 @@ h1 {
     align-items: center; 
     font-size: clamp(12px, calc(var(--real-book-height) * 0.045), 22px); 
     color: #888;
-    margin: 0 0 0.3rem 0; 
+    margin: 0 !important; 
     line-height: 1;
 }
 
@@ -290,17 +285,20 @@ h1 {
 
 .grid-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
 
+/* 🔥 FIX: Zurück auf originale 1.5rem Base-Größe! */
 .grid-header h2 { 
     font-weight: 200; 
-    font-size: clamp(12px, calc(var(--real-book-height) * 0.045), 22px); 
+    font-size: 1.5rem !important; 
     cursor: default; 
     color: #a0a0a0; 
 }
 
+/* 🔥 FIX: Base-Größe auf 1.5rem plus feste Box für Anti-Wackeln */
 .grid-header a { 
     color: #888; 
     text-decoration: none; 
     font-weight: 200; 
+    font-size: 1.5rem !important; 
     display: flex; 
     justify-content: center;
     align-items: center;
