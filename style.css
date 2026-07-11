@@ -78,24 +78,30 @@ h1:hover, h1:active,
 .menu-links a:hover, .menu-links a:active,
 [data-lang].active,
 #loading .menu-links:hover, #loading .menu-links:active,
-.ui-btn:hover, .ui-btn:active,
-.grid-header h2:hover, .grid-header h2:active {
+.ui-btn:hover, .ui-btn:active {
     font-size: clamp(15px, calc(var(--real-book-height) * 0.05625), 27.5px) !important;
 }
 
 /* 2. EXTRA-GRÖSSE (+50%) NUR für die kleinen 'x' Schließen-Buttons! 
-      (Gilt jetzt EXAKT gleich für Home, 3D-Close und das Grid/Legal X) */
+      (Gilt jetzt EXAKT gleich für Home und 3D-Close) */
 #home-btn:hover, #home-btn:active,
 #close-legal:hover, #close-legal:active,
 #back-to-book-btn:hover, #back-to-book-btn:active,
-.close-3d-btn:hover, .close-3d-btn:active,
-.grid-header a:hover, .grid-header a:active {
+.close-3d-btn:hover, .close-3d-btn:active {
     font-size: clamp(18px, calc(var(--real-book-height) * 0.0675), 33px) !important;
 }
 
 /* 3. Für Legal-Links (Mail & Impressum) */
 .legal-links a:hover, .legal-links a:active {
     font-size: clamp(10px, calc(var(--real-book-height) * 0.03125), 13.75px) !important;
+}
+
+/* 4. Für Grid/Impressum-Überschriften und das X dort (Wieder zurück auf Originalgröße!) */
+.grid-header h2:hover, .grid-header h2:active {
+    font-size: 1.875rem !important; /* +25% für Titel */
+}
+.grid-header a:hover, .grid-header a:active {
+    font-size: 2.25rem !important; /* +50% für X */
 }
 
 /* TEIL C: FARB-LOGIK (Klickbare Links = Schwarz / Nicht klickbar = Grau) */
@@ -200,7 +206,9 @@ h1 {
     font-weight: 200;
     text-align: center;
     white-space: nowrap; 
-    margin-bottom: 0.8rem; 
+    /* 🔥 FIX: Optischer Abstandsausgleich */
+    margin: 0 0 0.15rem 0; 
+    line-height: 1; /* Verhindert versteckte Abstände durch die Schrift-Box */
     color: #a0a0a0; 
     cursor: pointer;
 }
@@ -211,7 +219,8 @@ h1 {
     align-items: center; 
     font-size: clamp(12px, calc(var(--real-book-height) * 0.045), 22px); 
     color: #888;
-    margin-bottom: 0.3rem; 
+    margin: 0 0 0.3rem 0; 
+    line-height: 1;
 }
 
 /* Klammern und Trennstriche sind geschützt und reagieren NICHT auf Hover */
@@ -278,9 +287,10 @@ h1 {
 
 .grid-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
 
+/* 🔥 FIX: Zurück auf originale 1.5rem Größe, damit es groß genug ist! */
 .grid-header h2 { 
     font-weight: 200; 
-    font-size: clamp(12px, calc(var(--real-book-height) * 0.045), 22px); 
+    font-size: 1.5rem; 
     cursor: default; 
     color: #a0a0a0; 
 }
@@ -290,7 +300,7 @@ h1 {
     color: #888; 
     text-decoration: none; 
     font-weight: 200; 
-    font-size: clamp(12px, calc(var(--real-book-height) * 0.045), 22px); 
+    font-size: 1.5rem; 
     display: flex; 
     justify-content: center;
     align-items: center;
