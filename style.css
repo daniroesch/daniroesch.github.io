@@ -59,8 +59,7 @@ h1, h2, h3, a, button, .ui-btn, .menu-links, #loading .menu-links, span {
     transition: color 0.2s ease, font-size 0.2s ease;
 }
 
-/* TEIL A: SCHRIFTART & STÄRKE (Alles fokussierte wird Crimson Pro Bold) 
-   (Isoliert! Z.B. greift es nur auf <a> Tags, die Trennstriche '|' bleiben unberührt) */
+/* TEIL A: SCHRIFTART & STÄRKE (Alles fokussierte wird Crimson Pro Bold) */
 h1:hover, h1:active, h1:hover *, h1:active *,
 h2:hover, h2:active, h2:hover *, h2:active *,
 h3:hover, h3:active, h3:hover *, h3:active *,
@@ -96,15 +95,17 @@ h1:hover, h1:active,
     font-size: clamp(10px, calc(var(--real-book-height) * 0.03125), 13.75px) !important;
 }
 
-/* 4. Für Grid-Überschriften */
-.grid-header h2:hover, .grid-header h2:active,
+/* 4. Für Grid/Impressum-Überschriften und das X dort */
+.grid-header h2:hover, .grid-header h2:active {
+    font-size: 1.875rem !important; /* +25% für die reinen Titel */
+}
 .grid-header a:hover, .grid-header a:active {
-    font-size: 1.875rem !important; 
+    font-size: 2.25rem !important; /* +50% für das winzige Crimson 'x' */
 }
 
 /* TEIL C: FARB-LOGIK (Klickbare Links = Schwarz / Nicht klickbar = Grau) */
 
-/* 1. Links & Titel (Klickbar) -> SCHWARZ */
+/* 1. Links & Startseiten-Titel (Klickbar) -> SCHWARZ */
 h1:hover, h1:active,
 .menu-links a:hover, .menu-links a:active, .menu-links a.active,
 .legal-links a:hover, .legal-links a:active,
@@ -113,9 +114,12 @@ h1:hover, h1:active,
     color: #000 !important;
 }
 
-/* 2. Lade-Text (Nicht klickbar) -> GRAU (Behält blasse, edle Farbe) */
+/* 2. Unterseiten-Titel & Lade-Text (Nicht klickbar) -> GRAU (Behalten blasse, edle Farbe) */
+h2:hover, h2:active, h2:hover *, h2:active *,
+h3:hover, h3:active, h3:hover *, h3:active *,
+.grid-header h2:hover, .grid-header h2:active,
 #loading .menu-links:hover, #loading .menu-links:active {
-    color: #888 !important;
+    color: #a0a0a0 !important;
     cursor: default; 
 }
 
@@ -201,7 +205,8 @@ h1 {
     font-weight: 200;
     text-align: center;
     white-space: nowrap; 
-    margin-bottom: 0.8rem; /* Exakt gleicher Abstand wie die Sprachen zum Grid */
+    /* 🔥 FIX: Exakt gleicher Abstand wie die Sprachen zum Grid (.menu-row = 0.3rem) */
+    margin-bottom: 0.3rem; 
     color: #a0a0a0; 
     cursor: pointer;
 }
@@ -278,8 +283,8 @@ h1 {
 }
 
 .grid-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-.grid-header h2 { font-weight: 200; font-size: 1.5rem; cursor: default; }
-.grid-header a { color: #000; text-decoration: none; font-weight: 200; font-size: 1.5rem; display: inline-block; }
+.grid-header h2 { font-weight: 200; font-size: 1.5rem; cursor: default; color: #a0a0a0; }
+.grid-header a { color: #888; text-decoration: none; font-weight: 200; font-size: 1.5rem; display: inline-block; }
 
 .grid-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; }
 .book-tile { cursor: pointer; transition: transform 0.2s; }
