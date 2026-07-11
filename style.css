@@ -51,51 +51,64 @@ body {
 }
 
 /* ==========================================================================
-   🔥 HOVER-LOGIK FÜR ALLE TEXTE (CRIMSON PRO & EXAKTER GRÖSSENAUSGLEICH) 
+   🔥 HOVER-LOGIK FÜR ALLE TEXTE (CRIMSON PRO, GRÖSSENAUSGLEICH & FARBEN) 
    ========================================================================== */
 
-/* Basis-Animation für weiche Übergänge */
-h1, h2, h3, a, button, .ui-btn, .menu-links, #loading .menu-links {
+/* Weiche Übergänge für alle Texte */
+h1, h2, h3, a, button, .ui-btn, .menu-links, #loading .menu-links, span {
     transition: color 0.2s ease, font-size 0.2s ease;
 }
 
-/* Teil A: Schriftart und Stärke ändern auf Crimson Pro Bold (700) 
-   (Wirkt NUR auf die fokussierten Elemente, nicht auf Klammern oder Trennstriche!) */
-h1:hover, h1:active,
-h2:hover, h2:active,
-h3:hover, h3:active,
-a:hover, a:active,
-button:hover, button:active,
-#loading .menu-links:hover, #loading .menu-links:active,
-[data-lang].active, 
-.ui-btn:hover, .ui-btn:active, 
-.ui-btn:hover *, .ui-btn:active * {
+/* TEIL A: SCHRIFTART & STÄRKE (Alles wird Crimson Pro Bold beim Hover) */
+h1:hover, h1:active, h1:hover *, h1:active *,
+h2:hover, h2:active, h2:hover *, h2:active *,
+h3:hover, h3:active, h3:hover *, h3:active *,
+a:hover, a:active, a:hover *, a:active *,
+button:hover, button:active, button:hover *, button:active *,
+.menu-links:hover, .menu-links:active, .menu-links:hover *, .menu-links:active *,
+.bracket:hover, .bracket:active,
+[data-lang].active, [data-lang].active * {
     font-family: 'Crimson Pro', serif !important;
     font-weight: 700 !important;
-    color: #000;
 }
 
-/* Teil B: EXAKTER GRÖSSEN-AUSGLEICH (Crimson wird mathematisch +15% größer berechnet)
-   Damit die kleiner ausfallende Schrift nicht das Layout zusammenschrumpfen lässt! */
-
-/* Für Titel, Menü-Links und UI-Buttons (Zwingt die Schrift von 12-22px auf 13.8-25px) */
+/* TEIL B: GRÖSSEN-AUSGLEICH (+25% Größer, damit Crimson optisch nicht schrumpft) */
 h1:hover, h1:active,
 .menu-links a:hover, .menu-links a:active,
 [data-lang].active,
 #loading .menu-links:hover, #loading .menu-links:active,
 .ui-btn:hover, .ui-btn:active {
-    font-size: clamp(13.8px, calc(var(--real-book-height) * 0.05175), 25.3px) !important;
+    font-size: clamp(15px, calc(var(--real-book-height) * 0.05625), 27.5px) !important;
 }
 
-/* Für Legal-Links (Mail/Impressum) (Zwingt die Schrift von 8-11px auf 9.2-12.6px) */
 .legal-links a:hover, .legal-links a:active {
-    font-size: clamp(9.2px, calc(var(--real-book-height) * 0.02875), 12.65px) !important;
+    font-size: clamp(10px, calc(var(--real-book-height) * 0.03125), 13.75px) !important;
 }
 
-/* Für Grid-Überschriften (Original: 1.5rem -> Neu: 1.72rem) */
 .grid-header h2:hover, .grid-header h2:active,
 .grid-header a:hover, .grid-header a:active {
-    font-size: 1.72rem !important; 
+    font-size: 1.875rem !important; 
+}
+
+/* TEIL C: FARB-LOGIK (Klickbare Links = Schwarz / Nicht klickbar = Grau) */
+
+/* 1. Links -> SCHWARZ */
+.menu-links a:hover, .menu-links a:active, .menu-links a.active,
+.legal-links a:hover, .legal-links a:active,
+.ui-btn:hover, .ui-btn:active,
+.grid-header a:hover, .grid-header a:active,
+#loading a:hover, #loading a:active {
+    color: #000 !important;
+}
+
+/* 2. Titel & Info-Texte -> GRAU (Behalten ihre blasse, edle Farbe) */
+h1:hover, h1:active {
+    color: #a0a0a0 !important;
+}
+
+#loading .menu-links:hover, #loading .menu-links:active {
+    color: #888 !important;
+    cursor: default; /* Macht klar, dass der Ladebalken nicht klickbar ist */
 }
 
 /* ========================================================================== */
@@ -124,29 +137,30 @@ h1:hover, h1:active,
 /* --- 4. ASYMMETRISCHE UI-BUTTONS (Home & Vollbild) --- */
 .ui-btn {
     position: absolute;
-    width: 4.5em; 
+    /* Feste Box-Größen verhindern, dass die Buttons beim Hover springen! */
+    width: 60px;  
+    height: 60px; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
     text-align: center; 
     white-space: nowrap;
     color: #888;
     text-decoration: none;
     font-weight: 200;
-    /* Einheitliche Basis-Schriftgröße */
     font-size: clamp(12px, calc(var(--real-book-height) * 0.045), 22px);
     opacity: 0;
     pointer-events: none; 
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 #home-btn { top: clamp(8px, calc(var(--real-book-height) * 0.035), 20px); right: clamp(8px, calc(var(--real-book-height) * 0.035), 20px); left: auto; }
 #fullscreen-btn { bottom: clamp(8px, calc(var(--real-book-height) * 0.035), 20px); left: clamp(8px, calc(var(--real-book-height) * 0.035), 20px); right: auto; }
 
-body.fit-width #home-btn { top: -2.5em; right: 0; left: auto; }
-body.fit-width #fullscreen-btn { bottom: -2.5em; left: 0; right: auto; }
+body.fit-width #home-btn { top: -4rem; right: 0; left: auto; }
+body.fit-width #fullscreen-btn { bottom: -4rem; left: 0; right: auto; }
 
-body.fit-height #home-btn { top: 10px; right: -5.5em; left: auto; }
-body.fit-height #fullscreen-btn { bottom: 10px; left: -5.5em; right: auto; }
+body.fit-height #home-btn { top: 10px; right: -4rem; left: auto; }
+body.fit-height #fullscreen-btn { bottom: 10px; left: -4rem; right: auto; }
 
 /* --- 5. MENÜ-DESIGN UND TYPOGRAFIE --- */
 .static-menu, #end-of-book-menu {
@@ -179,7 +193,7 @@ h1 {
     font-weight: 200;
     text-align: center;
     white-space: nowrap; 
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.8rem; /* Exakt gleicher Abstand wie die Sprachen zum Grid */
     text-transform: lowercase;
     color: #a0a0a0; 
     cursor: pointer;
@@ -206,7 +220,6 @@ h1 {
     align-items: center;
     gap: 4px; 
     margin-top: clamp(8px, calc(var(--real-book-height) * 0.04), 20px); 
-    /* NOCH KLEINER GESTELLT: 8px bis 11px */
     font-size: clamp(8px, calc(var(--real-book-height) * 0.025), 11px); 
     text-transform: lowercase;
 }
@@ -259,7 +272,7 @@ h1 {
 }
 
 .grid-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-.grid-header h2 { font-weight: 200; font-size: 1.5rem; text-transform: lowercase; cursor: pointer; }
+.grid-header h2 { font-weight: 200; font-size: 1.5rem; text-transform: lowercase; cursor: default; }
 .grid-header a { color: #000; text-decoration: none; font-weight: 200; text-transform: lowercase; font-size: 1.5rem; display: inline-block; }
 
 .grid-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; }
