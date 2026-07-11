@@ -82,27 +82,12 @@ h1:hover, h1:active,
     font-size: clamp(15px, calc(var(--real-book-height) * 0.05625), 27.5px) !important;
 }
 
-/* 2. EXAKTER GRÖSSEN-AUSGLEICH FÜR ALLE 'X'-BUTTONS! */
-
-/* Gruppe 2a: Das Home-X und 3D-Close-X haben im Code einen inneren <span style="transform: scale(1.35)">. 
-   Daher brauchen sie hier nur die normale Hover-Regel, der innere Span vergrößert es dann optisch. */
+/* 2. EXTRA-GRÖSSE (+50%) NUR für die kleinen 'x' Schließen-Buttons! */
 #home-btn:hover, #home-btn:active,
-.close-3d-btn:hover, .close-3d-btn:active {
-    font-size: clamp(18px, calc(var(--real-book-height) * 0.0675), 33px) !important;
-}
-
-/* Gruppe 2b: Das X auf Grid/Impressum (#close-legal, #back-to-book-btn, .grid-header a) 
-   hat KEINEN inneren Span. Wir geben diesen Buttons permanent exakt die +35% mehr Basis-Größe, 
-   damit sie exakt so groß aussehen wie das skalierte Home-X im Buch! */
-#close-legal, #back-to-book-btn, .grid-header a {
-    font-size: clamp(16.2px, calc(var(--real-book-height) * 0.06075), 29.7px) !important;
-}
-
-/* Beim Hovern bekommen diese "nackten" X-Buttons exakt die ausgerechneten Maße der skalierten Buch-X */
 #close-legal:hover, #close-legal:active,
 #back-to-book-btn:hover, #back-to-book-btn:active,
-.grid-header a:hover, .grid-header a:active {
-    font-size: clamp(24.3px, calc(var(--real-book-height) * 0.091125), 44.55px) !important;
+.close-3d-btn:hover, .close-3d-btn:active {
+    font-size: clamp(18px, calc(var(--real-book-height) * 0.0675), 33px) !important;
 }
 
 /* 3. Für Legal-Links (Mail & Impressum) */
@@ -110,9 +95,12 @@ h1:hover, h1:active,
     font-size: clamp(10px, calc(var(--real-book-height) * 0.03125), 13.75px) !important;
 }
 
-/* 4. Für Grid/Impressum-Überschriften (+25%) */
+/* 4. Für Grid/Impressum-Überschriften und das X dort (Wieder zurück auf Originalgröße!) */
 .grid-header h2:hover, .grid-header h2:active {
     font-size: 1.875rem !important; 
+}
+.grid-header a:hover, .grid-header a:active {
+    font-size: 2.25rem !important; 
 }
 
 /* TEIL C: FARB-LOGIK (Klickbare Links = Schwarz / Nicht klickbar = Grau) */
@@ -161,7 +149,6 @@ h3:hover, h3:active, h3:hover *, h3:active *,
 /* --- 4. ASYMMETRISCHE UI-BUTTONS (Home & Vollbild) --- */
 .ui-btn {
     position: absolute;
-    /* Feste Box-Größen verhindern, dass die Buttons beim Hover springen! */
     width: 60px;  
     height: 60px; 
     display: flex;
@@ -217,7 +204,8 @@ h1 {
     font-weight: 200;
     text-align: center;
     white-space: nowrap; 
-    margin: 0 0 0.15rem 0; 
+    /* 🔥 FIX: Abstand leicht vergrößert für den optischen Ausgleich */
+    margin: 0 0 0.45rem 0; 
     line-height: 1; 
     color: #a0a0a0; 
     cursor: pointer;
@@ -304,17 +292,16 @@ h1 {
     color: #a0a0a0; 
 }
 
-/* Feste 60x60 Box, damit das X beim Wachsen NICHT mehr nach unten springt! */
 .grid-header a { 
     color: #888; 
     text-decoration: none; 
     font-weight: 200; 
-    /* Die Schriftgröße wird jetzt vom Fix (Gruppe 2b) in Zeile 99 geregelt */
     display: flex; 
     justify-content: center;
     align-items: center;
     width: 60px;
     height: 60px;
+    font-size: 1.5rem; 
 }
 
 .grid-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; }
