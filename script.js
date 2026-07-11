@@ -5,7 +5,7 @@
 /* 📖 LEGENDE / WIE FUNKTIONIERT DAS HIER?
 
 1. PROJEKTE (books / hiddenBooks)
-   - 'books': Diese Projekte tauchen im Menü ("alle projekte") auf.
+   - 'books': Diese Projekte tauchen im Menü ("Alle Projekte") auf.
    - 'hiddenBooks': Diese Projekte sind unsichtbar und nur per Direktlink erreichbar.
    - Der Name (z.B. 'book_1') MUSS exakt dem Ordnernamen auf dem Server entsprechen!
 
@@ -91,17 +91,17 @@ const CONFIG = {
     // ✉️ DEINE KONTAKTDATEN
     email: 'arch.daniroesch@gmail.com',
 
-    // 🌍 DEINE TEXTE & SEO-DATEN
+    // 🌍 DEINE TEXTE & SEO-DATEN (Mit korrekter Groß-/Kleinschreibung)
     translations: {
         'de': { 
-            titles: ["meine projekte", "schau dich um", "architektur portfolio", "daniroesch.de"], 
-            allBooks: "alle projekte", 
-            backToStart: "zurück zum anfang", 
-            nextProject: "nächstes projekt", 
+            titles: ["Meine Projekte", "Schau dich um", "Architektur Portfolio", "Daniroesch.de"], 
+            allBooks: "Alle Projekte", 
+            backToStart: "Zurück zum Anfang", 
+            nextProject: "Nächstes Projekt", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
-            loading: "wird geladen . . .",
-            notAvailable: "projekt noch nicht in dieser sprache verfügbar",
+            loading: "Wird geladen . . .",
+            notAvailable: "Projekt noch nicht in dieser Sprache verfügbar",
             
             seoDesc: "Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch. Entdecken Sie meine Arbeiten, Entwürfe und Konzepte.", 
             seoH1: "Architektur Portfolio von Daniel Rösch", 
@@ -109,14 +109,14 @@ const CONFIG = {
             seoContact: "Kontaktieren Sie mich gerne unter arch.daniroesch@gmail.com für Projektanfragen."
         },
         'en': { 
-            titles: ["my projects", "take a look", "architecture portfolio", "daniroesch.de"], 
-            allBooks: "all projects", 
-            backToStart: "back to start", 
-            nextProject: "next project", 
+            titles: ["My Projects", "Take a look", "Architecture Portfolio", "Daniroesch.de"], 
+            allBooks: "All Projects", 
+            backToStart: "Back to start", 
+            nextProject: "Next Project", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
-            loading: "loading . . .", 
-            notAvailable: "project not yet available in this language",
+            loading: "Loading . . .", 
+            notAvailable: "Project not yet available in this language",
             
             seoDesc: "Digital architecture projects and design portfolio of Daniel Rösch. Explore my work and concepts.", 
             seoH1: "Architecture Portfolio by Daniel Rösch", 
@@ -124,14 +124,14 @@ const CONFIG = {
             seoContact: "Feel free to contact me at arch.daniroesch@gmail.com for inquiries."
         },
         'es': { 
-            titles: ["mis proyectos", "echa un vistazo", "portafolio de arquitectura", "daniroesch.de"], 
-            allBooks: "todos los proyectos", 
-            backToStart: "volver al inicio", 
-            nextProject: "siguiente proyecto", 
+            titles: ["Mis Proyectos", "Echa un vistazo", "Portafolio de Arquitectura", "Daniroesch.de"], 
+            allBooks: "Todos los proyectos", 
+            backToStart: "Volver al inicio", 
+            nextProject: "Siguiente Proyecto", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
-            loading: "cargando . . .", 
-            notAvailable: "proyecto aún no disponible en este idioma",
+            loading: "Cargando . . .", 
+            notAvailable: "Proyecto aún no disponible en este idioma",
             
             seoDesc: "Proyectos de arquitectura digital y portafolio de diseño de Daniel Rösch. Explora mi trabalho y concepts.", 
             seoH1: "Portafolio de Arquitectura de Daniel Rösch", 
@@ -139,14 +139,14 @@ const CONFIG = {
             seoContact: "Contáctame en arch.daniroesch@gmail.com para consultas."
         },
         'pt': { 
-            titles: ["meus projetos", "dê uma olhada", "portfólio de arquitetura", "daniroesch.de"], 
-            allBooks: "todos os projetos", 
-            backToStart: "voltar ao início", 
-            nextProject: "próximo projeto", 
+            titles: ["Meus Projetos", "Dê uma olhada", "Portfólio de Arquitetura", "Daniroesch.de"], 
+            allBooks: "Todos os Projetos", 
+            backToStart: "Voltar ao início", 
+            nextProject: "Próximo Projeto", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
-            loading: "carregando . . .", 
-            notAvailable: "projeto ainda não disponible neste idioma",
+            loading: "Carregando . . .", 
+            notAvailable: "Projeto ainda não disponible neste idioma",
             
             seoDesc: "Projetos de arquitetura digital e portfólio de design de Daniel Rösch. Explore meu trabalho e conceitos.", 
             seoH1: "Portfólio de Arquitetura de Daniel Rösch", 
@@ -157,7 +157,7 @@ const CONFIG = {
 };
 
 // ==========================================================================================
-// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.21 PLATFORM
+// ⚙️ 2. SYSTEM-LOGIK (MASCHINENRAUM) - V2.22 PLATFORM
 // ==========================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -208,7 +208,19 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const is3DOpen = document.querySelector('model-viewer') !== null;
 
-            if (yDiff > 130 && xDiff < 40 && !isZoomed() && !is3DOpen) {
+            // 🔥 FIX: Schutz vor versehentlichem Refresh beim Scrollen auf Grid/Legal-Seiten!
+            let isAtTop = true;
+            const gridViewElem = document.getElementById('grid-view');
+            const legalViewElem = document.getElementById('legal-view');
+            
+            if (gridViewElem && gridViewElem.style.display === 'block') {
+                isAtTop = gridViewElem.scrollTop <= 10;
+            } else if (legalViewElem && legalViewElem.style.display === 'block') {
+                isAtTop = legalViewElem.scrollTop <= 10;
+            }
+
+            // Distanz auf 160 erhöht und isAtTop Prüfung hinzugefügt
+            if (yDiff > 160 && xDiff < 40 && !isZoomed() && !is3DOpen && isAtTop) {
                 window.location.hash = `/${currentBook}/${currentLang}/1`;
                 setTimeout(() => { window.location.reload(); }, 30);
             }
