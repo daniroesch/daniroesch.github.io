@@ -94,14 +94,14 @@ const CONFIG = {
     // 🌍 DEINE TEXTE & SEO-DATEN (🔥 FIX: Strenge Kleinschreibung am Wortanfang!)
     translations: {
         'de': { 
-            titles: ["meine Projekte", "schau dich um", "architektur Portfolio", "daniroesch.de"], 
+            titles: ["meine Projekte", "schau dich um", "Architektur Portfolio", "daniroesch.de"], 
             allBooks: "alle Projekte", 
             backToStart: "zurück zum Anfang", 
             nextProject: "nächstes Projekt", 
             close: "x", 
             home: '<span style="display:inline-block; transform: scale(1.35); line-height: 1;">x</span>', 
             loading: "wird geladen . . .",
-            notAvailable: "projekt noch nicht in dieser Sprache verfügbar",
+            notAvailable: "Projekt noch nicht in dieser Sprache verfügbar",
             
             seoDesc: "Digitale Architektur-Projekte und Design-Portfolio von Daniel Rösch. Entdecken Sie meine Arbeiten, Entwürfe und Konzepte.", 
             seoH1: "Architektur Portfolio von Daniel Rösch", 
