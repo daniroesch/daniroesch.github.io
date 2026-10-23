@@ -31,6 +31,7 @@
 const CONFIG = {
     // 📁 ÖFFENTLICHE PROJEKTE
     books: [
+        'Portfolio',
         'book_1', 
         'book_2',
         'book_3',
