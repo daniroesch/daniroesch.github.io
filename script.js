@@ -32,15 +32,23 @@ const CONFIG = {
     // 📁 ÖFFENTLICHE PROJEKTE
     books: [
         'Portfolio',
-        'book_1', 
-        'book_2',
-        'book_3',
-        'book_4'
+        'Instant-Faculty',
+        'Zukunft-von-Gestern',
+        'Common-Ground',
+        'Erbe-auf-dem-Land',
+        'Habitação-de-interesse-social',
+        'St-Rupert-Kirche',
+        'Neue-Umweltstation',
+        'Cidade-do-Samba'
     ],
 
     // 🕵️ UNSICHTBARE PROJEKTE
     hiddenBooks: [
-        'Portfolio-MA' 
+        'Portfolio-MA',
+        'book_1', 
+        'book_2',
+        'book_3',
+        'book_4' 
     ],
 
     // 🧊 DEINE 3D MODELLE
